@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.6.0-rc.3",
-  "changeSet": "feedback-ci-boolean-input-focus-2026-11-02",
-  "note": "User-approved Grid/TreeGrid contract evolution; imported provenance is preserved separately.",
+  "packageVersion": "0.6.0-rc.4",
+  "changeSet": "branding-row-drag-label-2026-11-03",
+  "note": "User-authorized branding cleanup; reviewed Grid delta is the row-drag plain-text label only. Imported provenance and the other 46 candidate source hashes are preserved.",
   "importManifestSha256": "9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67",
   "files": [
     {
@@ -188,7 +188,7 @@
     {
       "path": "src/ui/GridRowReorderController.js",
       "importedSha256": "dfb289d6824b2538ba98fae598a80aed5e6aecf5732231c31123506c6134bf42",
-      "sha256": "dfb289d6824b2538ba98fae598a80aed5e6aecf5732231c31123506c6134bf42"
+      "sha256": "83b559b6e08b7413033402e734df54a41748b6ba9a957b11b1debd230dcfd75b"
     },
     {
       "path": "src/ui/GridRowTransferController.js",

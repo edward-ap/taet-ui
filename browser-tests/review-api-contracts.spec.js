@@ -22,7 +22,7 @@ for(const type of ['Grid','TreeGrid'])test(`${type} public double click, cancell
  await page.evaluate(()=>{grid.disable();hits=[];});await cell.dispatchEvent('dblclick');expect(await page.evaluate(()=>hits)).toEqual([]);
  await page.evaluate(()=>{grid.enable();grid.events.on('rowDoubleClick',()=>grid.destroy());});await cell.dblclick();expect(await page.evaluate(()=>grid.destroyed)).toBe(true);
 });
-test('Dense Form input Enter validates; consumed and composing keys do not confirm',async({page})=>{
+test('Tæt Form input Enter validates; consumed and composing keys do not confirm',async({page})=>{
  await page.evaluate(async()=>{const {Dialog,Form,TextInput,Popup}=await import('/src/ui/all.js');window.field=new TextInput({label:'Project',value:'Example'});const form=new Form().row(field);window.dialog=new Dialog({title:'Form keys',content:form,destroyContent:true,buttons:[{text:'Apply',result:'apply',primary:true}]});window.dialogCloseCount=0;window.veto=true;dialog.events.on('beforeClose',e=>{if(veto)e.cancel=true;});dialog.events.on('close',()=>dialogCloseCount++);dialog.open();window.popup=new Popup({content:'Overlay'});});
  const input=page.getByRole('textbox',{name:'Project',exact:true});await input.press('Enter');expect(await page.evaluate(()=>dialog.opened)).toBe(true);
  await page.evaluate(()=>veto=false);await input.dispatchEvent('keydown',{key:'Enter',isComposing:true});expect(await page.evaluate(()=>dialogCloseCount)).toBe(0);

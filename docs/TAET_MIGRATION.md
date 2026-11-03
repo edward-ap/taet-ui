@@ -1,60 +1,60 @@
-# Tæt UI local migration
+# Tæt UI migration and compatibility
 
-Display name: Tæt UI. Technical/package name: taet-ui. GitHub repository:
-edward-ap/taet-ui (https://github.com/edward-ap/taet-ui), created public after explicit
-maintainer authorization on 2026-11-03. Initial commit d03a9c0 was local-only; it
-is preserved. A separate harness fix and release-preparation changes follow it.
-GitHub release/CI and npm publication outcomes are verified separately.
+Display name: Tæt UI. Package, import and repository name: taet-ui.
+The public repository is https://github.com/edward-ap/taet-ui.
+The current 0.6.0-rc.4 candidate is local and unpublished; published rc.3
+source, npm versions, GitHub releases and assets remain unchanged.
 
-## Source inventory and choice
+## Source inventory
 
-| Input | Identity | Decision |
-| --- | --- | --- |
-| Original dense-ui | HEAD 18c65890435e1bae97af262a20ced705e0e49e4f with local edits | Older framework; preserved in place |
-| Released rc.2 source | 1e51bdc8baa99130954206b0aff6367b0764e9d6, clean | All 878 tracked files copied as baseline |
-| Runtime feedback base | be78df1056d1c25369b989f51d7819f37c88c8fd | Included through rc.2: Date sorting, Switch focus, fixture readiness and documentation |
-| Accepted PropertyGrid production patch | codex/property-grid-presentation on rc.2 | Only src/ui/styles/property-grid.css integrated: 2 insertions, 11 deletions |
-| SelectInput CORE_PROPOSAL.md | Investigation | Excluded; not an accepted framework patch |
-| Radio application styling | Application-specific 24px square arrow and polish | Excluded; external consumers unchanged |
-| Old archive/specialized extensions | Painter/Viewport/StockChart/FlatFile/Spectrum/Pivot | Excluded; released scope retained |
+- Released rc.2 baseline: 1e51bdc8baa99130954206b0aff6367b0764e9d6, 878 tracked files.
+- Feedback base: be78df1056d1c25369b989f51d7819f37c88c8fd, included through rc.2.
+- Original working source: 18c65890435e1bae97af262a20ced705e0e49e4f, preserved separately.
+- Accepted PropertyGrid presentation patch: category-border gutter inset and removal
+  of the selected-row blue pseudo-element, preserving background/focus/keyboard.
+  Original patch SHA-256: 3c62abcc2f6bedad1b2c9da3a1b3d8255193645cf201237f2ee78135ec1a5ac2.
+- Excluded: unaccepted SelectInput proposal, application-specific radio styling,
+  old specialized Painter/Viewport/StockChart/FlatFile/Spectrum/Pivot extensions.
 
-The PropertyGrid patch insets category borders past the +/- gutter and compensates
-the triangle position; it removes only the selected-row blue pseudo-element marker.
-Selection background, focus, keyboard behavior and JS API are preserved.
-Its SHA-256 is 3c62abcc2f6bedad1b2c9da3a1b3d8255193645cf201237f2ee78135ec1a5ac2.
-All 47 approved Grid/TreeGrid file hashes and immutable imported provenance bytes
-are preserved. Candidate packageVersion alone advances to match the new package.
+Initial commit d03a9c0, harness fix 635df4a and rc.3 preparation/history remain.
+The immutable imported source-snapshot.json stays byte-for-byte unchanged.
+The rc.4 Grid candidate changes only the reviewed row-drag display text; the other
+46 reviewed source hashes and all imported hashes remain unchanged. No row move,
+selection, event, MIME or ownership behavior is changed by that presentation edit.
+Exact current hashes are in provenance/grid-candidate.json.
 
-Version 0.6.0-rc.3 identifies these changed artifacts without reusing released rc.2.
-No old tags/history are copied, moved or rewritten. MIT/OFL licenses and attribution
-are retained. Historical verification and release notes keep their original names,
-versions, links and exact evidence identities; they are not new migration results.
+## Current names and retained compatibility
 
-## Names and compatibility
+Canonical CSS import: taet-ui/taet-ui.css. The taet-ui/dense.css export and
+src/ui/dense.css file stay as forwarding aliases for installed consumers.
+The immutable imported manifest also records that original stylesheet filename.
+The dui-* classes, data-dui-* attributes and --dui-* tokens remain CSS/DOM contracts.
+Semantic compact/density options and ordinary English wording retain their meaning.
 
-Current documentation, package imports, examples, build profiles and portable assets
-use taet-ui; human-facing titles use Tæt UI. Canonical CSS is taet-ui/taet-ui.css.
-taet-ui/dense.css and src/ui/dense.css remain import aliases for CSS migration.
-JavaScript export names and constructor identity remain unchanged.
+Theme export writes format taet-ui-theme, version 1, and .taet-theme.json filenames.
+Import also accepts dense-ui-theme version 1 and the existing bare definitions.
+Older implementations do not understand the new format tag; backward reading is
+provided by the new implementation, not by rewriting already published packages.
 
-The dui-* classes, --dui-* tokens, semantic density values, denseUiDocs inspection global, denseThemeEditor demo
-host global, dense-ui.theme-editor.v1 local storage key, dense-ui-theme JSON format,
-application/x-dense-ui-grid-rows and application/x-dense-ui-tree-nodes MIME types
-remain compatibility contracts. Grid's legacy human-readable drag text also remains
-to preserve reviewed source bytes. Do not globally replace the word dense.
-Test runner configuration now uses TAET_UI_PORT/WORKERS/TEST_OUTPUT/TEST_SERVER.
-Portable bundles are taet-ui[.min].js/css (full/components/foundation).
+Preset storage reads taet-ui.theme-editor.v1 first and falls back to
+dense-ui.theme-editor.v1 only when the current key is absent. An empty current
+array is authoritative. No eager write occurs on mount. The next preset mutation
+writes the full collection to the current key, leaving the previous key untouched.
 
-## Excluded local material and publication
+Canonical documentation/example globals are taetUiDocs and taetThemeEditor.
+denseUiDocs and denseThemeEditor remain aliases to the same objects for existing
+inspection and documented host integrations. New examples/tests use current names.
 
-Only baseline tracked files were selected: no old .git, node_modules, dist, reports,
-private notes, caches, profiles, test artifacts or application implementations.
-Original folders, accepted-patch worktrees and existing consumers remain in place.
-The destination was empty immediately before copying.
+application/x-dense-ui-grid-rows and application/x-dense-ui-tree-nodes stay as
+cross-version drag MIME contracts. Their runtime strings and compatibility tests
+are intentional residuals; renaming them would require a separate protocol change.
+The plain-text row drag label is Tæt UI rows.
 
-The initial root private:true prevented accidental npm publication. The maintainer
-subsequently authorized a public repository, GitHub prerelease and npm taet-ui
-publication under next. Root publishConfig now selects public access/next; portable
-profile package.json files remain private. Read-only registry lookup does not
-reserve a name. No old repo visibility/tags or external consumers are changed.
-Native Tauri rebuild and non-Windows native acceptance are not implied by browser checks.
+## Boundaries
+
+Zero runtime dependencies, existing constructors, exports and maturity tiers remain.
+No external application, original source directory, historical tag or remote is edited.
+Only tracked framework inputs are packaged; generated dist/distribution, dependencies,
+reports, caches and private diagnostics remain out of Git. MIT/OFL attribution and
+third-party license text are retained. Native rebuilds and physical-input acceptance
+are separate from browser automation. See VERIFICATION.md for exact checked inputs.

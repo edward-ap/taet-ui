@@ -67,7 +67,7 @@ for (const theme of ['light-blue', 'dark-blue']) {
     await expect(button).not.toHaveAttribute('aria-invalid');
     await page.mouse.move(600, 400);
     await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    await page.screenshot({ path: join(tmpdir(), `dense-toggle-icon-button-${theme}.png`) });
+    await page.screenshot({ path: join(tmpdir(), `taet-toggle-icon-button-${theme}.png`) });
     await page.evaluate(() => window.toggleAction.destroy());
     await expect(page.locator('#root')).toBeEmpty();
   });
@@ -150,7 +150,7 @@ for (const theme of ['light-blue', 'dark-blue']) {
     await expect(next).toBeDisabled();
     await previous.click();
     await expect(input).toHaveValue('179');
-    await page.screenshot({ path: join(tmpdir(), `dense-icon-button-${theme}.png`) });
+    await page.screenshot({ path: join(tmpdir(), `taet-icon-button-${theme}.png`) });
     await page.evaluate(() => window.navigatorForm.destroy());
     await expect(page.locator('#root')).toBeEmpty();
   });

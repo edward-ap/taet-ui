@@ -5,7 +5,7 @@ trimmed from the Windows acceptance stand; it does not ship that stand's EXE,
 profiles, reports, fixture data, test harness or copied Tæt UI implementation.
 
 **Windows build/run smoke verified (2026-11-01).** This trimmed source was built
-as a separate consumer with historical Dense UI 0.6.0-rc.1 assets from commit
+as a separate consumer with historical pre-rename 0.6.0-rc.1 assets from commit
 18c65890435e1bae97af262a20ced705e0e49e4f and run in standalone WebView2
 156.0.4314.58 on Windows 11. Local JS/CSS/Noto loading, bounded Rust echo and
 programmatic Form input/button handling passed. These are this example's own

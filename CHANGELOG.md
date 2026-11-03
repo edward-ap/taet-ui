@@ -1,17 +1,26 @@
 # Tæt UI changes
 
+## 0.6.0-rc.4 - unpublished local candidate, 2026-11-03
+
+- Clean current branding, remove the private historical CI link and update local benchmark/demo identifiers.
+- Export taet-ui-theme v1 files as .taet-theme.json; keep importing the previous v1 format and bare definitions.
+- Prefer taet-ui.theme-editor.v1 storage, fall back to the previous key and write only the current key; opening an editor does not migrate or erase stored data.
+- Expose taetUiDocs and taetThemeEditor while retaining existing host aliases; preserve CSS selectors, CSS imports and cross-version drag MIME contracts.
+- Rename the row-drag plain-text label to Tæt UI rows without changing reorder behavior.
+- Published rc.3 packages, release assets and source history remain unchanged. This candidate is local only.
+
 ## 0.6.0-rc.3 — local migration, 2026-11-03
 
 - Rename display branding to Tæt UI, package/imports/assets to taet-ui.
 - Preserve the released rc.2 framework scope and zero runtime dependencies.
 - Integrate the accepted PropertyGrid gutter-border and selection-marker CSS patch.
 - Retain legacy CSS selectors, tokens, drag/theme formats and the dense.css alias.
-- Start new history, preserving the original Dense UI folders/tags and provenance.
+- Start new history, preserving the original project folders/tags and provenance.
 - Use owned Node HTTP fixtures for browser gates; retain all assertions.
 - Add classic TaetUI IIFE delivery alongside ESM, with minified variants and portable ZIP examples/checksums.
 - Prepare public npm metadata and the next preview channel; publication outcomes are verified separately. See docs/TAET_MIGRATION.md.
 
-The following Dense UI changelog is historical and keeps released identities.
+The following pre-rename changelog is historical and keeps exact released versions.
 
 # Changelog
 

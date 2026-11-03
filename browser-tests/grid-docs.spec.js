@@ -215,7 +215,7 @@ test("Lazy Loading has its own page and requests only one 50-row batch", async (
   await expect(batch).toHaveText("Batch 1 / 200 · 50 rows in memory · 10000 total");
   expect(await page.evaluate(() => {
     const find = control => control.id === "lazyGrid" ? control : (control.getItems?.() ?? []).map(find).find(Boolean);
-    const grid = find(window.denseUiDocs.shell);
+    const grid = find(window.taetUiDocs.shell);
     window.lazyLoadAudit = { grid, requests: [] };
     grid.dataProvider.events.on("loading", event => lazyLoadAudit.requests.push(event.request.page));
     return grid.data.all().length;

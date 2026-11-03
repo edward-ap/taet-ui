@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 const live = page => page.locator(".dui-example-host__live");
 const output = page => page.locator(".dui-example-host__output");
 async function navigate(page, id) {
-  await page.evaluate(id => window.denseUiDocs.shell.navigate(id), id);
+  await page.evaluate(id => window.taetUiDocs.shell.navigate(id), id);
 }
 
 test("new input and display examples update values and text in both themes", async ({ page }) => {

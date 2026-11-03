@@ -9,7 +9,7 @@ an error until an adapter is supplied. They never report simulated success.
 After the editor is ready, the embedding app calls the editor window API:
 
 ```js
-const disconnect = editorWindow.denseThemeEditor.connectHost({
+const disconnect = editorWindow.taetThemeEditor.connectHost({
   async getPresetDirectory({ signal }) {
     // Return an opaque directory identifier/handle, or null to cancel.
     return await app.getThemeFolder({ signal });
@@ -74,7 +74,7 @@ name appears centered between Delete and Apply in the toolbar. A Light/Dark Swit
 lives at the right of the lower configuration row under Theme; it edits foundation
 without replacing the base color or distribution.
 
-`editorWindow.denseThemeEditor.getPresets()` returns a detached snapshot of the
+`editorWindow.taetThemeEditor.getPresets()` returns a detached snapshot of the
 available built-in and locally saved records, including `id`, `name`, `definition`
 and recovery `readOnly` flags. The host Explorer may include these alongside files.
 Opening a protected name selects its immutable canonical definition; it never

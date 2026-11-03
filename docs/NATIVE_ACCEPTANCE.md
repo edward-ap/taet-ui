@@ -1,6 +1,6 @@
 # Native host acceptance
 
-A Windows Tauri acceptance stand used Dense UI 0.6.0-rc.1 from commit
+A Windows Tauri acceptance stand used the pre-rename 0.6.0-rc.1 release from commit
 18c65890435e1bae97af262a20ced705e0e49e4f. It embedded one components profile,
 matching CSS, local Noto Sans and notices, with no frontend framework or CDN.
 
@@ -14,7 +14,7 @@ window probe is deliberately unavailable there.
 The author additionally reported real Grid Move and Tree Move fixture operations.
 That bounded observation does not certify the complete keyboard/mouse/IME matrix.
 The large acceptance stand, EXE, local profiles and raw diagnostic reports are not
-the small public example or a required runtime dependency of Dense UI.
+the small public example or a required runtime dependency of this toolkit.
 
 Still unverified: actual IME composition; complete physical keyboard/pointer flow;
 screen readers; mixed-monitor DPI; native file dialogs/clipboard; other WebView hosts.

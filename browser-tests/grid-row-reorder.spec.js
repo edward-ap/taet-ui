@@ -20,7 +20,7 @@ test('filtered drag retains hidden records; sorting disables handles',async({pag
 });
 test('data change during drag cancels it and Escape removes target markers',async({page})=>{
  await setup(page);const data=await page.evaluateHandle(()=>new DataTransfer());
- await handle(page,0).dispatchEvent('dragstart',{dataTransfer:data});await row(page,3).dispatchEvent('dragover',{dataTransfer:data,clientY:0});
+ await handle(page,0).dispatchEvent('dragstart',{dataTransfer:data});expect(await data.evaluate(value=>value.getData('text/plain'))).toBe('Tæt UI rows');await row(page,3).dispatchEvent('dragover',{dataTransfer:data,clientY:0});
  await expect(page.locator('.dui-grid__row--drop-before')).toHaveCount(1);await page.keyboard.press('Escape');await expect(page.locator('.dui-grid__row--drop-before')).toHaveCount(0);
  await handle(page,0).dispatchEvent('dragstart',{dataTransfer:data});await page.evaluate(()=>g.data.update(0,{value:99}));
  await row(page,3).dispatchEvent('drop',{dataTransfer:data,clientY:0});expect(await ids(page)).toEqual([0,1,2,3,4,5]);await data.dispose();

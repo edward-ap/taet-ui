@@ -193,7 +193,7 @@ test('Preview fills available height without an outer scrollbar and scrolls real
 });
 
 async function openLocal(page,name){
- await page.evaluate(name=>window.denseThemeEditor.connectHost({getPresetDirectory:async()=> 'local',openPresetExplorer:async()=>window.denseThemeEditor.getPresets().find(p=>p.name===name)}),name);
+ await page.evaluate(name=>window.taetThemeEditor.connectHost({getPresetDirectory:async()=> 'local',openPresetExplorer:async()=>window.taetThemeEditor.getPresets().find(p=>p.name===name)}),name);
  await page.getByRole('toolbar',{name:'Preset actions'}).getByRole('button',{name:'Open',exact:true}).click();
  await expect(page.locator('#preset-current')).toHaveText(name);
 }

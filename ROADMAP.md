@@ -1,6 +1,6 @@
 # Roadmap
 
-0.6.0-rc.3: foundation/shared-mechanics local candidate.
+0.6.0-rc.4: foundation/shared-mechanics local candidate.
 
 - Complete actual unit/types/package/build/browser gates and native support scope.
 - Preserve Form mutations, terminal ownership, callback lifetime and silent sync.

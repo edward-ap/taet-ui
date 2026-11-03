@@ -1,6 +1,6 @@
 # API maturity
 
-0.6.0-rc.3 preserves the stable root and experimental status of retained APIs.
+0.6.0-rc.4 preserves the stable root and experimental status of retained APIs.
 Tier does not promote maturity: [TIERS](TIERS.md).
 Grid/TreeGrid remain experimental. Approved common-contract changes are recorded
 in the candidate manifest; maturity and tier boundaries are unchanged.

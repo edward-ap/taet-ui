@@ -84,9 +84,9 @@ export const treeListPage = {
     owner.add(actions, tree);
     tree.data.parse([
       { id: "projects", parentId: null, text: "Projects" },
-      { id: "dense", parentId: "projects", text: "Tæt UI" },
-      { id: "components", parentId: "dense", text: "Components" },
-      { id: "docs", parentId: "dense", text: "Documentation" },
+      { id: "taet", parentId: "projects", text: "Tæt UI" },
+      { id: "components", parentId: "taet", text: "Components" },
+      { id: "docs", parentId: "taet", text: "Documentation" },
       { id: "archive", parentId: null, text: "Archive" },
       { id: "previous", parentId: "archive", text: "Previous releases" }
     ], { origin: "import" });

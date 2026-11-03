@@ -104,7 +104,7 @@ test("DialogBox validates content, returns results, restores focus and closes on
   await page.getByRole("button", { name: "Dark", exact: true }).click();
   await opener.click();
   await expect(dialog).toBeVisible();
-  await page.evaluate(() => window.denseUiDocs.shell.navigate("menu"));
+  await page.evaluate(() => window.taetUiDocs.shell.navigate("menu"));
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".dui-overlay-backdrop")).toHaveCount(0);
   expect(errors).toEqual([]);

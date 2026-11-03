@@ -11,7 +11,7 @@ test('toolbar manages local presets with dialogs, protection and portable files'
  await page.getByRole('slider',{name:'Base hue',exact:true}).fill('80');
  await command(page,'Save').click();await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
  await command(page,'Save').click();await page.getByRole('dialog').getByRole('button',{name:'OK',exact:true}).click();await expect(page.getByRole('status')).toContainText('Preset saved locally.');
- const download=page.waitForEvent('download');await command(page,'Export').click();const file=await download;const text=await readFile(await file.path(),'utf8');expect(JSON.parse(text)).toMatchObject({format:'dense-ui-theme',version:1,name:'Ocean draft'});
+ const download=page.waitForEvent('download');await command(page,'Export').click();const file=await download;expect(file.suggestedFilename()).toBe('Ocean-draft.taet-theme.json');const text=await readFile(await file.path(),'utf8');expect(JSON.parse(text)).toMatchObject({format:'taet-ui-theme',version:1,name:'Ocean draft'});
  await page.locator('#preset-toolbar input[type=file]').setInputFiles({name:'theme.json',mimeType:'application/json',buffer:Buffer.from(text)});await nameDialog(page,'Imported ocean');
  await command(page,'Delete').click();await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();await expect(command(page,'Delete')).toBeEnabled();
  await command(page,'Delete').click();await page.getByRole('dialog').getByRole('button',{name:'OK',exact:true}).click();await expect(command(page,'Delete')).toBeDisabled();
@@ -20,7 +20,7 @@ test('toolbar manages local presets with dialogs, protection and portable files'
 });
 test('host stub reports missing connection and adapter receives explorer and apply requests',async({page})=>{
  await ready(page);await command(page,'Open').click();await expect(page.getByRole('alert')).toContainText('Host API not connected: getPresetDirectory');
- await page.evaluate(async()=>{const {presets}=await import('/examples/theme-editor/theme-presets.js');window.calls=[];window.denseThemeEditor.connectHost({
+ await page.evaluate(async()=>{const {presets}=await import('/examples/theme-editor/theme-presets.js');window.calls=[];window.taetThemeEditor.connectHost({
  getPresetDirectory:async()=>{calls.push('directory');return 'presets-folder';},
  openPresetExplorer:async({directory,purpose})=>{calls.push({directory,purpose});return {name:'Host palette',definition:structuredClone(presets[3].definition)};},
  applyPreset:async({preset,theme})=>{calls.push({applied:preset.name,token:theme.tokens['--dui-window-header-bg']});}
@@ -31,7 +31,7 @@ test('host stub reports missing connection and adapter receives explorer and app
 });
 
 async function openLocal(page,name){
- await page.evaluate(name=>window.denseThemeEditor.connectHost({getPresetDirectory:async()=> 'local',openPresetExplorer:async()=>window.denseThemeEditor.getPresets().find(p=>p.name===name)}),name);
+ await page.evaluate(name=>window.taetThemeEditor.connectHost({getPresetDirectory:async()=> 'local',openPresetExplorer:async()=>window.taetThemeEditor.getPresets().find(p=>p.name===name)}),name);
  await page.getByRole('toolbar',{name:'Preset actions'}).getByRole('button',{name:'Open',exact:true}).click();
  await expect(page.locator('#preset-current')).toHaveText(name);
 }

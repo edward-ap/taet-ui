@@ -4,7 +4,7 @@ Compact desktop UI controls for embedded WebViews. Build screens with live
 JavaScript objects, explicit ownership, events, commands and data models.
 No JSX, virtual DOM, runtime npm dependencies or CDN.
 
-**0.6.0-rc.3 is a pre-1.0 preview.** Grid/TreeGrid and Advanced remain experimental.
+**0.6.0-rc.4 is an unpublished local pre-1.0 candidate; published rc.3 artifacts remain unchanged.** Grid/TreeGrid and Advanced remain experimental.
 Source packages and standalone WebView ZIPs are separate delivery choices.
 The npm preview channel uses `next`: `npm install taet-ui@next`; publication
 status is recorded in the matching GitHub prerelease notes.
@@ -86,12 +86,12 @@ export function destroy() { screen.destroy(); } // Host calls this when closing.
 ```
 
 A source-only [minimal Tauri host](examples/tauri-minimal/README.md) demonstrates
-a compact Form and bounded Rust echo. Its historical Dense UI Windows smoke passed
+a compact Form and bounded Rust echo. Its historical pre-rename Windows smoke passed
 7/7 programmatic checks. A renamed Tæt UI native rebuild, physical input and other OSes remain unverified.
 
 For TypeScript or resolver-based apps, `npm pack --pack-destination ..` creates
-the local `taet-ui-0.6.0-rc.3.tgz`. Install that file in your app with
-`npm install ../taet-ui-0.6.0-rc.3.tgz`. Bare package names need a resolver or
+the local `taet-ui-0.6.0-rc.4.tgz`. Install that file in your app with
+`npm install ../taet-ui-0.6.0-rc.4.tgz`. Bare package names need a resolver or
 browser import map; installing a tarball does not create native browser URLs.
 
 | Import | Scope |
@@ -109,7 +109,7 @@ screen, read [mutation/ownership examples](docs/MUTATIONS.md).
 ## Preview limits
 
 Current migration checks are recorded in [verification](docs/VERIFICATION.md).
-Earlier Dense UI results identify their original inputs and are historical evidence.
+Earlier pre-rename results identify their original inputs and are historical evidence.
 
 Recorded checks include Windows browser automation and a separate Windows
 Tauri/WebView2 acceptance stand. Programmatic/synthetic input is distinguished

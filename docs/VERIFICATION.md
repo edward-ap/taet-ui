@@ -1,3 +1,63 @@
+# rc.4 local branding and compatibility verification - 2026-11-03
+
+0.6.0-rc.4 is an unpublished local candidate based on
+ab75c464ed300a8680e7081b94db3744b78c4dfd. No push, registry publication,
+release edit or external application change is part of this cleanup. Published
+rc.3 and its six original local release assets are preserved; old local outer
+manifests are retained under ignored distribution/rc.3-publication/.
+
+Current branding, notices, the row-drag label, export filenames and local benchmark
+identifiers use the current project name. The broken private historical CI link is
+removed. Exact old versions/commits still identify historical native evidence;
+none is relabeled as a newly executed native test.
+
+Theme export writes taet-ui-theme v1 and .taet-theme.json. Import retains the
+previous v1 tag and bare definitions. Storage reads the current key first, falls
+back only when it is absent, writes the current key on mutation and never eagerly
+rewrites the previous key. Canonical globals retain their old host aliases.
+See [compatibility decisions](TAET_MIGRATION.md) for retained CSS/MIME/storage
+names and one-way backward reading of saved files.
+
+Reviewed Grid change: only the plain-text row drag label. New
+GridRowReorderController.js SHA-256:
+83b559b6e08b7413033402e734df54a41748b6ba9a957b11b1debd230dcfd75b.
+The other 46 candidate source hashes, all imported hashes and immutable
+source-snapshot.json bytes are unchanged. MIT/OFL/font bytes are preserved;
+notices change only this project's descriptive name.
+
+| Check on the rc.4 working tree | Result |
+| --- | --- |
+| New compatibility and row-drag targeted cases | 13/13 passed |
+| npm run test:all, including npm test | Passed: syntax 541, API/boundaries, 695/695 units, full Chromium 728/728 |
+| Installed source-package consumers | Strict TypeScript/JSDoc, NodeNext + Bundler and browser recipes passed; 476 bindings across entries |
+| Standard Firefox compatibility, port 5893, one worker | 473/473 passed |
+| Standard WebKit compatibility, port 5894, one worker | 473/473 passed |
+| npm run test:bundle | 42/42 across Chromium/Firefox/WebKit; readable/minified ESM/IIFE and bundled font |
+| Isolated pre-commit ZIP consumers | 18/18: three profiles, two formats, three engines; live input/action, font and teardown; blocked external requests |
+| Preview ZIP manifests/contents | 22 entries/profile; content hashes, relative maps, required assets/licenses/examples and secret-pattern checks passed |
+| Pre-report npm pack inspection | 496 tracked entries byte-matched; zero runtime dependencies; source/types/CSS/font exports preserved |
+| Scope check | One Grid presentation string; other candidate hashes, license/font bytes and six original local rc.3 release assets preserved |
+| Source/artifact legacy-name scan | 39 source matches: 24 compatibility/test/documentation and 15 ordinary English; no obsolete product branding or old HTTP link |
+| ZIP residuals including source maps | full 32, components 16, foundation 0; only retained MIME and backward theme/storage strings |
+
+Full Chromium used two workers, Firefox and Windows WebKit one each, on isolated
+ports/outputs. This retains the existing Windows resource mitigation and WebKit
+cap; assertions and global timeouts are unchanged. Compatibility now additionally
+includes the new migration cases and existing row-reorder regressions.
+
+Build input content SHA-256: 91a1636bc57547a47b51a3f8d9e57916865eaeec96c4c5109d149f5cf139894a.
+These checks identify the pre-commit rc.4 working-tree content, not the older base
+commit. Final archives must be regenerated from the clean local commit with
+--release and their exact revision recorded in PROVENANCE.json. Repack after this
+verification-record update so the tarball contains the current documentation.
+
+Remaining boundaries: no native Tauri/WebView2 rebuild, physical input/IME,
+screen-reader, mixed-monitor or non-Windows native acceptance was rerun. Existing
+applications and optional licensed-vendor benchmarks were not modified or run.
+Ignored old reports/caches and preserved rc.3/history are not new release inputs.
+
+---
+
 # Publication destination correction — 2026-11-03
 
 The maintainer's final destination is **edward-ap/taet-ui**, matching npm taet-ui.
@@ -16,7 +76,7 @@ Initial local commit d03a9c065a16ffe9bf2240fffc4dc1ecc54ec587 is preserved.
 Harness fix 635df4a57ec713b3a5cc8963b0b3b9e4c46bc005 is a separate commit.
 The maintainer subsequently authorized the public edward-ap/taet-ui repository,
 GitHub prerelease/distribution and npm taet-ui publication under next. The new
-repository was created public; the old dense-ui repository stayed private and
+repository was created public; the original project repository stayed private and
 its v0.6.0-rc.2 tag still targets 1e51bdc8baa99130954206b0aff6367b0764e9d6.
 Remote release/CI and npm registry outcomes are recorded separately in release
 notes; local checks below do not themselves claim either publication succeeded.
@@ -79,14 +139,14 @@ rejects stale build input digests and --release requires a clean commit. Final
 archive provenance identifies the exact release commit. Maps contain public code.
 
 No new native Tauri/WebView2, physical IME/screen-reader or mixed-monitor acceptance
-was performed. Historical native evidence below keeps its original Dense UI
+was performed. Historical native evidence below keeps its original pre-rename
 identities. The new browser/distribution results do not certify native hosts.
 
 ---
 
 # Tæt UI migration verification — 2026-11-03
 
-These are new local checks of taet-ui 0.6.0-rc.3, based on released Dense UI
+These are new local checks of taet-ui 0.6.0-rc.3, based on the pre-rename release
 1e51bdc8baa99130954206b0aff6367b0764e9d6 plus the accepted PropertyGrid CSS patch.
 See [migration inventory and naming decisions](TAET_MIGRATION.md). Historical
 results below retain their original identities and are not new Tæt UI evidence.
@@ -191,7 +251,7 @@ The intended future repository is edward-ap/taet-ui, requiring a separate action
 
 ---
 
-# Historical Dense UI verification (original identities preserved)
+# Historical pre-rename verification (exact versions preserved)
 
 # Verification scope
 
@@ -206,7 +266,7 @@ fonts and the reviewed Grid file hashes are unchanged from that input. Final
 release checks and CI run again on the resulting release commit. Results below
 identify the feedback base and are not silently transferred to another SHA.
 
-[CI run 41375177487](https://github.com/edward-ap/dense-ui/actions/runs/41375177487)
+Archived pre-rename CI run 41375177487 (private repository; not a public validation link)
 completed successfully on that exact feedback SHA, first attempt, all six jobs:
 
 - 692 unit tests; full Chromium 719/719 in each Windows/Linux Node22/24 job.
