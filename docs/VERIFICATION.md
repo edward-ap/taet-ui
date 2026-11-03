@@ -1,8 +1,20 @@
+# Publication destination correction — 2026-11-03
+
+The maintainer's final destination is **edward-ap/taet-ui**, matching npm taet-ui.
+The earlier edward-ap/taet repository was created before that correction. It was
+confirmed empty (no branches, commits, releases or assets); no code was pushed.
+It is left untouched and is not a publication destination. All current origin,
+package metadata, release links and archive provenance use edward-ap/taet-ui.
+Initial d03a9c0, harness fix 635df4a and preparation 34d29b8 remain in local history;
+the correction is a follow-up commit, with no amend/rewrite.
+
+---
+
 # rc.3 publication preparation and standard Firefox gate — 2026-11-03
 
 Initial local commit d03a9c065a16ffe9bf2240fffc4dc1ecc54ec587 is preserved.
 Harness fix 635df4a57ec713b3a5cc8963b0b3b9e4c46bc005 is a separate commit.
-The maintainer subsequently authorized the public edward-ap/taet repository,
+The maintainer subsequently authorized the public edward-ap/taet-ui repository,
 GitHub prerelease/distribution and npm taet-ui publication under next. The new
 repository was created public; the old dense-ui repository stayed private and
 its v0.6.0-rc.2 tag still targets 1e51bdc8baa99130954206b0aff6367b0764e9d6.
@@ -175,7 +187,7 @@ That means no package document was found at that time; it is not a reservation,
 ownership guarantee or publication permission. No unknown taet-ui package was
 installed. private:true is retained; no npm publish/register action occurred.
 No origin, remote repository, push, visibility change or release was created.
-The intended future repository is edward-ap/taet, requiring a separate action.
+The intended future repository is edward-ap/taet-ui, requiring a separate action.
 
 ---
 

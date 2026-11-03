@@ -10,7 +10,7 @@ The npm preview channel uses `next`: `npm install taet-ui@next`; publication
 status is recorded in the matching GitHub prerelease notes.
 
 Display name: **Tæt UI**. Package and technical names: **taet-ui**.
-Repository: [edward-ap/taet](https://github.com/edward-ap/taet).
+Repository: [edward-ap/taet-ui](https://github.com/edward-ap/taet-ui).
 See the [migration inventory](docs/TAET_MIGRATION.md) and [verification](docs/VERIFICATION.md).
 
 ## Standalone WebView distribution

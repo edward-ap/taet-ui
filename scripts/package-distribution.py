@@ -49,7 +49,7 @@ for profile, meta in report['profiles'].items():
       'Do not mix profiles/formats in one document. Full retains experimental APIs.\n'
       'No Node, Python, npm or network dependency is required in the packaged application.\n'
       'ES2022 is a syntax target, not API polyfills. Source maps embed public framework source.\n'
-      f'Source repository: https://github.com/edward-ap/taet\n'
+      f'Source repository: https://github.com/edward-ap/taet-ui\n'
       f'Git revision/state: {report["source"]["git"]}\n'
       f'Source content SHA-256: {report["source"]["contentSha256"]}\n').encode('utf-8')
     manifest = {'schemaVersion':1,'package':'taet-ui','version':version,'profile':profile,

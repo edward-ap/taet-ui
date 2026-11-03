@@ -116,11 +116,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/edward-ap/taet.git"
+    "url": "https://github.com/edward-ap/taet-ui.git"
   },
-  "homepage": "https://github.com/edward-ap/taet#readme",
+  "homepage": "https://github.com/edward-ap/taet-ui#readme",
   "bugs": {
-    "url": "https://github.com/edward-ap/taet/issues"
+    "url": "https://github.com/edward-ap/taet-ui/issues"
   },
   "publishConfig": {
     "access": "public",

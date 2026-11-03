@@ -1,7 +1,7 @@
 # Tæt UI local migration
 
 Display name: Tæt UI. Technical/package name: taet-ui. GitHub repository:
-edward-ap/taet (https://github.com/edward-ap/taet), created public after explicit
+edward-ap/taet-ui (https://github.com/edward-ap/taet-ui), created public after explicit
 maintainer authorization on 2026-11-03. Initial commit d03a9c0 was local-only; it
 is preserved. A separate harness fix and release-preparation changes follow it.
 GitHub release/CI and npm publication outcomes are verified separately.
