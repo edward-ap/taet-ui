@@ -18,6 +18,7 @@ Never replace files under an already published tag/version with different bytes.
 A release identifies its exact Git commit and asset hashes. Validate the final
 candidate after all source/documentation edits, not only its previous runtime build.
 
-The current package keeps private:true: GitHub source/pre-release publication and
-npm registry publication are separate decisions. No npm registry availability is
-implied by a GitHub release or local tarball.
+The initial migration kept private:true. Explicit maintainer authorization now
+prepares rc.3 for public npm publication with publishConfig.tag=next, alongside a
+GitHub prerelease. These remain separate outcomes: confirm registry availability
+and remote release assets independently; a local tarball is not publication.

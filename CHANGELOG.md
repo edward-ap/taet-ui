@@ -6,7 +6,10 @@
 - Preserve the released rc.2 framework scope and zero runtime dependencies.
 - Integrate the accepted PropertyGrid gutter-border and selection-marker CSS patch.
 - Retain legacy CSS selectors, tokens, drag/theme formats and the dense.css alias.
-- Start new local history; no remote or npm publication. See docs/TAET_MIGRATION.md.
+- Start new history, preserving the original Dense UI folders/tags and provenance.
+- Use owned Node HTTP fixtures for browser gates; retain all assertions.
+- Add classic TaetUI IIFE delivery alongside ESM, with minified variants and portable ZIP examples/checksums.
+- Prepare public npm metadata and the next preview channel; publication outcomes are verified separately. See docs/TAET_MIGRATION.md.
 
 The following Dense UI changelog is historical and keeps released identities.
 

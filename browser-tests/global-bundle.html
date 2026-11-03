@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>Global bundle fixture</title>
+<link rel="icon" href="data:,"><body class="dui-page dui-theme-light-blue"><main id="root"></main>
+<script>
+const params=new URLSearchParams(location.search),profile=params.get('profile')||'full',min=params.get('min')==='1';
+const prefix=profile==='full'?'/dist/':'/dist/'+profile+'/';
+const css=document.createElement('link');css.rel='stylesheet';css.href=prefix+'taet-ui'+(min?'.min':'')+'.css';document.head.append(css);
+const js=document.createElement('script');js.src=prefix+'taet-ui.global'+(min?'.min':'')+'.js';
+js.onload=async()=>{try{
+ const api=window.TaetUI,report=await (await fetch('/dist/size-report.json')).json();
+ if(JSON.stringify(Object.keys(api).sort())!==JSON.stringify(report.profiles[profile].exports.slice().sort()))throw Error('Global exports differ');
+ const data=new api.DataStore();data.parse([{id:1,text:'Tæt UI'}]);if(data.all().length!==1)throw Error('Model failed');data.destroy();
+ if(profile!=='foundation'){
+  const input=new api.TextInput({name:'name',label:'Name',value:'Ada'}),form=new api.Form().row(input);
+  const screen=new api.Panel('#root').add(form);form.value.set({name:'Tæt UI'});
+  if(form.value.get().name!=='Tæt UI')throw Error('Form failed');screen.destroy();
+ }
+ window.globalBundleResult={profile,min,exports:Object.keys(api).length};
+}catch(e){window.globalBundleError=e.message;}};
+js.onerror=()=>window.globalBundleError='Global bundle failed to load';document.head.append(js);
+</script>

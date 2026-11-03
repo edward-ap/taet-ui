@@ -1,9 +1,10 @@
 # Tæt UI local migration
 
-Display name: Tæt UI. Technical/package name: taet-ui. Intended future GitHub
-repository: edward-ap/taet (https://github.com/edward-ap/taet), not taet-ui.
-No remote is configured and no remote existence, CI run, or npm publication is claimed.
-Package metadata omits remote links until that destination is confirmed.
+Display name: Tæt UI. Technical/package name: taet-ui. GitHub repository:
+edward-ap/taet (https://github.com/edward-ap/taet), created public after explicit
+maintainer authorization on 2026-11-03. Initial commit d03a9c0 was local-only; it
+is preserved. A separate harness fix and release-preparation changes follow it.
+GitHub release/CI and npm publication outcomes are verified separately.
 
 ## Source inventory and choice
 
@@ -51,8 +52,9 @@ private notes, caches, profiles, test artifacts or application implementations.
 Original folders, accepted-patch worktrees and existing consumers remain in place.
 The destination was empty immediately before copying.
 
-private:true deliberately prevents accidental npm publication. Read-only registry
-lookup is recorded in VERIFICATION.md; lookup does not reserve the name.
-Remote creation, origin configuration, push, visibility and publication require a
-separate maintainer action. Native Tauri rebuild and non-Windows native acceptance
-are not implied by browser checks.
+The initial root private:true prevented accidental npm publication. The maintainer
+subsequently authorized a public repository, GitHub prerelease and npm taet-ui
+publication under next. Root publishConfig now selects public access/next; portable
+profile package.json files remain private. Read-only registry lookup does not
+reserve a name. No old repo visibility/tags or external consumers are changed.
+Native Tauri rebuild and non-Windows native acceptance are not implied by browser checks.

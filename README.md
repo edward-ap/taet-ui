@@ -5,11 +5,36 @@ JavaScript objects, explicit ownership, events, commands and data models.
 No JSX, virtual DOM, runtime npm dependencies or CDN.
 
 **0.6.0-rc.3 is a pre-1.0 preview.** Grid/TreeGrid and Advanced remain experimental.
-This is a source/portable delivery; the package is not published to npm.
+Source packages and standalone WebView ZIPs are separate delivery choices.
+The npm preview channel uses `next`: `npm install taet-ui@next`; publication
+status is recorded in the matching GitHub prerelease notes.
 
 Display name: **Tæt UI**. Package and technical names: **taet-ui**.
-This local migration is prepared for the future repository `edward-ap/taet`;
-that remote has not been created or configured. See [migration](docs/TAET_MIGRATION.md).
+Repository: [edward-ap/taet](https://github.com/edward-ap/taet).
+See the [migration inventory](docs/TAET_MIGRATION.md) and [verification](docs/VERIFICATION.md).
+
+## Standalone WebView distribution
+
+`npm run distribution` builds/minifies the library and produces versioned ZIPs in
+ignored `distribution/`. Release builds use `npm run distribution -- --release`
+from a clean commit. GitHub prerelease assets include one ZIP for each profile:
+full, components and foundation. Each contains matching CSS/fonts/licenses,
+readable/minified ESM and classic IIFE JavaScript, examples, provenance and SHA-256.
+Use one profile and one JS format in each document. Classic scripts expose `TaetUI`;
+ESM files export named bindings. Both target ES2022 without API polyfills.
+
+Each ZIP has a working `index.html` (classic IIFE) and `example-esm.html`. Serve
+through a WebView origin or HTTP; local-file access depends on host policy.
+Node/Python/npm are build/preview tools, not packaged-application dependencies.
+Generated ZIPs and `dist/` stay out of Git. The npm package delivers typed ESM
+source and CSS/font assets for resolver/bundler consumers.
+
+```js
+// Browser application with a resolver/bundler and its CSS loader:
+import {Panel, Form, TextInput, Button} from 'taet-ui';
+import 'taet-ui/taet-ui.css';
+```
+
 
 ## Try it
 

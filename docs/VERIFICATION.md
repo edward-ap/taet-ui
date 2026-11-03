@@ -1,3 +1,77 @@
+# rc.3 publication preparation and standard Firefox gate — 2026-11-03
+
+Initial local commit d03a9c065a16ffe9bf2240fffc4dc1ecc54ec587 is preserved.
+Harness fix 635df4a57ec713b3a5cc8963b0b3b9e4c46bc005 is a separate commit.
+The maintainer subsequently authorized the public edward-ap/taet repository,
+GitHub prerelease/distribution and npm taet-ui publication under next. The new
+repository was created public; the old dense-ui repository stayed private and
+its v0.6.0-rc.2 tag still targets 1e51bdc8baa99130954206b0aff6367b0764e9d6.
+Remote release/CI and npm registry outcomes are recorded separately in release
+notes; local checks below do not themselves claim either publication succeeded.
+
+## Harness evidence and bounded resolution
+
+The saved Python-runner failures record NS_ERROR_NET_PARTIAL_TRANSFER on three
+different unchanged module files. Firefox uses this code for incomplete HTTP
+response framing ([Mozilla implementation](https://searchfox.org/firefox-main/source/netwerk/protocol/http/nsHttpTransaction.cpp));
+the error alone does not identify the server, client or OS trigger.
+Failures occurred with a one-worker repeat too, so concurrent browser load is not
+necessary for the observed symptom. No readiness or wrong-root cause was proved.
+
+A bounded instrumented reproduction used the unchanged Python request handler:
+400 fresh Firefox contexts loaded the complete module graph, 82,001 responses
+were recorded, all announced/sent byte counts matched and no client import failed.
+Reset exceptions occurred while reading the next request after contexts closed;
+no truncated-body record was observed. This probe did NOT establish a root cause.
+Raw diagnostics remain outside source/package/distribution history.
+
+The automated harness now uses Node's built-in loopback HTTP server, already a
+required test tool. Resources are read into Buffers; Content-Length describes
+those exact bytes. The runner checks the serving child PID, consumes its readiness
+response and retains fixture stderr for failures. An occupied-port regression
+proves an unrelated listener is not used or stopped. Python dev/docs commands
+remain available. No runtime UI, assertions, global timeout, worker budget or
+browser/OS security settings changed. This is an operational harness resolution,
+not a claim that the original Python/Firefox transport trigger was repaired.
+
+| Check on the final harness/release formats | Result |
+| --- | --- |
+| Standard Firefox compatibility runner, one worker, port 5873 | 462/462 passed, 14.0 minutes |
+| Three originally interrupted cases, ten repeats through standard runner | 30/30 passed |
+| Exact byte/HEAD/concurrent transfer and occupied-port regressions | 2/2 passed |
+| npm test after public package metadata/formats | Passed: 694 units, syntax/API/boundaries, strict installed TS/JS consumers; 476 bindings across entries |
+| Final complete unit run, including provenance regression | 695/695 passed; ignored Python bytecode cannot change the source digest; changing a real build input does |
+| ESM/IIFE readable/minified exports, ownership and fonts | 42/42 across Chromium, Firefox and WebKit |
+| Isolated extracted ZIPs | 18/18 across three profiles, two JS formats and three engines; live Form input/action, models, fonts and teardown; no source/network access |
+| ZIP content/checksums | 22 members per profile; inner manifest/SHA-256 and outer ZIP hashes verified; no caches, credentials, executables or machine-specific map paths |
+
+The source-provenance walker now excludes ignored __pycache__/*.pyc files.
+Local diagnostic imports/compile checks had exposed those caches as volatile
+hash inputs; no cache bytes were in Git or packaged assets. A regression proves
+real source changes remain detected. The approved 47 Grid hashes and immutable
+imported manifest are still checked independently and were not regenerated.
+
+## Publication artifacts and boundaries
+
+The npm root has public repository/homepage/issues metadata, typed ESM entries,
+canonical/legacy CSS exports, local fonts and zero runtime dependencies. Explicit
+publishConfig selects public access and next, not latest. Portable dist profile
+metadata stays private; it is omitted from ZIPs. Registry authentication/2FA is a
+separate user-controlled step; no credentials are placed in source or artifacts.
+
+Build/minify uses pinned esbuild. Each full/components/foundation ZIP contains
+readable/minified ESM and TaetUI classic IIFE alternatives, matching CSS/maps,
+Noto WOFF2/OFL, MIT/notices, working classic/ESM examples, PROVENANCE.json and
+SHA256SUMS.txt. Generated dist/ and distribution/ remain ignored. Release packaging
+rejects stale build input digests and --release requires a clean commit. Final
+archive provenance identifies the exact release commit. Maps contain public code.
+
+No new native Tauri/WebView2, physical IME/screen-reader or mixed-monitor acceptance
+was performed. Historical native evidence below keeps its original Dense UI
+identities. The new browser/distribution results do not certify native hosts.
+
+---
+
 # Tæt UI migration verification — 2026-11-03
 
 These are new local checks of taet-ui 0.6.0-rc.3, based on released Dense UI

@@ -5,6 +5,8 @@ import {execFileSync} from 'node:child_process';
 export async function sourceProvenance(root) {
  const hash=createHash('sha256');let files=0;
  async function visit(dir){for(const name of (await readdir(path.join(root,dir),{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))){
+  // Python bytecode is an ignored local cache, not a portable source input.
+  if(name.name==='__pycache__'||name.name.endsWith('.pyc'))continue;
   const rel=path.posix.join(dir,name.name);
   if(name.isDirectory())await visit(rel);else{const bytes=await readFile(path.join(root,rel));hash.update(rel+'\0');hash.update(bytes);hash.update('\0');files++;}
  }}

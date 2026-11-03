@@ -22,3 +22,21 @@ Git state may be not-versioned/uncommitted/dirty/clean; no clean commit is inven
 Content SHA-256, immutable imported snapshot hash and approved Grid candidate
 manifest hash identify pre-commit builds.
 Run check-bundle.js and test:bundle. Native limits: [NATIVE_ACCEPTANCE](NATIVE_ACCEPTANCE.md).
+
+## Standalone release archives
+
+Each profile now has readable/minified ESM (`taet-ui[.min].js`) and classic IIFE
+(`taet-ui.global[.min].js`, global `TaetUI`) plus matching CSS and source maps.
+These are alternative instances: use one profile/format in a document.
+`npm run distribution` builds and packages full/components/foundation ZIPs in
+ignored distribution/. `npm run distribution -- --release` requires a clean
+commit and matching current build provenance. Archives include a working classic
+and ESM example, fonts/OFL, MIT/notices, PROVENANCE.json and SHA256SUMS.txt.
+Source maps embed public framework code. Keep them for debugging or omit them
+from a deployed host; JS/CSS/fonts/licenses must remain together.
+
+The automated browser harness uses scripts/test-server.js (Node built-in HTTP).
+It serves exact Buffer bytes/Content-Length and only binds loopback. The runner
+checks its own child PID in readiness responses and reports fixture stderr.
+The existing Python dev/docs server remains available. No app runtime server is
+required by either portable format. Source npm exports remain typed ESM.
