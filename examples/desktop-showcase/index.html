@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier · Tæt UI consumer IDE</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../../src/ui/taet-ui.css">
+<link rel="stylesheet" href="./host.css">
+<script type="importmap">{"imports":{"taet-ui":"../../src/ui/index.js","taet-ui/components":"../../src/components/index.js","taet-ui/advanced":"../../src/advanced/index.js"}}</script>
+</head><body class="dui-page dui-theme-light-blue">
+<header class="brand"><strong>ATELIER</strong><span>Component Studio</span><span class="project-name">Northwind Desk / workspace.taet</span><span class="build-tag">LOCAL PREVIEW</span></header>
+<nav id="menu" aria-label="Application menu"></nav><div id="tools"></div>
+<main id="desktop" aria-label="IDE desktop"></main><footer id="status"></footer>
+<script type="module" src="./app.js"></script>
+<script>window.addEventListener("pagehide",()=>window.atelier?.destroy(),{once:true});</script></body></html>

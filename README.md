@@ -60,6 +60,51 @@ In Windows PowerShell, use `npm.cmd run dev -- --port 5641` if the npm.ps1 shim
 consumes forwarded options. Check `node --version`, `npm --version` and
 `python --version` before starting.
 
+## Desktop showcase
+
+[Atelier](examples/desktop-showcase/README.md) is a runnable dummy IDE made from
+TreeList, DockLayout/DockPanel, MdiWorkspace, PropertyGrid, TabBar, Menu, Toolbar,
+Form and Dialog. Project data and build/run actions are synthetic. These are real
+controls in the same live application, captured in the built-in light/dark themes
+from the local rc.4 candidate.
+
+![Light theme: project tree, overlapping MDI documents with Code and Design tabs, live form preview, property inspector and build output](.github/screenshots/desktop-ide-light.png)
+
+*Light theme — the project tree selects the object inspected beside the MDI workspace.*
+
+![Dark theme of the same application with the same selected object, documents, properties and build output](.github/screenshots/desktop-ide-dark.png)
+
+*Dark theme — switched on the same instance without losing edits or window state.*
+
+<img src=".github/screenshots/desktop-ide-dialog.png" width="320" alt="Actual modal Run configuration dialog with program arguments, Cancel and Run preview actions">
+
+*The run configuration uses a real modal Dialog and Form; fixed side placement is host CSS.*
+
+UI composition uses live objects and explicit ownership. For example, the workspace
+frame is ordinary JavaScript; the complete [example](examples/desktop-showcase/)
+also wires selection, descriptor setters, commands, tabs and cleanup:
+
+```js
+import {DataStore} from 'taet-ui';
+import {TreeList} from 'taet-ui/components';
+import {DockLayout, DockPanel, MdiWorkspace} from 'taet-ui/advanced';
+
+const records = new DataStore();
+records.parse([{id: 'project', parentId: null, text: 'Demo project'}]);
+const dock = new DockLayout('#desktop', {leftSize: 216, rightSize: 268});
+const explorer = dock.addPanel(new DockPanel({id: 'explorer', title: 'Project', area: 'left'}));
+explorer.add(new TreeList({data: records, textField: 'text'}));
+const center = dock.addPanel(new DockPanel({id: 'editor', title: 'Workspace', area: 'center'}));
+center.add(new MdiWorkspace({width: '100%', height: '100%'}));
+const destroy = () => { dock.destroy(); records.destroy(); };
+```
+
+The host supplies data, actions and layout CSS. A WebView can serve the full ESM
+profile with matching local CSS/fonts through its own origin; Node/npm are build
+tools. The example explains the import map and teardown. Desktop APIs retain their
+[experimental maturity](docs/STABLE_API.md); the consumer trial and its API friction
+are described in the [example notes](examples/desktop-showcase/README.md).
+
 ## Use it in a WebView
 
 Copy one built profile's JS, matching CSS, `fonts/`, `LICENSE` and

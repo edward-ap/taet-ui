@@ -1,3 +1,56 @@
+# README desktop showcase verification - 2026-11-03
+
+README now links a small runnable examples/desktop-showcase host and contains real
+light/dark screenshots of that same application instance plus an actual Dialog
+detail. Capture: local rc.4 core from 140478d4a0e8b91763b9413512b022500f46601c,
+Windows Chromium 149, viewport 1200x700, DPR 2, bundled font ready before capture.
+No browser chrome or machine paths appear. Synthetic records and build/run
+simulation are labeled; no real compiler or native backend is claimed.
+
+A separate model context installed public npm rc.3, using README/docs, public
+declarations and checked recipes under a no-implementation-inspection constraint.
+It then installed the verified local rc.4 tarball. The final identical app passed
+12 checks on each version, with no browser errors or external requests. This was
+a directed trial: coordinator review added sequential-typing and positioning QA.
+It is not a general model, timing or token-efficiency benchmark.
+
+The follow-up found a consumer wiring error: same-ID selection invalidations
+rebound PropertyGrid after the first typed character. A selected-ID guard fixes
+it; every prefix of the 16-character edit now retains the original focused editor
+and updates model/preview. Fixed host CSS prevented Dialog title dragging, so
+draggable:false is explicit. Dialog-owned Form destruction is explicit and checked
+after both Cancel and Run. Other friction involved aggregate declaration files,
+guessed icons, Toolbar showText and TextArea css/label options. No library
+implementation or runtime stylesheet was changed for these corrections.
+
+Consumer/capture app.js raw SHA-256:
+4998845f8baf8b117d86fb0e21d4eae1b3d7aefb2abc1e51a19d825c58a74ae0.
+The curated app.js/host.css normalize only line endings/EOF whitespace; their
+logic/styles match the installed-package trial. The repository host only
+maps public entries to this checkout and adds pagehide cleanup. The same 12 checks
+also pass against this host in Chromium, Firefox and WebKit. They exercise Menu,
+TreeList/PropertyGrid/model/preview synchronization including sequential typing,
+MDI activation/open/close, dock collapse/menu restore, TabBar content, Dialog
+cancel/primary action/content destruction, and theme state retention.
+
+README relative image paths and alt text load in a local 896px layout preview,
+with no horizontal overflow. The exact new JavaScript excerpt mounts successfully
+and its cleanup removes all owned controls. All three PNGs were visually inspected;
+lossless IDAT optimization preserves every pixel. Sizes: light 220154 bytes,
+dark 218594, Dialog 31733; total 470481 bytes. Images live under .github/screenshots
+and the small example is outside the npm files allowlist. Raw trial reports,
+private test tooling, dependencies and draft captures remain outside Git.
+
+Syntax check: 542 files. API inventory and package boundaries pass, including all
+47 approved Grid candidate hashes. Production src/scripts/package manifests are
+unchanged from the preceding fully checked rc.4 commit; those full core gates were
+not needlessly rerun for documentation/host assets. No new native WebView/physical
+input/IME or screen-reader acceptance is claimed. Published rc.3 and remote state
+were not changed. The PropertyGrid presentation baseline already existed in rc.3;
+the dummy IDE does not test rc.4-specific theme-file/storage migration.
+
+---
+
 # rc.4 local branding and compatibility verification - 2026-11-03
 
 0.6.0-rc.4 is an unpublished local candidate based on
