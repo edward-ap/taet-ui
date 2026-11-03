@@ -1,0 +1,58 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.woff2 binary
+
+# Preserve imported Grid bytes across checkouts; no line-ending conversion.
+src/core/GridColumnModel.d.ts -text
+src/core/GridColumnModel.js -text
+src/core/GridDataProvider.d.ts -text
+src/core/GridDataProvider.js -text
+src/core/GridFilterModel.d.ts -text
+src/core/GridFilterModel.js -text
+src/core/GridGroupModel.d.ts -text
+src/core/GridGroupModel.js -text
+src/core/GridSearchModel.d.ts -text
+src/core/GridSearchModel.js -text
+src/ui/Grid.d.ts -text
+src/ui/Grid.js -text
+src/ui/GridColumnReorderController.js -text
+src/ui/GridColumnResizer.js -text
+src/ui/GridCore.d.ts -text
+src/ui/GridCore.js -text
+src/ui/GridDefinition.d.ts -text
+src/ui/GridDefinition.js -text
+src/ui/GridEditors.d.ts -text
+src/ui/GridEditors.js -text
+src/ui/GridExporters.d.ts -text
+src/ui/GridExporters.js -text
+src/ui/GridKeyboardController.js -text
+src/ui/GridPortProvider.js -text
+src/ui/GridPrimitives.js -text
+src/ui/GridRowReorderController.js -text
+src/ui/GridSelectionController.js -text
+src/ui/GridVirtualRenderer.js -text
+src/ui/GridWindowRenderer.js -text
+src/ui/TreeGrid.d.ts -text
+src/ui/TreeGrid.js -text
+src/ui/grid-api.d.ts -text
+src/ui/grid-api.js -text
+src/ui/grid-columns.d.ts -text
+src/ui/grid-controllers.d.ts -text
+src/ui/grid-editor-contracts.d.ts -text
+src/ui/grid-editor-options.d.ts -text
+src/ui/grid-events.d.ts -text
+src/ui/grid-options.d.ts -text
+src/ui/gridEditorLifecycle.js -text
+src/ui/gridIntrinsicWidth.js -text
+src/ui/gridStringCompare.js -text
+src/ui/gridWindowGeometry.js -text
+
+# Preserve reviewed successor Grid candidate bytes as well.
+src/ui/gridEditorFactory.js -text
+src/ui/GridRowTransferController.js -text
+src/ui/gridSelectionState.js -text
+src/ui/GridTreeMove.js -text
+
+# Preserve the immutable imported manifest hash across checkout/archive.
+provenance/source-snapshot.json -text

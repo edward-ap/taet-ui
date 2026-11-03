@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tæt UI Lab 22</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../../src/ui/taet-ui.css?v=22.13" />
+    <style>
+      body.dui-page--full {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #root {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .dui-lab22-side {
+        display: grid;
+        align-content: start;
+        gap: var(--dui-gap-sm);
+        width: 100%;
+        height: 100%;
+        padding: var(--dui-gap-md);
+      }
+
+      .dui-lab22-side .dui-button {
+        width: 100%;
+      }
+
+      .dui-lab22-main {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: var(--dui-gap-sm);
+        width: 100%;
+        height: 100%;
+        padding: var(--dui-gap-md);
+      }
+
+      .dui-lab22-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--dui-gap-md);
+        min-height: var(--dui-control-height);
+      }
+
+      .dui-lab22-grid {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <link rel="stylesheet" href="./labs.css" />
+  </head>
+  <body class="dui-page dui-page--full dui-theme-light-blue dui-profile-compact" data-theme="light-blue">
+    <div id="root"></div>
+    <script type="module" src="./lab22.js?v=22.13"></script>
+  </body>
+</html>

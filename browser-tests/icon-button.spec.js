@@ -1,0 +1,157 @@
+import { test, expect } from '@playwright/test';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+test('documentation exposes both borderless variants with working examples', async ({ page }) => {
+  page.on('pageerror', error => { throw error; });
+  await page.goto('/docs/index.html#borderless-icon-button');
+  await expect(page.getByRole('heading', { name: 'IconButton', exact: true, level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Next page', exact: true }).click();
+  await expect(page.getByRole('spinbutton')).toHaveValue('2');
+  const group = page.getByRole('treeitem', { name: 'Buttons', exact: true });
+  if (await group.getAttribute('aria-expanded') !== 'true') await group.locator('[data-dui-tree-toggle]').click();
+  await page.getByRole('treeitem', { name: 'ToggleIconButton', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'ToggleIconButton', exact: true, level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Stop', exact: true })).toHaveAttribute('aria-pressed', 'true');
+});
+
+for (const theme of ['light-blue', 'dark-blue']) {
+  test(`ToggleIconButton Play/Stop, veto, silent state and reset in ${theme}`, async ({ page }) => {
+    page.on('pageerror', error => { throw error; });
+    await page.goto('/browser-tests/recipes.html');
+    await page.evaluate(async theme => {
+      const { toggleIconButtonPage } = await import('/docs/src/pages/ToggleIconButton.page.js');
+      const { ToggleIconButton } = await import('/src/ui/all.js');
+      document.body.className = `dui-theme-${theme} dui-profile-compact`;
+      document.body.style.backgroundColor = "var(--dui-color-bg)";
+      const copy = new Function('ToggleIconButton', `${toggleIconButtonPage.examples[0].source}\nreturn button;`)(ToggleIconButton);
+      copy.mount('#root'); copy.destroy();
+      window.toggleAction = toggleIconButtonPage.examples[0].create().mount('#root');
+      window.changes = [];
+      window.toggleAction.events.on('change', e => window.changes.push([e.newValue, e.source === window.toggleAction]));
+    }, theme);
+    const button = page.locator('.dui-toggle-icon-button button');
+    await expect(button).toHaveAccessibleName('Play');
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+    await expect(button.locator('.dui-check-button__visible svg path')).toHaveCount(1);
+    const width = (await button.boundingBox()).width;
+    await page.keyboard.press('Tab');
+    await expect(button).toBeFocused();
+    await expect(button).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('Enter');
+    await expect(button).toHaveAccessibleName('Stop');
+    await expect(button).toHaveAttribute('title', 'Stop');
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await expect(button.locator('.dui-check-button__visible svg rect')).toHaveCount(1);
+    await expect(button).toHaveCSS('border-top-width', '0px');
+    expect((await button.boundingBox()).width).toBe(width);
+    await page.keyboard.press('Space');
+    await expect(button).toHaveAccessibleName('Play');
+    await page.evaluate(() => window.toggleAction.value.set(true, { silent: true }));
+    await expect(button).toHaveAccessibleName('Stop');
+    expect(await page.evaluate(() => window.changes)).toEqual([[true, true], [false, true]]);
+    await page.evaluate(() => window.toggleAction.reset());
+    await expect(button).toHaveAccessibleName('Play');
+    await page.evaluate(() => { window.veto = window.toggleAction.events.on('beforeChange', e => { e.cancel = true; }); });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+    await page.evaluate(() => { window.veto.dispose(); window.toggleAction.setReadOnly(true); });
+    await expect(button).toBeDisabled();
+    await page.evaluate(() => { window.toggleAction.setReadOnly(false); window.toggleAction.value.set(true); });
+    await page.evaluate(() => { window.toggleAction.setValidators([() => 'Playback unavailable']); window.toggleAction.validate(); });
+    await expect(button).toHaveAttribute('title', 'Playback unavailable');
+    await expect(button).toHaveAttribute('aria-invalid', 'true');
+    await page.evaluate(() => window.toggleAction.clearValidation());
+    await expect(button).toHaveAttribute('title', 'Stop');
+    await expect(button).not.toHaveAttribute('aria-invalid');
+    await page.mouse.move(600, 400);
+    await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await page.screenshot({ path: join(tmpdir(), `dense-toggle-icon-button-${theme}.png`) });
+    await page.evaluate(() => window.toggleAction.destroy());
+    await expect(page.locator('#root')).toBeEmpty();
+  });
+
+  test(`IconButton keyboard, command state and borderless presentation in ${theme}`, async ({ page }) => {
+    page.on('pageerror', error => { throw error; });
+    await page.goto('/browser-tests/recipes.html');
+    await page.evaluate(async theme => {
+      const { IconButton, CommandRegistry } = await import('/src/ui/index.js');
+      document.body.className = `dui-theme-${theme} dui-profile-compact`;
+      document.body.style.backgroundColor = "var(--dui-color-bg)";
+      window.clicks = [];
+      window.action = new IconButton('#root', { text: 'Next page', icon: 'chevron-right', onClick: e => {
+        window.clicks.push([e.source === window.action, e.origin, e.userAction]);
+      } });
+      window.commands = new CommandRegistry();
+      window.commands.register('previous', { label: 'Previous page', icon: 'chevron-left', run: () => window.clicks.push('command') });
+      window.bound = new IconButton('#root', { commands: window.commands, command: 'previous', shape: 'rounded' });
+    }, theme);
+    const button = page.getByRole('button', { name: 'Next page', exact: true });
+    await expect(button).toHaveCSS('border-top-width', '0px');
+    await expect(button).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(button).toHaveText('');
+    await expect(button.locator('svg')).toHaveCount(1);
+    await expect(button).toHaveAttribute('title', 'Next page');
+    await page.keyboard.press('Tab');
+    await expect(button).toBeFocused();
+    await expect(button).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    expect(await page.evaluate(() => window.clicks)).toEqual([[true, 'user', true], [true, 'user', true]]);
+    await button.hover();
+    await expect(button).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(button).toHaveCSS('border-top-width', '0px');
+    const hoverFill = await button.evaluate(el => getComputedStyle(el).backgroundColor);
+    await page.mouse.down();
+    await expect(button).not.toHaveCSS('background-color', hoverFill);
+    await expect(button).toHaveCSS('border-top-width', '0px');
+    await page.mouse.up();
+    await page.evaluate(() => window.action.disable());
+    await expect(button).toBeDisabled();
+    const count = await page.evaluate(() => window.clicks.length);
+    await button.evaluate(el => el.click());
+    expect(await page.evaluate(() => window.clicks.length)).toBe(count);
+    await page.getByRole('button', { name: 'Previous page', exact: true }).click();
+    expect(await page.evaluate(() => window.clicks.at(-1))).toBe('command');
+    await page.evaluate(() => { window.action.enable(); window.action.setText('Forward'); window.action.setIcon('chevron-left'); });
+    await expect(page.getByRole('button', { name: 'Forward' })).toHaveText('');
+    await page.evaluate(() => { window.action.destroy(); window.bound.destroy(); });
+    await expect(page.locator('#root')).toBeEmpty();
+    expect(await page.evaluate(() => Boolean(window.commands.get('previous')))).toBe(true);
+    await page.evaluate(() => window.commands.destroy());
+  });
+
+  test(`page navigation example and copyable source in ${theme}`, async ({ page }) => {
+    page.on('pageerror', error => { throw error; });
+    await page.goto('/browser-tests/recipes.html');
+    await page.evaluate(async theme => {
+      const ui = await import('/src/ui/index.js');
+      const { borderlessIconButtonPage: definition } = await import('/docs/src/pages/IconButton.page.js');
+      document.body.className = `dui-theme-${theme} dui-profile-compact`;
+      document.body.style.backgroundColor = "var(--dui-color-bg)";
+      const style = document.createElement('style'); style.textContent = definition.examples[0].styles; document.head.append(style);
+      const names = ['Form', 'IconButton', 'NumberInput', 'ReadonlyText'];
+      const copy = new Function(...names, `${definition.examples[0].source}\nreturn form;`)(...names.map(n => ui[n]));
+      copy.mount('#root');
+      if (copy.value.get().page !== 1) throw new Error('Copied example differs');
+      copy.destroy();
+      window.navigatorForm = definition.examples[0].create().mount('#root');
+    }, theme);
+    const previous = page.getByRole('button', { name: 'Previous page' });
+    const next = page.getByRole('button', { name: 'Next page' });
+    const input = page.getByRole('spinbutton');
+    await expect(previous).toBeDisabled();
+    await next.click();
+    await expect(input).toHaveValue('2');
+    await previous.click();
+    await expect(input).toHaveValue('1');
+    await input.fill('180');
+    await expect(next).toBeDisabled();
+    await previous.click();
+    await expect(input).toHaveValue('179');
+    await page.screenshot({ path: join(tmpdir(), `dense-icon-button-${theme}.png`) });
+    await page.evaluate(() => window.navigatorForm.destroy());
+    await expect(page.locator('#root')).toBeEmpty();
+  });
+}

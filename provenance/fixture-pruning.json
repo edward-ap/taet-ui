@@ -1,0 +1,14 @@
+{
+  "reason": "Deferred extension fixtures and mixed type consumers; retained API consumer replaces mixed files. No Grid implementation changed.",
+  "paths": [
+    "docs/src/pages/Advanced.pages.js",
+    "examples/labs/lab28.js",
+    "examples/labs/lab28.html",
+    "examples/labs/lab29.js",
+    "examples/labs/lab29.html",
+    "test/types/chart-consumer.ts",
+    "test/types/remaining-components-browser.ts",
+    "test/types/remaining-components-consumer.ts",
+    "test/types/remaining-components-javascript.js"
+  ]
+}

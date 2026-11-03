@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tæt UI Lab 27 - MDI Mapping Workspace</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../../src/ui/taet-ui.css" />
+    <style>
+      body { display:grid; grid-template-rows:var(--dui-toolbar-height) minmax(0, 1fr); }
+      .lab27-toolbar {
+        display:flex;
+        align-items:center;
+        gap:var(--dui-gap-sm);
+        padding:2px var(--dui-gap-md);
+        border-bottom:1px solid var(--dui-color-border-strong);
+        background:var(--dui-color-surface-strong);
+      }
+      .lab27-toolbar strong { margin-right:var(--dui-gap-md); }
+      .lab27-toolbar button {
+        height:var(--dui-control-height);
+        border:1px solid var(--dui-color-border-strong);
+        background:var(--dui-button-bg);
+        color:var(--dui-color-text);
+      }
+      #status { margin-left:auto; color:var(--dui-color-muted); }
+      #workspace { min-width:0; min-height:0; }
+      .lab27-transformer-panel {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        width:100%;
+        height:100%;
+        color:var(--dui-color-muted);
+      }
+    </style>
+    <link rel="stylesheet" href="./labs.css" />
+  </head>
+  <body class="dui-page dui-page--full dui-theme-light-blue dui-profile-compact">
+    <header class="lab27-toolbar">
+      <strong>MDI Mapping Workspace</strong>
+      <button id="reset" type="button">Reset windows</button>
+      <button id="cascade" type="button">Cascade</button>
+      <span id="status">Drag between any two row ports</span>
+    </header>
+    <main id="workspace"></main>
+    <script type="module" src="./lab27.js"></script>
+  </body>
+</html>

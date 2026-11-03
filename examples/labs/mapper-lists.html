@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tæt UI — List and TreeList connectors</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../../src/ui/taet-ui.css">
+  <style>
+    body { display:grid; grid-template-rows:auto minmax(0,1fr) auto; }
+    #workspace { min-height:0; }
+    #actions { border-bottom:1px solid var(--dui-color-border); }
+    #help { padding:8px; color:var(--dui-color-muted); }
+    .mapper-field { display:flex; align-items:center; justify-content:space-between; gap:20px; width:100%; }
+    .mapper-field small { color:var(--dui-color-muted); }
+  </style>
+</head>
+<body class="dui-page dui-page--full dui-theme-light-blue dui-profile-compact">
+  <header id="actions"></header>
+  <main id="workspace"></main>
+  <footer id="help">Drag between ports, or Tab and Enter. Escape cancels. On a connection: Delete removes; R reconnects target; Shift+R reconnects source.</footer>
+  <script type="module" src="./mapper-lists.js"></script>
+</body>
+</html>

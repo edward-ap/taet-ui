@@ -1,0 +1,18 @@
+@font-face { font-family:'Compare Noto'; src:url('./fonts/NotoSans-variable.ttf') format('truetype'); font-weight:100 900; font-style:normal; font-display:block; }
+@font-face { font-family:'Compare Roboto'; src:url('./fonts/Roboto-variable.ttf') format('truetype'); font-weight:100 900; font-style:normal; font-display:block; }
+@font-face { font-family:'Compare Segoe'; src:local('Segoe UI'); font-weight:400; font-style:normal; }
+@font-face { font-family:'Compare Segoe'; src:local('Segoe UI Semibold'); font-weight:600; font-style:normal; }
+@font-face { font-family:'Compare Segoe'; src:local('Segoe UI Bold'); font-weight:700; font-style:normal; }
+body { padding:16px; }
+header h1 { margin:0 0 8px; font-size:20px; line-height:26px; }
+header p { margin:6px 0; }
+#comparison { display:grid; grid-template-columns:repeat(3,minmax(370px,1fr)); gap:14px; margin:12px 0; align-items:start; }
+.font-sample { min-width:0; padding:10px; border:1px solid var(--dui-color-border-strong); background:var(--dui-color-bg); font-family:var(--dui-font-family); font-size:12px; line-height:18px; font-synthesis:none; }
+.font-sample h2 { font-size:16px; line-height:22px; margin:0 0 4px; }
+.font-sample h3 { margin:12px 0 5px; font-size:12px; line-height:18px; font-weight:600; }
+.font-status { color:var(--dui-color-muted); min-height:36px; }
+.font-specimen { border-bottom:1px solid var(--dui-color-border); padding:6px 0; white-space:pre-wrap; overflow-wrap:anywhere; min-height:72px; }
+.font-buttons { display:flex; gap:4px; margin-top:6px; }
+.font-host { min-width:0; }
+.font-sample .dui-form { width:100%; }
+footer { color:var(--dui-color-muted); }

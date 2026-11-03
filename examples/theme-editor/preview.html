@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="data:,"><link rel="stylesheet" href="../../src/ui/taet-ui.css"><style>
+body{margin:0;padding:4px;background:var(--dui-color-bg);color:var(--dui-color-text);font:var(--dui-font-size)/var(--dui-line-height) var(--dui-font-family)}.preview-section{margin-bottom:12px}.preview-actions{display:flex;gap:6px;flex-wrap:wrap}.statuses{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}.status{padding:6px;border:1px solid}.preview-header{padding:6px;background:var(--dui-window-header-bg);color:var(--dui-window-header-text);margin-bottom:10px}
+.theme-details{display:flex;gap:8px;margin:8px 0}.theme-details .dui-control{padding:1px 6px;font-size:11px}
+.preview-header .dui-label-text, .status .dui-label-text{color:inherit}
+.scope-panel{padding:8px;border:1px solid var(--dui-color-border);margin:8px 0;background:var(--dui-color-surface)}.scope-heading{display:block;width:100%;box-sizing:border-box;padding:5px;margin-bottom:6px;background:var(--dui-window-header-bg);color:var(--dui-window-header-text)}.scope-heading .dui-label-text{color:inherit}
+
+.show-scope-labels [data-dui-scope-label]{position:relative}
+.show-scope-labels [data-dui-scope-label]::before{content:attr(data-dui-scope-label);position:absolute;z-index:8;right:2px;top:0;display:block;max-width:95%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;line-height:14px;background:var(--dui-color-bg);color:var(--dui-color-text);border:1px dashed var(--dui-color-border-strong);padding:0 3px;pointer-events:none;opacity:.92}
+.show-scope-labels [data-dui-scope-parts="grid"]::before{display:none}
+.dui-field-group__title{padding:3px 8px}.theme-details{padding:6px}
+.preview-page[hidden]{display:none}.preview-actions{margin:8px 0}.scope-panel{padding:6px}.preview-header{margin-top:0}
+:root{--dui-inspection-color:#527fa3}.distribution-highlight{outline:1px solid var(--dui-inspection-color)!important;outline-offset:-1px}
+.preview-last-name{grid-template-columns:minmax(0,1fr)}
+.preview-last-name > .dui-text-field__label{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.preview-time{margin-left:18px}
+.preview-actions{justify-content:flex-end}
+.preview-review{margin-right:auto;grid-template-columns:minmax(0,1fr)}
+.preview-review > .dui-check-button__label{display:none}
+</style></head><body class="dui-page dui-profile-compact" id="preview-root"><script type="module" src="preview.js"></script></body></html>
