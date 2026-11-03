@@ -15,7 +15,7 @@ export default defineConfig({
     trace: "retain-on-failure"
   },
   webServer: process.env.TAET_UI_TEST_SERVER ? undefined : {
-    command: "python scripts/dev-server.py --port " + (process.env.TAET_UI_PORT || "5173") + " --bind 127.0.0.1",
+    command: "node scripts/test-server.js " + (process.env.TAET_UI_PORT || "5173"),
     url: "http://127.0.0.1:" + (process.env.TAET_UI_PORT || "5173") + "/browser-tests/recipes.html",
     reuseExistingServer: !process.env.CI,
     timeout: 15_000
