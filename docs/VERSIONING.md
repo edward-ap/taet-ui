@@ -19,6 +19,6 @@ A release identifies its exact Git commit and asset hashes. Validate the final
 candidate after all source/documentation edits, not only its previous runtime build.
 
 The initial migration kept private:true. Explicit maintainer authorization now
-prepares rc.3 for public npm publication with publishConfig.tag=next, alongside a
+prepares rc.4 for public npm publication with publishConfig.tag=next, alongside a
 GitHub prerelease. These remain separate outcomes: confirm registry availability
 and remote release assets independently; a local tarball is not publication.

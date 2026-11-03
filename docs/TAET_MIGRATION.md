@@ -2,8 +2,9 @@
 
 Display name: Tæt UI. Package, import and repository name: taet-ui.
 The public repository is https://github.com/edward-ap/taet-ui.
-The current 0.6.0-rc.4 candidate is local and unpublished; published rc.3
-source, npm versions, GitHub releases and assets remain unchanged.
+The current 0.6.0-rc.4 candidate retains published rc.3 source, npm versions,
+GitHub releases and assets unchanged. Each new publication has its own version
+and assets; exact outcomes are recorded in the matching GitHub prerelease notes.
 
 ## Source inventory
 

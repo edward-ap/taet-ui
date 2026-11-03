@@ -1,3 +1,30 @@
+# rc.4 publication preflight - 2026-11-03
+
+The maintainer authorized a new rc.4 GitHub prerelease and npm next publication.
+This preparation combines the reviewed 140478d4 cleanup and 51424a27 desktop
+showcase; rc.3 versions, tags and assets are immutable. It changes release wording
+and uses absolute public GitHub image/example URLs so the npm README can display
+the showcase without shipping PNGs or a duplicate application in the tarball.
+
+Production src/scripts/package inputs are unchanged from the fully checked rc.4
+cleanup: content SHA-256 91a1636bc57547a47b51a3f8d9e57916865eaeec96c4c5109d149f5cf139894a.
+The exact completed local gate results and the three-engine showcase checks are
+recorded below. Publication re-runs, final-commit CI and registry/archive checks
+are recorded separately in the matching GitHub prerelease notes. This preflight
+entry does not claim those external operations succeeded.
+
+Source review: 898 tracked files; no generated archives, dependencies, reports or
+secret-pattern matches in tracked content. The three PNGs total 470481 bytes and
+retain the recorded hashes. The immutable imported manifest is byte-identical;
+all 47 reviewed candidate hashes pass the boundary guard. No export or maturity
+changes are introduced. Final archives must use --release from the final clean
+commit and embed that revision; npm must be verified independently after upload.
+
+Native WebView/physical-input, IME, screen-reader and non-Windows native limits
+remain as described below. Browser automation and remote CI do not remove them.
+
+---
+
 # README desktop showcase verification - 2026-11-03
 
 README now links a small runnable examples/desktop-showcase host and contains real

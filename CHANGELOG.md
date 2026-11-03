@@ -1,13 +1,14 @@
 # Tæt UI changes
 
-## 0.6.0-rc.4 - unpublished local candidate, 2026-11-03
+## 0.6.0-rc.4 - release candidate, 2026-11-03
 
 - Clean current branding, remove the private historical CI link and update local benchmark/demo identifiers.
 - Export taet-ui-theme v1 files as .taet-theme.json; keep importing the previous v1 format and bare definitions.
 - Prefer taet-ui.theme-editor.v1 storage, fall back to the previous key and write only the current key; opening an editor does not migrate or erase stored data.
 - Expose taetUiDocs and taetThemeEditor while retaining existing host aliases; preserve CSS selectors, CSS imports and cross-version drag MIME contracts.
 - Rename the row-drag plain-text label to Tæt UI rows without changing reorder behavior.
-- Published rc.3 packages, release assets and source history remain unchanged. This candidate is local only.
+- Add the real light/dark Atelier desktop showcase, a reproducible host example and documented consumer-trial limitations.
+- Published rc.3 packages, release assets and source history remain unchanged. Publication outcomes are recorded in the matching GitHub prerelease notes.
 
 ## 0.6.0-rc.3 — local migration, 2026-11-03
 

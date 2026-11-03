@@ -4,7 +4,7 @@ Compact desktop UI controls for embedded WebViews. Build screens with live
 JavaScript objects, explicit ownership, events, commands and data models.
 No JSX, virtual DOM, runtime npm dependencies or CDN.
 
-**0.6.0-rc.4 is an unpublished local pre-1.0 candidate; published rc.3 artifacts remain unchanged.** Grid/TreeGrid and Advanced remain experimental.
+**0.6.0-rc.4 is a pre-1.0 release candidate; published rc.3 artifacts remain unchanged.** Grid/TreeGrid and Advanced remain experimental.
 Source packages and standalone WebView ZIPs are separate delivery choices.
 The npm preview channel uses `next`: `npm install taet-ui@next`; publication
 status is recorded in the matching GitHub prerelease notes.
@@ -62,26 +62,26 @@ consumes forwarded options. Check `node --version`, `npm --version` and
 
 ## Desktop showcase
 
-[Atelier](examples/desktop-showcase/README.md) is a runnable dummy IDE made from
+[Atelier](https://github.com/edward-ap/taet-ui/tree/main/examples/desktop-showcase) is a runnable dummy IDE made from
 TreeList, DockLayout/DockPanel, MdiWorkspace, PropertyGrid, TabBar, Menu, Toolbar,
 Form and Dialog. Project data and build/run actions are synthetic. These are real
 controls in the same live application, captured in the built-in light/dark themes
-from the local rc.4 candidate.
+from the rc.4 candidate.
 
-![Light theme: project tree, overlapping MDI documents with Code and Design tabs, live form preview, property inspector and build output](.github/screenshots/desktop-ide-light.png)
+![Light theme: project tree, overlapping MDI documents with Code and Design tabs, live form preview, property inspector and build output](https://raw.githubusercontent.com/edward-ap/taet-ui/main/.github/screenshots/desktop-ide-light.png)
 
 *Light theme — the project tree selects the object inspected beside the MDI workspace.*
 
-![Dark theme of the same application with the same selected object, documents, properties and build output](.github/screenshots/desktop-ide-dark.png)
+![Dark theme of the same application with the same selected object, documents, properties and build output](https://raw.githubusercontent.com/edward-ap/taet-ui/main/.github/screenshots/desktop-ide-dark.png)
 
 *Dark theme — switched on the same instance without losing edits or window state.*
 
-<img src=".github/screenshots/desktop-ide-dialog.png" width="320" alt="Actual modal Run configuration dialog with program arguments, Cancel and Run preview actions">
+<img src="https://raw.githubusercontent.com/edward-ap/taet-ui/main/.github/screenshots/desktop-ide-dialog.png" width="320" alt="Actual modal Run configuration dialog with program arguments, Cancel and Run preview actions">
 
 *The run configuration uses a real modal Dialog and Form; fixed side placement is host CSS.*
 
 UI composition uses live objects and explicit ownership. For example, the workspace
-frame is ordinary JavaScript; the complete [example](examples/desktop-showcase/)
+frame is ordinary JavaScript; the complete [example](https://github.com/edward-ap/taet-ui/tree/main/examples/desktop-showcase)
 also wires selection, descriptor setters, commands, tabs and cleanup:
 
 ```js
@@ -103,7 +103,7 @@ The host supplies data, actions and layout CSS. A WebView can serve the full ESM
 profile with matching local CSS/fonts through its own origin; Node/npm are build
 tools. The example explains the import map and teardown. Desktop APIs retain their
 [experimental maturity](docs/STABLE_API.md); the consumer trial and its API friction
-are described in the [example notes](examples/desktop-showcase/README.md).
+are described in the [example notes](https://github.com/edward-ap/taet-ui/tree/main/examples/desktop-showcase).
 
 ## Use it in a WebView
 
@@ -172,7 +172,8 @@ For contributors: [setup/checks](CONTRIBUTING.md), [AI entry point](docs/AI_CONT
 Browser tests additionally require matching Playwright binaries; `npm ci` alone
 does not install them. After npm ci, use `npx playwright install chromium firefox webkit`.
 For selective Windows project flags, use the direct-node commands in
-[release checks](docs/RELEASE.md). CI definitions are provided; no remote CI pass is claimed.
+[release checks](docs/RELEASE.md). Exact remote CI and publication outcomes are
+linked from the matching GitHub prerelease notes.
 
 Tæt UI is [MIT](LICENSE). Local Noto Sans is OFL; retain its license and
 [third-party notices](THIRD_PARTY_NOTICES.md) when distributing assets.
