@@ -19,7 +19,7 @@ test("lab23 TreeGrid loads and preserves tree semantics", async ({ page }) => {
   await expect(tree.locator(".dui-grid__row[data-dui-grid-row-id]").nth(2)).toContainText("Asset 1.2.3");
 
   await search.fill("");
-  await search.press("Control+A");
+  await search.press("ControlOrMeta+A");
   await search.press("Backspace");
   await expect(tree.locator(".dui-grid__status-bar")).toContainText("Total 1260");
 

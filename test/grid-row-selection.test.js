@@ -8,11 +8,11 @@ function create(options={}) {
  return grid;
 }
 const pick=(g,id,event={})=>g._selectionController.selectFromUser(g.data.get(id),event);
-test('row ranges extend, shrink and Ctrl+Shift union without changing their anchor',()=>{
+for(const modifier of ['ctrlKey','metaKey']) test(`row ranges extend, shrink and ${modifier}+Shift union without changing their anchor`,()=>{
  const g=create();try{
  pick(g,1);pick(g,4,{shiftKey:true});assert.deepEqual(g.getSelectedIds(),[1,2,3,4]);
  pick(g,2,{shiftKey:true});assert.deepEqual(g.getSelectedIds(),[1,2]);
- pick(g,4,{ctrlKey:true});pick(g,3,{ctrlKey:true,shiftKey:true});
+ pick(g,4,{[modifier]:true});pick(g,3,{[modifier]:true,shiftKey:true});
  assert.deepEqual(g.getSelectedIds(),[1,2,4,3]);
  pick(g,2);pick(g,0,{shiftKey:true});assert.deepEqual(g.getSelectedIds(),[0,1,2]);
  }finally{g.destroy();}

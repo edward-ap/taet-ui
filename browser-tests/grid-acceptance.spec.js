@@ -21,11 +21,11 @@ test('header sorting, conditional formatting, filters and footer repaint togethe
  await page.evaluate(()=>g.clearAllFilters());await page.evaluate(()=>g.sortBy('amount','asc'));
  await expect(cell(page,'r29','amount')).toHaveText('$5');await expect(cell(page,'r29','amount')).not.toHaveClass(/high-amount/);
 });
-test('Ctrl row selection survives sorting; Shift extends a separate cell range',async({page})=>{
- await setup(page);await cell(page,'r0','name').click();await cell(page,'r2','name').click({modifiers:['Control']});
+test('Primary-modifier row selection survives sorting; Shift extends a separate cell range',async({page})=>{
+ await setup(page);await cell(page,'r0','name').click();await cell(page,'r2','name').click({modifiers:['ControlOrMeta']});
  expect(await page.evaluate(()=>g.getSelectedIds())).toEqual(['r0','r2']);
- await cell(page,'r2','name').click({modifiers:['Control']});expect(await page.evaluate(()=>g.getSelectedIds())).toEqual(['r0']);
- await cell(page,'r2','name').click({modifiers:['Control']});
+ await cell(page,'r2','name').click({modifiers:['ControlOrMeta']});expect(await page.evaluate(()=>g.getSelectedIds())).toEqual(['r0']);
+ await cell(page,'r2','name').click({modifiers:['ControlOrMeta']});
  await page.evaluate(()=>g.sortBy('amount','desc'));expect((await page.evaluate(()=>g.getSelectedIds())).sort()).toEqual(['r0','r2']);
  await page.evaluate(()=>g.clearSort());
  await cell(page,'r0','name').click();await cell(page,'r3','name').click({modifiers:['Shift']});

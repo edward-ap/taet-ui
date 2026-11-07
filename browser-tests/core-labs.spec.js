@@ -203,16 +203,33 @@ test("lab21 date and time pickers use the shared overlay stack", async ({ page }
   const timeTheme = await timePopup.evaluate(popup => {
     const probe = document.createElement("span");
     probe.style.backgroundColor = "var(--dui-picker-button-bg)";
+    probe.style.scrollbarWidth = "thin";
+    probe.style.scrollbarColor = "var(--dui-scrollbar-thumb) transparent";
     popup.append(probe);
+    const wheel = popup.querySelector(".dui-time-picker__wheel");
+    const standard = getComputedStyle(wheel);
+    const expected = getComputedStyle(probe);
+    const webkit = CSS.supports("selector(::-webkit-scrollbar)");
     const result = {
-      scrollbar:getComputedStyle(popup.querySelector(".dui-time-picker__wheel"), "::-webkit-scrollbar").width,
+      webkit,
+      standardWidthSupported:CSS.supports("scrollbar-width", "thin"),
+      standardColorSupported:CSS.supports("scrollbar-color", "red transparent"),
+      scrollbar:webkit ? getComputedStyle(wheel, "::-webkit-scrollbar").width : null,
+      standardWidth:standard.scrollbarWidth,
+      standardColor:standard.scrollbarColor,
+      expectedWidth:expected.scrollbarWidth,
+      expectedColor:expected.scrollbarColor,
       okBackground:getComputedStyle(popup.querySelector(".dui-picker-actions__button")).backgroundColor,
       framed:getComputedStyle(probe).backgroundColor
     };
     probe.remove();
     return result;
   });
-  expect(timeTheme.scrollbar).toBe("6px");
+  expect(timeTheme.webkit || timeTheme.standardWidthSupported).toBe(true);
+  if (timeTheme.webkit) expect(timeTheme.scrollbar).toBe("6px");
+  // macOS Firefox computes native thin as none; compare with a native thin probe.
+  if (timeTheme.standardWidthSupported) expect(timeTheme.standardWidth).toBe(timeTheme.expectedWidth);
+  if (timeTheme.standardColorSupported) expect(timeTheme.standardColor).toBe(timeTheme.expectedColor);
   expect(timeTheme.okBackground).toBe(timeTheme.framed);
   await timePopup.locator('.dui-time-picker__wheel').first().getByRole("button", { name:"08" }).click();
   await expect(timePopup).toBeVisible();

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pressNativeTab } from './keyboard-helpers.js';
 
 async function setup(page, kind) {
   page.on('pageerror', error => { throw error; });
@@ -26,9 +27,9 @@ for (const kind of ['Grid', 'TreeGrid']) {
     await setup(page, kind);
     const root = page.locator('.dui-grid');
     const input = page.locator('.dui-grid__editor-host input');
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(page.getByRole('button', { name:'Before table', exact:true })).toBeFocused();
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(root).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('F2');
@@ -52,7 +53,7 @@ for (const kind of ['Grid', 'TreeGrid']) {
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name:'After table', exact:true })).toBeFocused();
     expect(await page.evaluate(() => grid.data.get(2).b)).toBe('Last saved');
-    await page.keyboard.press('Shift+Tab');
+    await pressNativeTab(page, { backward: true });
     await expect(root).toBeFocused();
     await page.keyboard.press('Home');
     for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowLeft');

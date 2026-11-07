@@ -29,8 +29,8 @@ test('keyboard scopes shortcuts, clipboard subtrees and permissions', async ({ p
   await page.keyboard.press('F2');
   const input = page.locator('.dui-grid__editor-host input');
   await expect(input).toBeVisible(); await input.press('Escape');
-  await page.keyboard.press('Control+x');
-  await page.getByText('Documents', { exact: true }).click(); await page.keyboard.press('Control+v');
+  await page.keyboard.press('ControlOrMeta+x');
+  await page.getByText('Documents', { exact: true }).click(); await page.keyboard.press('ControlOrMeta+v');
   await expect.poll(() => page.evaluate(() => explorer.getResources().find(i => i.id === 'rust').parentId)).toBe('documents');
   await page.keyboard.press('Shift+F10');
   await expect(page.getByRole('menuitem', { name: /Rename/ })).toBeVisible();
