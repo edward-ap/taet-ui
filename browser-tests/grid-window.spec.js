@@ -330,3 +330,36 @@ test("virtual axes opt out independently and shrinking data clears stale windows
   await body(page).evaluate(node => { node.scrollTop = node.scrollHeight; node.scrollLeft = node.scrollWidth; });
   await expect(cell(page, 59, 29)).toHaveText("R59 C29");
 });
+
+for (const axis of ["width", "height"]) {
+  test(`editor survives ${axis} resize scroll before observer delivery, but later scroll cancels`, async ({ page }) => {
+    await setup(page, { frozen: true });
+    expect(await page.evaluate(() => grid.startEdit("r501", "c50"))).toBe(true);
+    await settle(page);
+    const result = await page.evaluate(axis => {
+      const editing = grid._editing, body = grid._body, input = editing.cell.querySelector("input");
+      input.value = "Resize draft";
+      const original = data.get("r501").c50;
+      let resizes = 0;
+      const resize = grid._afterResize.bind(grid);
+      grid._afterResize = () => { resizes++; resize(); };
+      // Force layout and the browser's possible focus/anchor scroll in the same
+      // task, before ResizeObserver can reconcile the editor's scroll baseline.
+      grid.element.style[axis] = axis === "width" ? "500px" : "250px";
+      const dimension = axis === "width" ? "clientWidth" : "clientHeight";
+      const scroll = axis === "width" ? "scrollLeft" : "scrollTop";
+      const changed = body[dimension] !== editing[axis === "width" ? "viewportWidth" : "viewportHeight"];
+      body[scroll] += 96;
+      body.dispatchEvent(new Event("scroll"));
+      const retained = grid._editing === editing && input.isConnected && input.value === "Resize draft";
+      const reconciled = resizes;
+      // No timeout/grace period: a second scroll at the same geometry is a real
+      // viewport change, even in this task before observer delivery.
+      body[scroll] += 24;
+      body.dispatchEvent(new Event("scroll"));
+      return { changed, retained, reconciled, canceled: grid._editing === null,
+        unchanged: data.get("r501").c50 === original };
+    }, axis);
+    expect(result).toEqual({ changed: true, retained: true, reconciled: 1, canceled: true, unchanged: true });
+  });
+}

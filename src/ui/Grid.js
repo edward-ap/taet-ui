@@ -567,6 +567,9 @@ export class Grid extends GridCore {
       footer.scrollLeft = body.scrollLeft;
 
       if (this.virtualRows || this.virtualColumns) {
+        // Layout can scroll a focused editor before ResizeObserver runs.
+        if (this._editing && (this._editing.viewportWidth !== body.clientWidth ||
+            this._editing.viewportHeight !== body.clientHeight)) this._afterResize();
         if (this._editing && (this._editing.scrollTop !== body.scrollTop || this._editing.scrollLeft !== body.scrollLeft)) {
           this._discardActiveEdit({
             origin: "user",
@@ -2588,6 +2591,8 @@ export class Grid extends GridCore {
       this._windowRenderer.scrollToColumn(this._editing.column.id);
       this._editing.scrollLeft = this._body.scrollLeft;
       this._editing.scrollTop = this._body.scrollTop;
+      this._editing.viewportWidth = this._body.clientWidth;
+      this._editing.viewportHeight = this._body.clientHeight;
     }
     this._windowRenderer.request();
     this._syncScrollbarGutter();
@@ -3495,6 +3500,8 @@ export class Grid extends GridCore {
     const editing = { item, id, column, editor, cellEditor, oldValue: value, cell,
       scrollTop: this._body?.scrollTop ?? 0, scrollLeft: this._body?.scrollLeft ?? 0, editorElement: host,
       origin: options.origin ?? "api", userAction: options.userAction === true };
+    editing.viewportWidth = this._body?.clientWidth ?? 0;
+    editing.viewportHeight = this._body?.clientHeight ?? 0;
     return mountGridEditor(this, editing, host, options,
       () => validTarget() && this._body?.contains(cell));
   }

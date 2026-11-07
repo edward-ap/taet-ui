@@ -106,3 +106,36 @@ test("TreeList also consumes silent TreeDataView invalidations without semantic 
   });
   expect(result.text).toContain("After"); expect(result.text).not.toContain("Before"); expect(result.changes).toBe(0);
 });
+
+for (const axis of ["width", "height"]) {
+  test(`editor survives ${axis} resize scroll before observer delivery, but later scroll cancels`, async ({ page }) => {
+    await setup(page);
+    expect(await page.evaluate(() => tree.startEdit("r501", "c50"))).toBe(true);
+    await frames(page);
+    const result = await page.evaluate(axis => {
+      const editing = tree._editing, body = tree._body, input = editing.cell.querySelector("input");
+      input.value = "Resize draft";
+      const original = data.get("r501").c50;
+      let resizes = 0;
+      const resize = tree._afterResize.bind(tree);
+      tree._afterResize = () => { resizes++; resize(); };
+      // Force layout and the browser's possible focus/anchor scroll in the same
+      // task, before ResizeObserver can reconcile the editor's scroll baseline.
+      tree.element.style[axis] = axis === "width" ? "500px" : "250px";
+      const dimension = axis === "width" ? "clientWidth" : "clientHeight";
+      const scroll = axis === "width" ? "scrollLeft" : "scrollTop";
+      const changed = body[dimension] !== editing[axis === "width" ? "viewportWidth" : "viewportHeight"];
+      body[scroll] += 96;
+      body.dispatchEvent(new Event("scroll"));
+      const retained = tree._editing === editing && input.isConnected && input.value === "Resize draft";
+      const reconciled = resizes;
+      // No timeout/grace period: a second scroll at the same geometry is a real
+      // viewport change, even in this task before observer delivery.
+      body[scroll] += 24;
+      body.dispatchEvent(new Event("scroll"));
+      return { changed, retained, reconciled, canceled: tree._editing === null,
+        unchanged: data.get("r501").c50 === original };
+    }, axis);
+    expect(result).toEqual({ changed: true, retained: true, reconciled: 1, canceled: true, unchanged: true });
+  });
+}

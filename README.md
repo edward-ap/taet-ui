@@ -156,7 +156,9 @@ screen, read [mutation/ownership examples](docs/MUTATIONS.md).
 ## Preview limits
 
 Current migration checks are recorded in [verification](docs/VERIFICATION.md).
-Earlier pre-rename results identify their original inputs and are historical evidence.
+Results apply to the recorded source revision, not automatically to older release
+archives. Earlier pre-rename results identify their original inputs and are
+historical evidence.
 
 Recorded checks include Windows browser automation and a separate Windows
 Tauri/WebView2 acceptance stand. Programmatic/synthetic input is distinguished
