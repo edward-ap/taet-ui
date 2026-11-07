@@ -32,7 +32,10 @@ reevaluates a function text source without emitting textChange. `setSpeed`, `set
 and `setPaused` return this, work before mount and reject after destroy. Invalid
 numeric settings throw before mutation. speed must be positive; gap/startDelay
 nonnegative. The owner cancels the animation and disconnects all observers/listeners
-on destroy. No animation/measurement promise survives teardown.
+on destroy. No animation or measurement runs after teardown. Native font-ready
+promises cannot be canceled, but their continuations are guarded against
+measurement after destruction. Font loading/completion/error subscriptions are
+released with the control.
 
 Tests: test/scrolling-label.test.js; browser-tests/scrolling-label.spec.js checks
 native mouse drag selection beyond both ends of a neighboring long TextInput,

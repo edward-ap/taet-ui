@@ -1,3 +1,94 @@
+# Cross-platform branch preparation - 2026-11-07
+
+Pre-PR verification snapshot for `fix/macos-webkit-portability`, based on
+`bfd3ddcddf1cdc539397e5d2ac5ed3cb976e72c2`. These are source-branch results,
+not new results for the previously published v0.6.0-rc.4 archives. The original
+Windows main was checked clean at that common base; Windows verification uses
+a separate detached worktree. No release tag or npm publication is part of
+this change. Final remote CI and further Windows engine results belong to the
+pull request for this branch, not to an assumed passing workflow file.
+
+## Additional findings before the PR
+
+- Modal traversal now includes native contenteditable hosts with true, empty
+  and plaintext-only attributes. Their default tabIndex is -1 despite being
+  native Tab stops. Explicit negative tabindex and inherited/nested editors
+  stay excluded unless explicitly tabbable. Twenty modal cases per engine
+  cover these and the earlier containment/editor/reentry contracts.
+- A separate pre-existing Firefox race lost an active Grid/TreeGrid draft when
+  automatic scrolling after a resize arrived before ResizeObserver. It was
+  reproduced with the baseline OverlayManager, so it was not a modal-fix
+  regression. Both tables now reconcile changed client geometry first using
+  their existing resize path. A subsequent scroll at unchanged geometry still
+  immediately cancels editing; there is no timer or grace period. Factory
+  teardown remains safe. Four new width/height regressions force this ordering.
+- The lab27 MDI test had a separate render-readiness race: selecting a connector
+  updates status immediately, then replaces SVG ports in a later animation
+  frame. The fixture now waits for selection rendering and bounded-polls live
+  port geometry. All interaction and connection assertions remain; production
+  ConnectorLayer code is unchanged.
+- ScrollingLabel had a rapid-font-swap edge: setGap could measure fallback
+  metrics, then the loaded font restored the observer's original width before
+  ResizeObserver sampled the fallback. The stale animation could persist.
+  Font loading/completion/error events now invalidate metrics; each loading
+  cycle also captures FontFaceSet.ready because WebKit can omit loadingdone.
+  Listeners are disposed and pending continuations cannot measure after
+  destruction. No polling, timers or per-frame JavaScript were added. The
+  original late-font test is unchanged; dedicated no-resize-delivery, listener
+  cleanup and missing-API cases cover the correction.
+- The two Grid source changes were reviewed before updating only their two
+  candidate hashes. The other 45 entries and immutable source-snapshot remain
+  unchanged. Imported CRLF bytes are retained.
+
+## Completed local checks
+
+| Check | Result |
+| --- | --- |
+| macOS test:all, two workers | 546 syntax files; API/package guards; 698/698 units; 755/755 Chromium; installed TS/JS/browser consumers; 476 runtime exports |
+| macOS full Firefox, two workers | 755/755 passed, 7.9 minutes |
+| macOS full WebKit, two workers | 755/755 passed, 6.2 minutes |
+| macOS modal regression file, all engines | 60/60 passed |
+| macOS Grid/TreeGrid window regressions, all engines | 66/66 passed |
+| macOS editor activation/teardown, all engines | 15/15 passed |
+| Original intermittent Firefox resize case | 30/30 serial repetitions passed after the fix |
+| Corrected lab27 fixture | 10/10 WebKit repetitions and 3/3 engine checks passed |
+| ScrollingLabel font completion | 21/21 focused engine checks; 40/40 WebKit repetitions; original/fixed comparison confirmed the stale endpoint and correction |
+| macOS bundle guard and all-engine bundle suite | 77 documentation imports checked; 42/42 browser cases passed |
+| macOS native example | prepare and cargo build --release --locked passed; final Mach-O arm64 binary and local .app copy match |
+| Windows after Grid fix, before final font patch | 698/698 units; incremental syntax and API/package guards; fresh build; 752/752 Chromium; 515/515 Firefox compatibility |
+| Windows initial patch baseline | Full test:all passed: 698 units, 748 Chromium, syntax/API/package and installed TS/JS/browser consumers |
+| Local distribution and package inspection | 497 npm package files; native PNG and verification record present; build outputs/dependencies/reports excluded; three portable archives have 22 files each |
+| Workflow and source hygiene | actionlint 1.7.12 passed; CRLF-aware diff check passed; only reviewed source/assets/tests/docs/workflow files selected |
+
+At this pre-PR snapshot, further Windows engine runs and the final font patch's
+Windows verification are still in progress. The pull request records their
+outcome and CI for its exact head commit. Earlier exploratory WebKit runs each
+passed 751/752 and exposed the lab27 fixture race and then the font-completion
+edge; those failures are retained as evidence, not counted as passing full
+runs. The final full Mac suites above use the corrected runtime and fixtures.
+
+Final source-content SHA-256 (src/scripts/package inputs):
+`e5672499ec2115ecf38a52b57d81d10a0839fd33f6005f9e3935563a60cb083a`.
+Reviewed runtime SHA-256 values:
+
+- OverlayManager.js: `17b9250fae7325a2164ae73af1c2b103f66397e6d4bd9cb9cd5c8f810d2b0de8`
+- Grid.js: `646bf4902a17d068896204d64de68bcf967bc8ac70208d82b891221385599690`
+- TreeGrid.js: `59c37c5e9c2a88c9242556dc7b8fa356c153bbe1d95b7d1d35fd7e77f42de3c2`
+- ScrollingLabel.js: `5b3c1d5340c70c6571b8577e947909044b3953db4e1bb377d2ec3893d618e982`
+
+Candidate manifest SHA-256:
+`4d7dddb43219c6daead41568e9fc063467abb99dd19fad4e158d86be9a5f487c`.
+The native BUNDLE.json and dist report identify the same final source content.
+
+The maintainer's earlier Safari/Grid and native Rust-echo smoke remains bounded
+manual evidence. The final rebuilt executable was not manually retested.
+Playwright WebKit is not a complete Safari/WKWebView acceptance pass. Actual
+IME, VoiceOver, native clipboard/file dialogs, mixed DPI, signing/notarization,
+installers and Intel/universal macOS builds remain unverified. Linux native
+hosts remain unverified. Earlier runs and their limitations follow below.
+
+---
+
 # macOS keyboard and WebKit remediation - 2026-11-07
 
 This local follow-up resolves the failures described in the first consumer

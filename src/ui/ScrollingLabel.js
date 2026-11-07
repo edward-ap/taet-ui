@@ -28,6 +28,19 @@ export class ScrollingLabel extends LabelText {
   this._motion=matchMedia('(prefers-reduced-motion: reduce)');
   this.disposables.addEventListener(this._motion,'change',()=>this._measure());
   this.disposables.addEventListener(document,'visibilitychange',()=>this._syncPlayback());
+  // A fallback font can come and go between ResizeObserver deliveries, leaving
+  // its measured animation behind even when the final text size is unchanged.
+  if(document.fonts?.addEventListener) {
+   const measureFonts=()=>{if(!this.destroyed)this._measure();};
+   // WebKit can resolve ready without delivering loadingdone. Capture each
+   // loading cycle's promise; ready also waits for font-dependent layout.
+   const fonts=document.fonts;
+   const loadingFonts=()=>{fonts.ready?.then(measureFonts);};
+   this.disposables.addEventListener(fonts,'loading',loadingFonts);
+   this.disposables.addEventListener(fonts,'loadingdone',measureFonts);
+   this.disposables.addEventListener(fonts,'loadingerror',measureFonts);
+   if(fonts.status==='loading')loadingFonts();
+  }
   this._sizeObserver=new ResizeObserver(()=>this._measure());this._sizeObserver.observe(root);this._sizeObserver.observe(first);
   this._intersection=new IntersectionObserver(entries=>{if(this.destroyed)return;this._intersecting=entries[0]?.isIntersecting===true;this._syncPlayback();});this._intersection.observe(root);
   return root;

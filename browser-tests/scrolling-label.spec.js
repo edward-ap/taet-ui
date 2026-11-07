@@ -83,3 +83,70 @@ test('late font metrics update the animation after bounded layout delivery',asyn
  expect(loaded.end).toBeCloseTo(-loaded.width-49,2);
  await page.evaluate(()=>{document.fonts.delete(lateLabelFont);label.destroy();input.destroy();});
 });
+
+// Isolate the rapid-swap case deterministically: ResizeObserver may coalesce
+// original -> fallback -> original into no size notification at all.
+test('font completion repairs fallback geometry without a resize delivery',async({page})=>{
+ let release;
+ const requested=new Promise(resolve=>{release=resolve;});
+ await page.route('**/NotoSans-variable.woff2?scrolling-label-rapid-font',route=>release(route));
+ const before=await page.evaluate(()=>{
+  const width=parseFloat(getComputedStyle(label._first).width);
+  label._sizeObserver.disconnect();
+  window.rapidFont=new FontFace('ScrollingLabelRapidTest','url("/src/ui/fonts/NotoSans-variable.woff2?scrolling-label-rapid-font")');
+  document.fonts.add(rapidFont);
+  label.element.style.fontFamily='"ScrollingLabelRapidTest", monospace';
+  void rapidFont.load();label.setGap(49);
+  return {width,fallback:parseFloat(getComputedStyle(label._first).width),end:Number(label._animation.effect.getKeyframes().at(-1).transform.match(/[-\d.]+/)[0])};
+ });
+ const route=await requested;
+ expect(before.fallback).not.toBeCloseTo(before.width,2);
+ expect(before.end).toBeCloseTo(-before.fallback-49,2);
+ await route.continue();
+ const after=await page.evaluate(async()=>{
+  await rapidFont.loaded;await document.fonts.ready;
+  return {width:parseFloat(getComputedStyle(label._first).width),end:Number(label._animation.effect.getKeyframes().at(-1).transform.match(/[-\d.]+/)[0])};
+ });
+ expect(after.width).toBeCloseTo(before.width,2);
+ expect(after.end).toBeCloseTo(-after.width-49,2);
+ await page.evaluate(()=>{label.destroy();input.destroy();document.fonts.delete(rapidFont);});
+});
+
+test('font completion listeners handle errors and are removed on destroy',async({page})=>{
+ const result=await page.evaluate(async()=>{
+  let measures=0;
+  const measure=label._measure.bind(label);
+  label._measure=()=>{measures++;measure();};
+  document.fonts.dispatchEvent(new Event('loadingdone'));
+  document.fonts.dispatchEvent(new Event('loadingerror'));
+  const active=measures;
+  document.fonts.dispatchEvent(new Event('loading'));
+  const removed=[];
+  const remove=document.fonts.removeEventListener;
+  document.fonts.removeEventListener=function(type,...args){removed.push(type);return remove.call(this,type,...args);};
+  label.destroy();
+  document.fonts.removeEventListener=remove;
+  document.fonts.dispatchEvent(new Event('loading'));
+  document.fonts.dispatchEvent(new Event('loadingdone'));
+  document.fonts.dispatchEvent(new Event('loadingerror'));
+  await document.fonts.ready;
+  input.destroy();
+  return {active,after:measures,removed:removed.sort()};
+ });
+ expect(result).toEqual({active:2,after:2,removed:['loading','loadingdone','loadingerror']});
+});
+
+test('mount and teardown work without the FontFaceSet API',async({page})=>{
+ const result=await page.evaluate(async()=>{
+  const {ScrollingLabel}=await import('/src/ui/all.js');
+  Object.defineProperty(document,'fonts',{value:undefined,configurable:true});
+  try {
+   const other=new ScrollingLabel('#root',{text:'Long title '.repeat(20),width:100});
+   other.setGap(50);
+   const animated=Boolean(other._animation);
+   other.destroy();
+   return {animated,destroyed:other.destroyed};
+  } finally {delete document.fonts;}
+ });
+ expect(result).toEqual({animated:true,destroyed:true});
+});
