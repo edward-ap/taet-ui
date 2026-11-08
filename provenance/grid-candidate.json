@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "packageVersion": "0.6.0-rc.4",
-  "changeSet": "branding-row-drag-label-2026-11-03",
-  "note": "User-authorized branding cleanup; reviewed Grid delta is the row-drag plain-text label only. Imported provenance and the other 46 candidate source hashes are preserved.",
+  "changeSet": "macos-firefox-resize-editor-2026-11-07",
+  "note": "User-authorized and reviewed Grid/TreeGrid viewport-resize editor preservation. Only these two candidate hashes change; imported provenance and the other 45 candidate hashes are preserved.",
   "importManifestSha256": "9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67",
   "files": [
     {
@@ -103,7 +103,7 @@
     {
       "path": "src/ui/Grid.js",
       "importedSha256": "8784367eb52a32ad3799286b1a7730c3373ad60544e1f22f90bd3efa5a7e497a",
-      "sha256": "5d95c4de9e818c8fd8afa0d1414d93dd2e243f45a9da699817aeef20abdad62a"
+      "sha256": "646bf4902a17d068896204d64de68bcf967bc8ac70208d82b891221385599690"
     },
     {
       "path": "src/ui/GridColumnReorderController.js",
@@ -238,7 +238,7 @@
     {
       "path": "src/ui/TreeGrid.js",
       "importedSha256": "4729994205f2fe3e2287f8931d41e813af328def5172fec05d5e8f60e31bdf11",
-      "sha256": "4f763242c1d6a174a1b55c9aefe6d7df8dc4ba3cb7104964d6e3141033881fc7"
+      "sha256": "59c37c5e9c2a88c9242556dc7b8fa356c153bbe1d95b7d1d35fd7e77f42de3c2"
     }
   ]
 }

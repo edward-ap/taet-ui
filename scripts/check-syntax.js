@@ -4,6 +4,9 @@ import { spawnSync } from "node:child_process";
 
 const roots = ["src", "docs/src", "browser-tests", "examples", "test", "scripts"];
 const files = ["playwright.config.js", "playwright.compat.config.js", "playwright.bundle.config.js"];
+// Cargo/Tauri outputs include compressed assets whose names still end in .js.
+// Check the example source, not its ignored native build products.
+const generatedDirectories = new Set([join("examples", "tauri-minimal", "target")]);
 
 for (const root of roots) {
   collectJavaScriptFiles(root, files);
@@ -28,6 +31,7 @@ function collectJavaScriptFiles(directory, result) {
     const path = join(directory, entry.name);
 
     if (entry.isDirectory()) {
+      if (generatedDirectories.has(path)) continue;
       collectJavaScriptFiles(path, result);
       continue;
     }

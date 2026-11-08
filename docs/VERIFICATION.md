@@ -1,3 +1,253 @@
+# Cross-platform branch preparation - 2026-11-07
+
+Pre-PR verification snapshot for `fix/macos-webkit-portability`, based on
+`bfd3ddcddf1cdc539397e5d2ac5ed3cb976e72c2`. These are source-branch results,
+not new results for the previously published v0.6.0-rc.4 archives. The original
+Windows main was checked clean at that common base; Windows verification uses
+a separate detached worktree. No release tag or npm publication is part of
+this change. Final remote CI and further Windows engine results belong to the
+pull request for this branch, not to an assumed passing workflow file.
+
+## Additional findings before the PR
+
+- Modal traversal now includes native contenteditable hosts with true, empty
+  and plaintext-only attributes. Their default tabIndex is -1 despite being
+  native Tab stops. Explicit negative tabindex and inherited/nested editors
+  stay excluded unless explicitly tabbable. Twenty modal cases per engine
+  cover these and the earlier containment/editor/reentry contracts.
+- A separate pre-existing Firefox race lost an active Grid/TreeGrid draft when
+  automatic scrolling after a resize arrived before ResizeObserver. It was
+  reproduced with the baseline OverlayManager, so it was not a modal-fix
+  regression. Both tables now reconcile changed client geometry first using
+  their existing resize path. A subsequent scroll at unchanged geometry still
+  immediately cancels editing; there is no timer or grace period. Factory
+  teardown remains safe. Four new width/height regressions force this ordering.
+- The lab27 MDI test had a separate render-readiness race: selecting a connector
+  updates status immediately, then replaces SVG ports in a later animation
+  frame. The fixture now waits for selection rendering and bounded-polls live
+  port geometry. All interaction and connection assertions remain; production
+  ConnectorLayer code is unchanged.
+- ScrollingLabel had a rapid-font-swap edge: setGap could measure fallback
+  metrics, then the loaded font restored the observer's original width before
+  ResizeObserver sampled the fallback. The stale animation could persist.
+  Font loading/completion/error events now invalidate metrics; each loading
+  cycle also captures FontFaceSet.ready because WebKit can omit loadingdone.
+  Listeners are disposed and pending continuations cannot measure after
+  destruction. No polling, timers or per-frame JavaScript were added. The
+  original late-font test is unchanged; dedicated no-resize-delivery, listener
+  cleanup and missing-API cases cover the correction.
+- The two Grid source changes were reviewed before updating only their two
+  candidate hashes. The other 45 entries and immutable source-snapshot remain
+  unchanged. Imported CRLF bytes are retained.
+
+## Completed local checks
+
+| Check | Result |
+| --- | --- |
+| macOS test:all, two workers | 546 syntax files; API/package guards; 698/698 units; 755/755 Chromium; installed TS/JS/browser consumers; 476 runtime exports |
+| macOS full Firefox, two workers | 755/755 passed, 7.9 minutes |
+| macOS full WebKit, two workers | 755/755 passed, 6.2 minutes |
+| macOS modal regression file, all engines | 60/60 passed |
+| macOS Grid/TreeGrid window regressions, all engines | 66/66 passed |
+| macOS editor activation/teardown, all engines | 15/15 passed |
+| Original intermittent Firefox resize case | 30/30 serial repetitions passed after the fix |
+| Corrected lab27 fixture | 10/10 WebKit repetitions and 3/3 engine checks passed |
+| ScrollingLabel font completion | 21/21 focused engine checks; 40/40 WebKit repetitions; original/fixed comparison confirmed the stale endpoint and correction |
+| macOS bundle guard and all-engine bundle suite | 77 documentation imports checked; 42/42 browser cases passed |
+| macOS native example | prepare and cargo build --release --locked passed; final Mach-O arm64 binary and local .app copy match |
+| Windows after Grid fix, before final font patch | 698/698 units; incremental syntax and API/package guards; fresh build; 752/752 Chromium; 515/515 Firefox compatibility |
+| Windows initial patch baseline | Full test:all passed: 698 units, 748 Chromium, syntax/API/package and installed TS/JS/browser consumers |
+| Local distribution and package inspection | 497 npm package files; native PNG and verification record present; build outputs/dependencies/reports excluded; three portable archives have 22 files each |
+| Workflow and source hygiene | actionlint 1.7.12 passed; CRLF-aware diff check passed; only reviewed source/assets/tests/docs/workflow files selected |
+
+At this pre-PR snapshot, further Windows engine runs and the final font patch's
+Windows verification are still in progress. The pull request records their
+outcome and CI for its exact head commit. Earlier exploratory WebKit runs each
+passed 751/752 and exposed the lab27 fixture race and then the font-completion
+edge; those failures are retained as evidence, not counted as passing full
+runs. The final full Mac suites above use the corrected runtime and fixtures.
+
+Final source-content SHA-256 (src/scripts/package inputs):
+`e5672499ec2115ecf38a52b57d81d10a0839fd33f6005f9e3935563a60cb083a`.
+Reviewed runtime SHA-256 values:
+
+- OverlayManager.js: `17b9250fae7325a2164ae73af1c2b103f66397e6d4bd9cb9cd5c8f810d2b0de8`
+- Grid.js: `646bf4902a17d068896204d64de68bcf967bc8ac70208d82b891221385599690`
+- TreeGrid.js: `59c37c5e9c2a88c9242556dc7b8fa356c153bbe1d95b7d1d35fd7e77f42de3c2`
+- ScrollingLabel.js: `5b3c1d5340c70c6571b8577e947909044b3953db4e1bb377d2ec3893d618e982`
+
+Candidate manifest SHA-256:
+`4d7dddb43219c6daead41568e9fc063467abb99dd19fad4e158d86be9a5f487c`.
+The native BUNDLE.json and dist report identify the same final source content.
+
+The maintainer's earlier Safari/Grid and native Rust-echo smoke remains bounded
+manual evidence. The final rebuilt executable was not manually retested.
+Playwright WebKit is not a complete Safari/WKWebView acceptance pass. Actual
+IME, VoiceOver, native clipboard/file dialogs, mixed DPI, signing/notarization,
+installers and Intel/universal macOS builds remain unverified. Linux native
+hosts remain unverified. Earlier runs and their limitations follow below.
+
+---
+
+# macOS keyboard and WebKit remediation - 2026-11-07
+
+This local follow-up resolves the failures described in the first consumer
+check below. Source checkout: `bfd3ddcddf1cdc539397e5d2ac5ed3cb976e72c2`, with
+uncommitted local corrections. No release, push or publication was performed.
+Host: Apple M1 Max (10 cores, 64 GiB), macOS 26.5.1 arm64. Toolchain and browser
+versions are unchanged from the first check.
+
+## Findings and corrections
+
+- **Real OverlayManager defects:** native macOS WebKit Tab could leave a modal
+  from an interior button; capture-phase trapping could steal Grid editor Tab
+  before validation/commit. Consumed Grid/TreeGrid Tab at the first/last cell
+  could also escape to an outside control or BODY. Popup editor forwarding at
+  document level must run before the modal's ordinary Tab handling.
+- OverlayManager now handles unconsumed Tab at window bubble phase, explicitly
+  advances modal/portal focus, and checks captured Tab after dispatch/default
+  actions. The deferred check only repairs focus outside the same live top
+  modal, tolerates a child popup closing, and cannot reclaim focus after modal
+  replacement/reopen. Teardown clears pending checks. Positive tabindex,
+  radio groups, duplicate portal targets and native summary/media/frame targets
+  are retained. Escape handling remains capture-phase.
+- **Platform-aware tests:** primary mouse/keyboard shortcuts use ControlOrMeta.
+  Unit tests retain explicit ctrlKey and metaKey coverage. macOS WebKit native
+  all-control navigation uses Option+Tab through a narrow test helper; Grid
+  editor and modal behavior still exercise plain Tab/Shift+Tab. No system
+  keyboard settings were changed.
+- Safari mouse activation does not focus native buttons. Two focus-return
+  tests now explicitly focus and keyboard-activate their opener before checking
+  restoration. Diagnostics confirmed the previous implementation restored the
+  actual saved focus correctly in those cases.
+- Firefox does not expose WebKit scrollbar pseudo-elements. Three visual tests
+  retain 6px pseudo-element assertions where supported and check standard
+  width/color against explicit native CSS probes elsewhere. macOS Firefox
+  computes native thin as none even in an independent plain-HTML probe. Theme
+  color assertions remain active; production CSS was unchanged.
+- The syntax walker now excludes exactly examples/tauri-minimal/target: Tauri
+  writes compressed assets with .js suffixes there. A regression verifies that
+  an invalid real example source still fails the check. The PNG icon extracted
+  from the existing ICO remains the only native-example source addition.
+
+Only src/core/OverlayManager.js changed in library runtime source. Grid source,
+public exports, immutable provenance and all 47 approved Grid candidate hashes
+are unchanged. Added coverage: 17 modal browser regressions, explicit Ctrl/Cmd
+unit variants and the syntax-walker fixture. No whole tests were skipped.
+
+## Final verification on the corrected source
+
+| Check | Result |
+| --- | --- |
+| npm run test:all, four workers | Passed: 546 syntax files, API/package guards, 698/698 units, 745/745 Chromium browser cases, installed TS/JS/browser consumers and 476 runtime exports |
+| Full Firefox suite, four workers | 745/745 passed, 6.1 minutes |
+| Full WebKit suite, two workers | 745/745 passed, 6.4 minutes |
+| Modal plus existing overlay/reentry regressions, all three engines, one worker | 108/108 passed, including 17 new cases per engine |
+| Bundle guard and three-engine bundle configuration, one worker | Passed; 42/42 browser cases; provenance/assets/exclusions and 77 documentation imports verified |
+| Local npm pack dry-run and tarball inspection | 497 files; final verification record and native PNG included; target, node_modules and test-results absent |
+| Portable ZIP packaging from the verified build | Full/components/foundation archives passed, 22 files each; local dirty-tree provenance retained |
+| Native example prepare + cargo build --release --locked | Passed; current components bundle embedded in Mach-O arm64 executable |
+| git diff --check | Passed |
+
+Final commands, with the installed user toolchains on PATH, included:
+
+- TAET_UI_PORT=5721 TAET_UI_WORKERS=4 npm run test:all
+- TAET_UI_PORT=5723 node scripts/run-browser.js --browser=firefox --workers=4
+- TAET_UI_PORT=5722 node scripts/run-browser.js --browser=webkit --workers=2
+- node scripts/check-bundle.js
+- TAET_UI_PORT=5724 node scripts/run-browser.js --config playwright.bundle.config.js --workers=1
+- node examples/tauri-minimal/prepare.mjs
+- cargo build --manifest-path examples/tauri-minimal/Cargo.toml --release --locked
+- python scripts/package-distribution.py
+- npm pack --dry-run --json; npm pack --json
+
+Distinct output directories were used for each run. Final source-content SHA-256
+(src/scripts/package inputs):
+`6f197d60d98b8ac3662f7471038162e912dfcd8d95dc505e4da2d785440f26bc`.
+OverlayManager.js SHA-256:
+`a4417cb37ba24f4f36ba8fbbb6d1c73ffc5ff57214bec04c28f3bd987900be3a`.
+The native BUNDLE.json source matches the final dist report. The existing local
+.app wrapper was refreshed with the identical rebuilt executable; its Finder
+launch is not an additional verified acceptance result.
+
+Exploratory reports are retained separately. One early parallel run read dist
+while another command rebuilt it, causing temporary delivery/JSON failures.
+Two Firefox geometry-loop tests exceeded their 30-second budget under that
+heavy load. The final runs used an unchanged completed build and both geometry
+tests passed without changing their assertions or timeout.
+
+## Remaining limits
+
+The maintainer's earlier native Rust-echo and Safari documentation/Grid checks
+remain useful manual smoke evidence. The final native executable was rebuilt
+but the already-open application was not restarted or manually retested. The
+2,235 passing final browser cases are Playwright Chromium/Firefox/WebKit tests,
+not a claim that all were driven in the Safari application or native WKWebView.
+Actual IME, VoiceOver, native clipboard/file dialogs, mixed-DPI behavior and a
+complete native consumer acceptance pass remain unverified. Signing,
+notarization, installers and Intel/universal builds were not configured.
+
+---
+
+# macOS first consumer check - 2026-11-07
+
+Local source checkout at `bfd3ddcddf1cdc539397e5d2ac5ed3cb976e72c2`,
+Tæt UI 0.6.0-rc.4, on macOS 26.5.1 arm64. This is a local preparation and
+verification record, not a publication or a complete macOS acceptance claim.
+
+Toolchain: Node 22.23.4, npm 10.9.9, Python 3.13.18, Rust/Cargo 1.99.1,
+Xcode 26.5 and macOS SDK 26.5. Playwright 1.61.1 used Chromium
+149.0.7827.55, Firefox 151.0 and WebKit 26.5. Tools and browser dependencies
+were installed in user-owned locations; system keyboard/security settings
+were not changed.
+
+| Check | Result |
+| --- | --- |
+| Fresh npm ci | Passed; npm audit reported zero vulnerabilities |
+| npm test | Passed: syntax/API/package guards, 695 units, installed TS/JS consumers and 476 runtime exports |
+| npm run test:all | Failed at full Chromium browser stage: 706/728 passed, 22 failed; the final types-browser stage did not run in this command |
+| Separate npm run test:types:browser | Passed |
+| Standard Firefox compatibility | 470/473 passed; three keyboard text-replacement failures |
+| Standard WebKit compatibility | 441/473 passed; modifier/selection and keyboard focus failures |
+| npm run test:bundle | 42/42 passed across Chromium, Firefox and WebKit |
+| Repeat of the 22 Chromium failures with one worker | All 22 reproduced; original evidence retained separately |
+| Local npm pack and portable archive packaging | Passed; full/components/foundation archives each contain 22 files; no publication |
+| Native Tauri example release build, locked Cargo dependencies | Passed after adding the PNG icon described below; Mach-O arm64 executable |
+| Native interactive smoke | The maintainer reported seeing the native example and receiving Rust echo after clicking its button |
+
+The Chromium failures are at test flows that hard-code Control-click or
+Control+A. A separate diagnostic observed Chromium emitting contextmenu rather
+than click for Control-click on this Mac. Control+A did not select all text.
+Using Cmd-click selected both Grid records, and Cmd+A replaced and committed
+the editor value in Chromium, Firefox and a fresh WebKit page. This is bounded
+browser evidence, not a rerun of the full suite with modified tests. No Grid
+implementation, candidate hashes or standard tests were changed.
+
+WebKit additionally skipped native HTML buttons during a plain Tab sequence
+in a minimal button/input/button page without Tæt: focus alternated between the
+input and document body. Its suite failures involving Tab entry, focus return
+and dialog trapping remain unresolved. They must not all be relabeled as
+library passes or dismissed as only Control/Cmd test mistakes. The earlier
+combined WebKit modifier diagnostic ran after a Control-click/context-menu
+sequence and failed; a fresh independent Cmd-first diagnostic passed.
+
+The native example originally failed in tauri::generate_context because
+icons/icon.png was absent. The existing MIT-licensed icon.ico contains one
+32x32 RGBA PNG image. That original embedded image was extracted without
+altering its pixels into icons/icon.png (125 bytes, SHA-256
+`7ee8e611873e85c0f0bd6ef5a7ee03dc97dd791c52fb3d6b5efc87d81c25eee3`). The ICO, application Rust/JS and Tauri
+configuration were unchanged. Native rebuild succeeded with pinned Tauri
+2.12.1 and tauri-build 2.7.1. The maintainer's button/echo observation is a
+limited manual smoke, not the historical Windows acceptance stand.
+
+Remaining work: platform-aware modifier tests, WebKit/native keyboard-focus
+acceptance, extended native controls, actual IME, screen reader, clipboard/file
+dialog and mixed-DPI checks. Signing, notarization and installer distribution
+were not configured. No push, release, npm publication or other project change
+was performed.
+
+---
+
 # rc.4 publication preflight - 2026-11-03
 
 The maintainer authorized a new rc.4 GitHub prerelease and npm next publication.

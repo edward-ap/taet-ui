@@ -12,9 +12,17 @@ test("lab20 applies light and dark theme tokens to shared visual primitives", as
     const actionIconStyle = getComputedStyle(action.querySelector(".dui-icon"));
     const headerStyle = getComputedStyle(action.closest(".dui-window-header"));
     const scrollbar = document.querySelector(".dui-log-panel");
-    const scrollbarStyle = getComputedStyle(scrollbar, "::-webkit-scrollbar");
-    const thumbStyle = getComputedStyle(scrollbar, "::-webkit-scrollbar-thumb");
-    return {
+    const webkit = CSS.supports("selector(::-webkit-scrollbar)");
+    const scrollbarStyle = webkit ? getComputedStyle(scrollbar, "::-webkit-scrollbar") : null;
+    const thumbStyle = webkit ? getComputedStyle(scrollbar, "::-webkit-scrollbar-thumb") : null;
+    const standard = getComputedStyle(scrollbar);
+    const probe = document.createElement("span");
+    probe.style.scrollbarWidth = "thin";
+    probe.style.scrollbarColor = "var(--dui-scrollbar-thumb) transparent";
+    probe.style.color = "var(--dui-scrollbar-thumb)";
+    scrollbar.append(probe);
+    const expected = getComputedStyle(probe);
+    const result = {
       theme:document.body.dataset.theme,
       bodyBackground:body.backgroundColor,
       actionColor:actionStyle.color,
@@ -27,11 +35,32 @@ test("lab20 applies light and dark theme tokens to shared visual primitives", as
       actionIconWidth:actionIconStyle.width,
       actionIconHeight:actionIconStyle.height,
       actionPressed:action.getAttribute("aria-pressed"),
-      scrollbarWidth:scrollbarStyle.width,
-      scrollbarHeight:scrollbarStyle.height,
-      scrollbarThumb:thumbStyle.backgroundColor
+      webkit,
+      standardWidthSupported:CSS.supports("scrollbar-width", "thin"),
+      standardColorSupported:CSS.supports("scrollbar-color", "red transparent"),
+      scrollbarWidth:scrollbarStyle?.width,
+      scrollbarHeight:scrollbarStyle?.height,
+      scrollbarThumb:thumbStyle?.backgroundColor,
+      standardWidth:standard.scrollbarWidth,
+      standardColor:standard.scrollbarColor,
+      expectedWidth:expected.scrollbarWidth,
+      expectedColor:expected.scrollbarColor,
+      expectedThumb:expected.color
     };
+    probe.remove();
+    return result;
   });
+  const expectScrollbars = theme => {
+    expect(theme.webkit || theme.standardWidthSupported).toBe(true);
+    if (theme.webkit) {
+      expect(theme.scrollbarWidth).toBe("6px");
+      expect(theme.scrollbarHeight).toBe("6px");
+      expect(theme.scrollbarThumb).toBe(theme.expectedThumb);
+    }
+    // macOS Firefox normalizes thin to none even on a native reference element.
+    if (theme.standardWidthSupported) expect(theme.standardWidth).toBe(theme.expectedWidth);
+    if (theme.standardColorSupported) expect(theme.standardColor).toBe(theme.expectedColor);
+  };
 
   const light = await readTheme();
   expect(light.theme).toBe("light-blue");
@@ -43,8 +72,7 @@ test("lab20 applies light and dark theme tokens to shared visual primitives", as
   expect(light.actionIconWidth).toBe("16px");
   expect(light.actionIconHeight).toBe("16px");
   expect(light.actionPressed).toBeNull();
-  expect(light.scrollbarWidth).toBe("6px");
-  expect(light.scrollbarHeight).toBe("6px");
+  expectScrollbars(light);
 
   await page.getByRole("button", { name:"Dark Blue" }).click();
   const dark = await readTheme();
@@ -53,7 +81,9 @@ test("lab20 applies light and dark theme tokens to shared visual primitives", as
   expect(light.actionColor).toBe("rgb(255, 255, 255)");
   expect(dark.actionColor).toBe(light.actionColor);
   expect(dark.headerBackground).not.toBe(light.headerBackground);
-  expect(dark.scrollbarThumb).not.toBe(light.scrollbarThumb);
+  expectScrollbars(dark);
+  if (dark.webkit) expect(dark.scrollbarThumb).not.toBe(light.scrollbarThumb);
+  if (dark.standardColorSupported) expect(dark.standardColor).not.toBe(light.standardColor);
   expect(dark.actionWidth).toBe(light.actionWidth);
   expect(dark.actionHeight).toBe(light.actionHeight);
   expect(dark.scrollbarWidth).toBe(light.scrollbarWidth);

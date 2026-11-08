@@ -15,11 +15,25 @@ Choose one immutable commit and version. Finish changes before the final build.
    a committed workflow file is not a passing CI run.
 6. Prepare source, local npm tarball and optional portable profile archives from
    that commit; include checksums and matching fonts/notices. Mark GitHub release
-   as a pre-release. Keep private:true unless npm publication is separately chosen.
+   as a pre-release. npm publication requires a separate explicit decision;
+   do not infer permission from package.json metadata or a branch push.
 
-macOS is intentionally checked after GitHub publication in a new consumer project
-on the author's MacBook. Until then label it unverified; this is not a blocker for
-the preliminary release. Linux native hosts are also unverified.
+macOS browser checks and a bounded Apple Silicon Tauri build/smoke are now
+recorded in VERIFICATION.md. They do not certify all native integrations:
+actual IME, VoiceOver, native clipboard/file dialogs, mixed DPI, signing,
+notarization and Intel/universal builds remain unverified. Linux native hosts
+are also unverified. Preserve these limits in release notes.
+
+The macOS CI job uses Node 22 and two browser workers: test:all, the Firefox and
+WebKit compatibility projects, and all three bundle projects. It has a
+30-minute timeout and runs for pull requests, main pushes and manual dispatch,
+not duplicate feature-branch pushes. It does not compile or certify a native
+Tauri host. Local full-engine runs are recorded separately; verify the remote
+job for the exact proposed commit before calling CI successful.
+
+Keep existing release tags immutable. Corrections go through a reviewed branch
+in this repository; merging a PR, choosing a new preview version and publishing
+npm/GitHub release artifacts are separate steps.
 
 No script here publishes, pushes or changes GitHub settings automatically.
 

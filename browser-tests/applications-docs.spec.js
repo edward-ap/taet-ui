@@ -85,7 +85,10 @@ test("DialogBox validates content, returns results, restores focus and closes on
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("/docs/index.html#dialog-box");
   const opener = live(page).getByRole("button", { name: "Edit Settings", exact: true });
-  await opener.click();
+  // Restoration returns actual prior focus; Safari mouse clicks need not focus buttons.
+  await opener.focus();
+  await expect(opener).toBeFocused();
+  await opener.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Project settings", exact: true });
   await dialog.getByRole("textbox", { name: "Project", exact: true }).fill("");
   await dialog.getByRole("button", { name: "Apply", exact: true }).click();

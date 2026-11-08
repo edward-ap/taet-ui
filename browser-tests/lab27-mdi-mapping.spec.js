@@ -136,9 +136,14 @@ test("lab27 MDI windows keep Grid row connectors attached during move, resize, a
 
   const sourcePort = workspace.locator('[data-dui-port-control-id="customersWindow"][data-dui-port-item-id="email"][data-dui-port-side="right"]');
   const targetPort = workspace.locator('[data-dui-port-control-id="ordersWindow"][data-dui-port-item-id="warehouse_id"][data-dui-port-side="left"]');
-  const sourceBox = await sourcePort.boundingBox();
-  const targetBox = await targetPort.boundingBox();
-  if (!sourceBox || !targetBox) throw new Error("Mapper port geometry is unavailable.");
+  // Selection renders asynchronously and replaces the port nodes.
+  await expect(customerPath).toHaveClass(/dui-selected/);
+  let sourceBox, targetBox;
+  await expect.poll(async () => {
+    sourceBox = await sourcePort.boundingBox();
+    targetBox = await targetPort.boundingBox();
+    return [sourceBox, targetBox].every(box => box && box.width > 0 && box.height > 0);
+  }).toBe(true);
   await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
   await page.mouse.down();
   await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);

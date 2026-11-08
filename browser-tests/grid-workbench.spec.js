@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { pressNativeTab } from './keyboard-helpers.js';
 
 test.beforeEach(async ({ page }) => {
   page.on("pageerror", error => { throw error; });
@@ -26,7 +27,7 @@ test("one screen owns live controls and borrowed views over the same source", as
 });
 
 test("keyboard-only passage edits a task and its properties without a focus trap", async ({ page }) => {
-  await page.keyboard.press("Tab");
+  await pressNativeTab(page);
   await expect(page.getByRole("button", { name: "Hierarchy", exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
   const tree = page.locator(".grid-workbench__tree");
@@ -35,19 +36,19 @@ test("keyboard-only passage edits a task and its properties without a focus trap
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Space");
   await selected(page, "design");
-  await page.keyboard.press("Tab");
+  await pressNativeTab(page);
   await expect(tree.getByRole("button", { name: "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0442\u0430\u0431\u043b\u0438\u0446\u044b", exact: true })).toBeFocused();
-  await page.keyboard.press("Tab");
+  await pressNativeTab(page);
   await expect(tree.getByRole("button", { name: "Column menu for Project / task", exact: true })).toBeFocused();
-  await page.keyboard.press("Tab");
+  await pressNativeTab(page);
   await expect(page.locator(".grid-workbench__tasks")).toBeFocused();
   await page.keyboard.press("F2");
   await expect(editor(page)).toBeFocused();
-  await page.keyboard.press("Control+A");
+  await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.type("Keyboard workflow");
   await page.keyboard.press("Tab");
   await expect(page.locator('.grid-workbench__tasks [data-dui-grid-column-id="hours"] input')).toBeFocused();
-  await page.keyboard.press("Control+A");
+  await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.type("17");
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
@@ -57,7 +58,7 @@ test("keyboard-only passage edits a task and its properties without a focus trap
   await expect(page.getByRole("button", { name: "Edit selected properties" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(propertyEditor(page)).toBeFocused();
-  await page.keyboard.press("Control+A");
+  await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.type("Property keyboard update");
   await page.keyboard.press("Enter");
   expect(await page.evaluate(() => ({ name: workbench.data.get("design").name,

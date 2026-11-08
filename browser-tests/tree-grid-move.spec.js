@@ -30,7 +30,7 @@ test.beforeEach(async ({page}) => {
 async function selectWithMouse(page, ids, range = false) {
   await cell(page, ids[0]).click();
   if (range) await cell(page, ids.at(-1)).click({modifiers:['Shift']});
-  else for (const id of ids.slice(1)) await cell(page, id).click({modifiers:['Control']});
+  else for (const id of ids.slice(1)) await cell(page, id).click({modifiers:['ControlOrMeta']});
   const selected = await page.evaluate(() => treeMove.tree.getSelectedIds());
   expect(selected.length).toBeGreaterThanOrEqual(2);
   for (const id of selected) await expect(row(page, id)).toHaveAttribute('aria-selected', 'true');
@@ -53,7 +53,7 @@ async function beginNative(page, id, targetId) {
   await expect(ghost(page)).toBeVisible();
 }
 
-test('native Ctrl-selected subtree move keeps the selected set and unchanged descendant records', async ({page}) => {
+test('native modifier-selected subtree move keeps the selected set and unchanged descendant records', async ({page}) => {
   const selected = await selectWithMouse(page, ['A1', 'A2']);
   await page.evaluate(() => {window.descendant = treeMove.tree.data.get('A11'); window.originalIds = treeMove.tree.data.all().map(item => item.id); treeMove.tree.collapse('B');});
   await drag(page, 'A1', 'B');
@@ -114,7 +114,7 @@ test('cycle attempts through native drag and API leave every source record uncha
   await expect(ghost(page)).toHaveCount(0); await expect(markers(page)).toHaveCount(0);
 });
 
-test('demo read-only policy vetoes the entire native Ctrl-selected batch and names the blocking ID', async ({page}) => {
+test('demo read-only policy vetoes the entire native modifier-selected batch and names the blocking ID', async ({page}) => {
   const before = await source(page);
   await selectWithMouse(page, ['A2', 'locked']);
   await drag(page, 'A2', 'B');

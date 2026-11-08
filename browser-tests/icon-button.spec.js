@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pressNativeTab } from './keyboard-helpers.js';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -36,7 +37,7 @@ for (const theme of ['light-blue', 'dark-blue']) {
     await expect(button).toHaveAttribute('aria-pressed', 'false');
     await expect(button.locator('.dui-check-button__visible svg path')).toHaveCount(1);
     const width = (await button.boundingBox()).width;
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(button).toBeFocused();
     await expect(button).toHaveCSS('outline-style', 'solid');
     await page.keyboard.press('Enter');
@@ -93,7 +94,7 @@ for (const theme of ['light-blue', 'dark-blue']) {
     await expect(button).toHaveText('');
     await expect(button.locator('svg')).toHaveCount(1);
     await expect(button).toHaveAttribute('title', 'Next page');
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(button).toBeFocused();
     await expect(button).toHaveCSS('outline-style', 'solid');
     await page.keyboard.press('Enter');

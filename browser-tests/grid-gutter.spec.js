@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import { pressNativeTab } from './keyboard-helpers.js';
 
 const settingsName='\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0442\u0430\u0431\u043b\u0438\u0446\u044b';
 const settings=page=>page.getByRole('button',{name:settingsName,exact:true});
@@ -136,7 +137,7 @@ for(const kind of ['Grid','TreeGrid']){
         document.body.classList.remove('dui-theme-light-blue','dui-theme-dark-blue');
         document.body.classList.add(`dui-theme-${theme}-blue`);
       },theme);
-      await settings(page).focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');
+      await settings(page).focus();await pressNativeTab(page);await pressNativeTab(page, { backward: true });
       await expect(settings(page)).toBeFocused();
       const geometry=await settings(page).evaluate(button=>{
         const gutter=button.parentElement.getBoundingClientRect(),rect=button.getBoundingClientRect();

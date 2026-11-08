@@ -7,11 +7,11 @@ async function setup(page,kind='Grid') {await page.evaluate(async kind=>{
 },kind);}
 const row=(page,id)=>page.getByRole('gridcell',{name:'Row '+id,exact:true});
 for(const kind of ['Grid','TreeGrid']) {
- test(kind+' Shift pointer/keyboard ranges, Ctrl focus and offscreen endpoints',async({page})=>{
+ test(kind+' Shift pointer/keyboard ranges, primary-modifier focus and offscreen endpoints',async({page})=>{
   await setup(page,kind);await row(page,1).click();await row(page,4).click({modifiers:['Shift']});
   expect(await page.evaluate(()=>g.getSelectedIds())).toEqual([1,2,3,4]);
   await page.keyboard.press('Shift+ArrowUp');expect(await page.evaluate(()=>g.getSelectedIds())).toEqual([1,2,3]);
-  await page.keyboard.press('Control+ArrowDown');expect(await page.evaluate(()=>g.getSelectedIds())).toEqual([1,2,3]);
+  await page.keyboard.press('ControlOrMeta+ArrowDown');expect(await page.evaluate(()=>g.getSelectedIds())).toEqual([1,2,3]);
   await page.keyboard.press('Shift+End');expect(await page.evaluate(()=>g.getSelectedIds())).toEqual(Array.from({length:79},(_,i)=>i+1));
   await expect(row(page,79)).toBeVisible();
   await page.keyboard.press('ArrowUp');expect(await page.evaluate(()=>g.getSelectedIds())).toEqual([78]);

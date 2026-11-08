@@ -24,15 +24,15 @@ test("GridSelectionController selects one row and synchronizes active id", () =>
   assert.deepEqual(owner.selection.get(), [row]);
 });
 
-test("GridSelectionController toggles rows with Ctrl in multi-select mode", () => {
+for (const modifier of ["ctrlKey", "metaKey"]) test(`GridSelectionController toggles rows with ${modifier} in multi-select mode`, () => {
   const owner = createOwner({ multiSelect:true });
   const controller = new GridSelectionController(owner);
   const first = { id:"a" };
   const second = { id:"b" };
 
   controller.selectFromUser(first);
-  controller.selectFromUser(second, { ctrlKey:true });
+  controller.selectFromUser(second, { [modifier]:true });
   assert.deepEqual(owner.selection.get(), [first, second]);
-  controller.selectFromUser(first, { ctrlKey:true });
+  controller.selectFromUser(first, { [modifier]:true });
   assert.deepEqual(owner.selection.get(), [second]);
 });

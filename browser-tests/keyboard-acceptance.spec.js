@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { pressNativeTab } from './keyboard-helpers.js';
 
 test.beforeEach(async ({ page }) => {
   page.on('pageerror', error => { throw error; });
@@ -43,9 +44,9 @@ for (const type of ['Grid', 'TreeGrid']) {
       window.keyboardOwner = owner;
     }, type);
     const root = page.locator('.dui-grid');
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(page.getByRole('button', { name: 'Before table', exact: true })).toBeFocused();
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(root).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(root).toHaveAttribute('aria-activedescendant', /.+/);
@@ -61,21 +62,21 @@ for (const type of ['Grid', 'TreeGrid']) {
     await page.keyboard.press('Home');
     await expect(editor).toBeFocused();
     await expect(root).toHaveAttribute('aria-activedescendant', active);
-    await page.keyboard.press('Control+A');
+    await page.keyboard.press('ControlOrMeta+A');
     await page.keyboard.type('Cancelled draft');
     await page.keyboard.press('Escape');
     await expect(root).toBeFocused();
     expect(await page.evaluate(() => window.keyboardOwner.data.get(0).a)).toBe('Row 0');
     await page.keyboard.press('Enter');
     await expect(editor).toBeFocused();
-    await page.keyboard.press('Control+A');
+    await page.keyboard.press('ControlOrMeta+A');
     await page.keyboard.type('Saved from keyboard');
     await page.keyboard.press('Enter');
     await expect(root).toBeFocused();
     expect(await page.evaluate(() => window.keyboardOwner.data.get(0).a)).toBe('Saved from keyboard');
-    await page.keyboard.press('Tab');
+    await pressNativeTab(page);
     await expect(page.getByRole('button', { name: 'After table', exact: true })).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
+    await pressNativeTab(page, { backward: true });
     await expect(root).toBeFocused();
   });
 }
@@ -134,9 +135,9 @@ test('TabBar keyboard skips disabled tabs and leaves the tablist in both directi
       { id: 'c', text: 'Last' }] }).mount(host);
     new Button({ text: 'After tabs' }).mount(host);
   });
-  await page.keyboard.press('Tab');
+  await pressNativeTab(page);
   await expect(page.getByRole('button', { name: 'Before tabs', exact: true })).toBeFocused();
-  await page.keyboard.press('Tab');
+  await pressNativeTab(page);
   await expect(page.getByRole('tab', { name: 'First', exact: true })).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Last', exact: true })).toBeFocused();
@@ -145,9 +146,9 @@ test('TabBar keyboard skips disabled tabs and leaves the tablist in both directi
   await page.keyboard.press('Home');
   await expect(page.getByRole('tab', { name: 'First', exact: true })).toBeFocused();
   await page.keyboard.press('End');
-  await page.keyboard.press('Tab');
+  await pressNativeTab(page);
   await expect(page.getByRole('button', { name: 'After tabs', exact: true })).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
+  await pressNativeTab(page, { backward: true });
   await expect(page.getByRole('tab', { name: 'Last', exact: true })).toBeFocused();
 });
 
@@ -166,7 +167,7 @@ test('Dialog Form supports keyboard text, choice, checkbox, focus trap and retur
     new Button({ text: 'Open form', onClick: () => window.keyboardDialog.open() }).mount(document.querySelector('#root'));
   });
   const dialog = page.getByRole('dialog', { name: 'Keyboard form' });
-  await page.keyboard.press('Tab');
+  await pressNativeTab(page);
   await page.keyboard.press('Enter');
   await expect(dialog).toBeFocused();
   await page.keyboard.press('Tab');

@@ -32,21 +32,35 @@ test("lab25 mapping workbench composes dock, commands, grid, inspector, and over
     return selectors.map(selector => {
       const element = document.querySelector(selector);
       const standard = getComputedStyle(element);
-      const webkit = getComputedStyle(element, "::-webkit-scrollbar");
-      return {
+      const webkitSupported = CSS.supports("selector(::-webkit-scrollbar)");
+      const webkit = webkitSupported ? getComputedStyle(element, "::-webkit-scrollbar") : null;
+      const probe = document.createElement("span");
+      probe.style.scrollbarWidth = "thin";
+      probe.style.scrollbarColor = "var(--dui-scrollbar-thumb) transparent";
+      element.append(probe);
+      const expected = getComputedStyle(probe);
+      const result = {
         selector,
-        width:webkit.width,
-        height:webkit.height,
-        standardWidth:standard.scrollbarWidth
+        webkitSupported,
+        standardWidthSupported:CSS.supports("scrollbar-width", "thin"),
+        standardColorSupported:CSS.supports("scrollbar-color", "red transparent"),
+        width:webkit?.width,
+        height:webkit?.height,
+        standardWidth:standard.scrollbarWidth,
+        standardColor:standard.scrollbarColor,
+        expectedWidth:expected.scrollbarWidth,
+        expectedColor:expected.scrollbarColor
       };
+      probe.remove();
+      return result;
     });
   });
   for (const scrollbar of scrollbarStyles) {
-    expect(scrollbar, scrollbar.selector).toMatchObject({
-      width:"6px",
-      height:"6px",
-      standardWidth:"thin"
-    });
+    expect(scrollbar.webkitSupported || scrollbar.standardWidthSupported, scrollbar.selector).toBe(true);
+    if (scrollbar.webkitSupported) expect(scrollbar, scrollbar.selector).toMatchObject({ width:"6px", height:"6px" });
+    // Compare computed thin to a native probe, including macOS Firefox normalization.
+    if (scrollbar.standardWidthSupported) expect(scrollbar.standardWidth, scrollbar.selector).toBe(scrollbar.expectedWidth);
+    if (scrollbar.standardColorSupported) expect(scrollbar.standardColor, scrollbar.selector).toBe(scrollbar.expectedColor);
   }
   const grid = page.locator(".dui-workbench__grid");
   await expect(grid).toBeVisible();

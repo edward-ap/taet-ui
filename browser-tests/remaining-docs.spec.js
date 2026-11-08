@@ -86,7 +86,11 @@ test("popup and tooltip keep focus and release their overlays on navigation", as
   await expect(page.locator(".dui-tooltip:visible")).toHaveCount(0);
   await navigate(page, "popup");
   const anchor = live(page).getByRole("button", { name: "Quick filter", exact: true });
-  await anchor.click();
+  // Safari mouse activation does not focus native buttons. Establish the
+  // focus owner explicitly before testing the popup's restoration contract.
+  await anchor.focus();
+  await expect(anchor).toBeFocused();
+  await anchor.press("Enter");
   await page.getByRole("textbox", { name: "Contains", exact: true }).fill("Ada");
   await page.getByRole("button", { name: "Apply filter", exact: true }).click();
   await expect(output(page)).toHaveText("Filter: Ada");

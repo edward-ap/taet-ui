@@ -132,7 +132,9 @@ export function destroy() { screen.destroy(); } // Host calls this when closing.
 
 A source-only [minimal Tauri host](examples/tauri-minimal/README.md) demonstrates
 a compact Form and bounded Rust echo. Its historical pre-rename Windows smoke passed
-7/7 programmatic checks. A renamed Tæt UI native rebuild, physical input and other OSes remain unverified.
+7/7 programmatic checks. The current host also builds on Apple Silicon macOS;
+the maintainer exercised the native Rust echo. See the example notes for the
+difference between that smoke check and full native acceptance.
 
 For TypeScript or resolver-based apps, `npm pack --pack-destination ..` creates
 the local `taet-ui-0.6.0-rc.4.tgz`. Install that file in your app with
@@ -154,18 +156,42 @@ screen, read [mutation/ownership examples](docs/MUTATIONS.md).
 ## Preview limits
 
 Current migration checks are recorded in [verification](docs/VERIFICATION.md).
-Earlier pre-rename results identify their original inputs and are historical evidence.
+Results apply to the recorded source revision, not automatically to older release
+archives. Earlier pre-rename results identify their original inputs and are
+historical evidence.
 
 Recorded checks include Windows browser automation and a separate Windows
 Tauri/WebView2 acceptance stand. Programmatic/synthetic input is distinguished
 from physical input in [verification](docs/VERIFICATION.md).
-macOS and Linux native hosts are **not verified**. macOS will be checked in a new
-consumer project after GitHub publication; it is not a blocker for this preview.
-Real IME, screen-reader, native file-dialog and mixed-DPI acceptance remain unverified.
+On Apple Silicon macOS, the corrected source passed the full Chromium, Firefox
+and WebKit suites, and the Tauri example was rebuilt with the current bundle.
+The maintainer also checked documentation and Grid interactions in Safari.
+Playwright WebKit is separate from a complete Safari or native WKWebView
+acceptance pass. Linux native hosts, Intel/universal macOS builds, signing and
+notarization remain unverified. Real IME, VoiceOver/screen-reader, native
+clipboard/file-dialog and mixed-DPI acceptance remain unverified.
 
 Grid row transfer is local and opt-in. Tree subtree movement is inside one local
 tree; cross-tree copy/move and remote/custom providers are outside that contract.
 Raster/Painter/StockChart/FlatFile/Spectrum/Pivot are [deferred extensions](docs/EXTENSIONS.md).
+
+## macOS keyboard behavior
+
+Use **Cmd** where a Grid or TreeGrid example says **Ctrl/Cmd**, including
+additive row selection with Cmd-click and primary-modifier keyboard navigation.
+Shift extends the selection; Ctrl-click on macOS is normally a context-menu
+gesture. Browser tests use the platform primary modifier and unit tests retain
+separate Ctrl and Meta coverage.
+
+ShortcutManager treats Ctrl/Cmd/Command bindings as portable shortcuts: a
+Command-key event can fall back to the Ctrl binding, while an explicit Meta
+binding takes precedence. Browser- or OS-reserved shortcuts still belong to the
+host; this is not a global keyboard remapping.
+
+Safari/WebKit native Tab navigation depends on the host's keyboard-navigation
+settings. Option-Tab reaches native controls when plain Tab skips them. Modal
+focus containment and Grid editor commit/navigation are tested with plain
+Tab and Shift-Tab; no system setting change is required by the test helper.
 
 For contributors: [setup/checks](CONTRIBUTING.md), [AI entry point](docs/AI_CONTEXT.md),
 [preview version recommendations](docs/VERSIONING.md), [changelog](CHANGELOG.md), [security](SECURITY.md).
