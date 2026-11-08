@@ -68,12 +68,10 @@ export class NumberInput extends TextField {
       });
 
       this.disposables.addEventListener(this._input, "blur", () => {
-        if (this.clamp) {
-          this._setValue(this._value, {
-            silent: true,
-            origin: "system"
-          });
-        }
+        this._setValue(this._value, {
+          silent: true,
+          origin: "system"
+        });
       });
 
       this.disposables.addEventListener(this._input, "wheel", event => {
@@ -129,7 +127,22 @@ export class NumberInput extends TextField {
   }
 
   _setValue(nextValue, options = {}) {
-    return super._setValue(formatNumberValue(this._normalizeNumber(nextValue)), options);
+    const preserveInputText = this._preserveInputText;
+    this._preserveInputText = options.origin === "user" && options.userAction === true &&
+      !this.disabled && !this.isReadOnly();
+    try {
+      return super._setValue(formatNumberValue(this._normalizeNumber(nextValue)), options);
+    } finally {
+      this._preserveInputText = preserveInputText;
+    }
+  }
+
+  _syncInput(value) {
+    // Keep intermediate decimal text ("1.", "1.0") during user input only.
+    // API writes, blur and normalization that changes the number still synchronize.
+    if (this._preserveInputText && this._input && this._input.value !== "" &&
+        parseNumberValue(this._input.value) === parseNumberValue(value)) return;
+    super._syncInput(value);
   }
 
   _valueToEventValue(value) {

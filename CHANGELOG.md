@@ -1,5 +1,12 @@
 # Tæt UI changes
 
+## 0.6.0-rc.6 - NumberInput decimal-entry fix, 2026-11-08
+
+- Preserve numerically equivalent intermediate text such as `1.` and `1.0` during user input, allowing decimals such as `1.05` to be typed character by character.
+- Normalize editor text on blur, including with clamping disabled; preserve API/silent synchronization, numeric events, veto and disabled/readonly recovery.
+- Add keystroke regressions for fractional and negative values, normalization, spin and nested API writes; include them in the three-engine compatibility gate.
+- Keep public declarations, runtime dependencies, API maturity, imported Grid source and previously published versions unchanged. This candidate targets npm next.
+
 ## 0.6.0-rc.5 - cross-platform release candidate, 2026-11-08
 
 - Improve macOS modal Tab containment, including native contenteditable focus targets, and strengthen portable Ctrl/Cmd regression coverage.

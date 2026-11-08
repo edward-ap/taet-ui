@@ -4,7 +4,7 @@ These are project recommendations for preview releases; the maintainer confirms
 each public version/tag. This document does not change the current version or
 create a new compatibility guarantee.
 
-0.6.0-rc.5 is a preview, not a 1.0 compatibility promise. Stable root and
+0.6.0-rc.6 is a preview, not a 1.0 compatibility promise. Stable root and
 experimental API are listed separately in STABLE_API.md. Import tiers describe
 architecture; they do not change maturity.
 

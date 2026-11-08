@@ -131,6 +131,14 @@ is ''). Finite numbers normalize by integer truncation, optional min/max clampin
 then precision rounding. Precision must be within JavaScript's toFixed range.
 Clearing does not become min. reset restores the numeric clean baseline.
 
+During user input, numerically equivalent intermediate text such as `1.` and
+`1.0` stays in the native editor so decimals can be typed character by character.
+Public values/events remain numeric; equivalent prefixes do not emit changes.
+Blur normalizes display text, including with clamp: false. API writes (including
+silent writes and unchanged values), reset and refresh synchronize the display.
+Integer/precision/range normalization still rewrites input when it changes the
+number; vetoed and disabled/readonly user writes still restore the stored value.
+
 spin/spinUp/spinDown return boolean and reject disabled or readonly controls,
 including programmatic calls. This differs from value.set, which permits API
 hydration. spin uses the sign of direction. Starting from empty uses min for

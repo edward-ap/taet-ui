@@ -1,3 +1,56 @@
+# rc.6 publication candidate - 2026-11-08
+
+The 0.6.0-rc.6 candidate combines the NumberInput fix and completed local checks
+recorded below with synchronized package/documentation versions. There are no
+additional runtime, declaration or dependency changes. Grid candidate metadata
+advances only packageVersion; all 47 approved file hashes and the immutable
+source-snapshot manifest remain unchanged.
+
+Publication targets npm next. The exact release commit must pass its own remote
+CI before publication. The PR and registry record provide commit/run and package
+integrity evidence; a prepared package or workflow file alone is not publication
+or a claim that final CI has passed. Existing release tags/versions stay immutable.
+
+---
+
+# NumberInput decimal entry - 2026-11-08
+
+Local working-tree verification on `codex/number-input-decimal-entry`, based on
+`3361a7e` (0.6.0-rc.5). Public declarations/exports, dependencies and the 47
+approved Grid candidate hashes remain unchanged.
+
+The new native keystroke regression failed before the fix: typing `1.05`
+produced `15`. NumberInput now preserves equivalent editor text such as `1.`
+and `1.0` during user changes while keeping public values/events numeric.
+Blur canonicalizes text with either clamping setting; API writes and numeric
+normalization, veto, disabled/readonly recovery and nested writes retain their
+synchronization behavior. The portable compatibility gate includes the new spec.
+
+Completed checks on Windows x64:
+
+- `npm run test:all`: passed. Its `npm test` phase checked 546 JavaScript files,
+  API inventory/package boundaries and all 698 unit tests. The main Chromium
+  browser suite passed 772 tests. Installed TS/JS consumers passed in Node and
+  Chromium with TypeScript 5.9.3, NodeNext/Bundler and 476 checked runtime exports.
+- `node scripts/run-browser.js --config playwright.compat.config.js`: 1605
+  passed across Chromium, Firefox and WebKit. The run used eight workers with
+  the configured single-worker Windows WebKit cap.
+- `npm run test:bundle`: build/provenance/assets checks and all 42 ESM/IIFE,
+  font and export checks passed across the three engines.
+- The new decimal-entry subset separately passed 51 tests (17 per engine);
+  the focused Chromium run including existing mount/recovery tests passed 24.
+  These subsets overlap the full gates and are not additional unique coverage.
+- `npm pack --pack-destination <external-directory>`: 497 files. The packed
+  NumberInput source matched the checkout; dist, node_modules and test reports
+  were excluded. Build/test artifacts and detailed logs remained ignored or
+  outside the checkout.
+
+These are automated browser/package checks, not native WebView host or physical
+keyboard/IME certification. This change stays within Tæt UI; application pins
+and public release metadata retain their existing versions.
+
+---
+
 # rc.5 release preparation - 2026-11-08
 
 The 0.6.0-rc.5 release metadata is based on merge commit

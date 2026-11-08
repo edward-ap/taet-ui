@@ -1,6 +1,6 @@
 # Tæt UI: start here
 
-0.6.0-rc.5 is a dependency-free desktop/WebView preview.
+0.6.0-rc.6 is a dependency-free desktop/WebView preview.
 
 1. Read [LLM_GUIDE](LLM_GUIDE.md), then one [AI_MAP](AI_MAP.md) row.
 2. Read its exact public .d.ts and one recipe before guessing a method.

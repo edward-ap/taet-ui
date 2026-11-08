@@ -1,6 +1,6 @@
 {
   "name": "taet-ui",
-  "version": "0.6.0-rc.5",
+  "version": "0.6.0-rc.6",
   "type": "module",
   "scripts": {
     "dev": "python scripts/dev-server.py --port 5173 --bind 127.0.0.1",
