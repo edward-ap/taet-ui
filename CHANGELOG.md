@@ -1,5 +1,14 @@
 # Tæt UI changes
 
+## 0.6.0-rc.5 - cross-platform release candidate, 2026-11-08
+
+- Improve macOS modal Tab containment, including native contenteditable focus targets, and strengthen portable Ctrl/Cmd regression coverage.
+- Preserve Grid/TreeGrid edit drafts when viewport resize scrolling precedes ResizeObserver, while retaining ordinary scroll cancellation.
+- Recalculate ScrollingLabel geometry after asynchronous font completion and release font listeners on teardown.
+- Add macOS CI and browser regressions; retain strict interaction assertions and wait for actual editor/render readiness.
+- Include the minimal macOS Tauri icon and document the bounded Apple Silicon build/smoke evidence. Native IME, VoiceOver, clipboard/file dialogs, mixed DPI, signing/notarization and Intel/universal builds remain unverified.
+- Keep zero runtime dependencies, existing API maturity, immutable imported provenance and published rc.3/rc.4 artifacts unchanged. This candidate targets npm next; latest is not promoted.
+
 ## 0.6.0-rc.4 - release candidate, 2026-11-03
 
 - Clean current branding, remove the private historical CI link and update local benchmark/demo identifiers.

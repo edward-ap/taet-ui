@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.6.0-rc.4",
+  "packageVersion": "0.6.0-rc.5",
   "changeSet": "macos-firefox-resize-editor-2026-11-07",
   "note": "User-authorized and reviewed Grid/TreeGrid viewport-resize editor preservation. Only these two candidate hashes change; imported provenance and the other 45 candidate hashes are preserved.",
   "importManifestSha256": "9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67",

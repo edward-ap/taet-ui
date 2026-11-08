@@ -1,3 +1,40 @@
+# rc.5 release preparation - 2026-11-08
+
+The 0.6.0-rc.5 release metadata is based on merge commit
+`65abe6a5b2d3dff0c28ebb88e4e9a96dfbca3bc1`. Runtime, declarations, test
+fixtures, build scripts and workflows are unchanged from that commit. All 47
+reviewed Grid candidate source hashes and the immutable imported manifest are
+preserved; only the candidate packageVersion advances with package.json.
+
+The exact merge commit passed all seven jobs in
+[CI run 42427920445](https://github.com/edward-ap/taet-ui/actions/runs/42427920445):
+Windows/Linux Node 22 and 24, macOS, three-engine compatibility/bundles, and
+performance. This is base-commit evidence, not a claim about a later commit.
+The final release commit must pass its own linked GitHub Actions run before npm
+publication. The public npm registry separately records publication outcome.
+
+Local preparation checks:
+
+- Clean macOS main at the merge commit: npm test passed 546 syntax files,
+  API/package guards, 698 units and installed TS/JS consumers (476 exports).
+- Windows rc.5 metadata snapshot: fresh build, bundle/provenance/assets guard
+  and 77 documentation imports passed; publication metadata prerequisites passed.
+- npm dry-run contained 497 files. Build products, dependencies, logs, profiles
+  and credential files were excluded. A bounded scan found no common npm/GitHub
+  token, private-key, AWS-access-key or npm auth-assignment patterns. This is
+  package hygiene, not a security certification.
+- Windows test:all and sequential Firefox/WebKit compatibility runs were
+  interrupted during execution. They have no completed pass/fail summary and
+  are not counted as passed gates. Full results must come from the final CI run.
+
+No API maturity is promoted. Native IME, VoiceOver, clipboard/file dialogs,
+mixed DPI, signing/notarization, Intel/universal macOS and Linux native hosts
+remain unverified. Earlier failed runs and bounded native evidence below remain
+historical records. Published rc.3/rc.4 versions and release tags are unchanged;
+rc.5 is intended for npm next, without promoting latest.
+
+---
+
 # Cross-platform branch preparation - 2026-11-07
 
 Pre-PR verification snapshot for `fix/macos-webkit-portability`, based on
