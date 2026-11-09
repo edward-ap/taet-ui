@@ -31,7 +31,7 @@
     "test:input-clipboard": "node scripts/run-browser.js --config playwright.compat.config.js --project chromium --grep @input-clipboard"
   },
   "devDependencies": {
-    "@playwright/test": "1.61.1",
+    "@playwright/test": "1.65.0",
     "esbuild": "0.28.2",
     "typescript": "5.9.3"
   },
