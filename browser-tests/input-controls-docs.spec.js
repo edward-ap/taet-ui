@@ -45,7 +45,11 @@ test("Input Controls navigation and examples cover form input behavior", async (
   const slotsInput = slotsExample.getByRole("textbox", { name: "Reference*", exact: true });
   await expect(slotsInput).toHaveValue("__-1234");
   await slotsInput.focus();
-  await slotsInput.press("Home");
+  // On macOS, Playwright maps Home to scrolling; collapse a full selection.
+  await slotsInput.press("ControlOrMeta+A");
+  expect(await slotsInput.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 7]);
+  await slotsInput.press("ArrowLeft");
+  expect(await slotsInput.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 0]);
   await slotsInput.pressSequentially("X");
   await expect(slotsInput).toHaveValue("X_-1234");
   await slotsInput.pressSequentially("Y");
@@ -251,7 +255,11 @@ test("positional mask documentation example preserves raw holes and requires com
   expect(await read()).toEqual({ value: "__-1234", raw: "__1234", display: "__-1234",
     form: { reference: "__-1234" }, ok: false, errors: ["Complete every position"] });
   await input.focus();
-  await input.press("Home");
+  // On macOS, Playwright maps Home to scrolling; collapse a full selection.
+  await input.press("ControlOrMeta+A");
+  expect(await input.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 7]);
+  await input.press("ArrowLeft");
+  expect(await input.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 0]);
   await input.pressSequentially("X");
   expect(await read()).toEqual({ value: "X_-1234", raw: "X_1234", display: "X_-1234",
     form: { reference: "X_-1234" }, ok: false, errors: ["Complete every position"] });

@@ -1,3 +1,35 @@
+# rc.7 macOS documentation-fixture correction - 2026-11-09 (UTC)
+
+The first rc.7 CI input was `270c9c6770827caf995de7f15d8170d63800e6fc`,
+[run 42717928687](https://github.com/edward-ap/taet-ui/actions/runs/42717928687).
+Its macOS Chromium suite finished 1304 passed / 1 failed. The failure was the
+positional-mask documentation journey after focus, Home and typing X; the value
+remained `__-1234`. Later macOS compatibility/bundle gates were skipped, not passed.
+The original [failure artifact](https://github.com/edward-ap/taet-ui/actions/runs/42717928687/artifacts/13719258057)
+is retained as historical evidence.
+
+Playwright 1.61.1 maps macOS Home to `scrollToBeginningOfDocument`, not caret
+movement. TextField leaves that native key behavior intact, and a positional mask
+correctly rejects insertion beyond its final slot. A controlled Windows Chromium
+replay of that macOS editing command on a scrollable page reproduced the unchanged
+masked value with the caret at the end; a bare input retained the same caret and
+accepted a trailing X. This is command replay, not a native macOS run. The original
+trace does not record selection offsets, so no exact failed-run caret is claimed.
+
+Both documentation journeys now use Ctrl/Cmd+A followed by ArrowLeft and assert
+selection `[0,7]` then `[0,0]` before the unchanged sequential X/Y typing. Their
+value, raw-value, Form, completeness, required-validation and teardown assertions
+are preserved. The complete four-test documentation spec is now also in the
+three-engine compatibility gate. No runtime, API, timeout or skip is changed.
+
+Focused Windows verification passed 36/36: all four documentation tests, three
+engines and three repeats, one worker. Independent source review found no blocker.
+The follow-up commit still requires its complete remote CI, including actual macOS,
+before publication. This correction alone does not declare rc.7 published or the
+original failed run green. npm remains intended for `next`; `latest` is unchanged.
+
+---
+
 # rc.7 publication preparation - 2026-11-09 (UTC)
 
 This candidate collects the accumulated input-editing and strict owner-validation
