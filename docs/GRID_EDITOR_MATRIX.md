@@ -1,5 +1,8 @@
 # Existing table editor matrix
 
+The short [editing contract](EDITOR_EDITING_CONTRACT.md) defines shared vocabulary
+and owner boundaries without making all controls deferred or transactional.
+
 Grid and TreeGrid remain experimental. This page describes the existing factories
 in `taet-ui/grid/editors`; it does not certify every standalone input as a cell
 editor. [Live example](../examples/grid-editors/README.md) / [recipe11](../examples/ai-recipes/11-grid-editor-matrix.js).
@@ -55,6 +58,40 @@ columns/records prevent activation. Control-level disabled/readOnly options reta
 the standalone input behavior; they do not redefine column editability. Use the
 column rule or disable the table for cells that should not start editing.
 
+## Opt-in deferred numeric values
+
+Number factories accept `updateMode: 'commit'`; omission remains live. Native text
+then stays pending until the numeric field commits, with integer/range/precision
+normalization deferred to that commit. Use `clamp:false` plus validators when an
+out-of-range completed number should be rejected instead of clamped. The existing
+matrix demo remains live and is not a commit-mode demonstration.
+
+Grid/TreeGrid prepare the field before validating and reading it for a row commit.
+Enter/Tab follow table policy; Escape discards the session. Blur commits only the
+field, never the row. Validation or veto can reject the owner write even after the
+local field committed. Disabled/readonly pending input is retained and blocks
+preparation rather than saving stale data. See [draft preparation](GRID_EDITOR_TYPES.md#explicit-draft-preparation)
+and [numeric API](INPUT_TYPES.md#numberinput). This adds no multiline, locale or
+real-IME guarantee to the editor matrix.
+
+## Validation-currentness boundary
+
+Built-in factories retain automatic value/candidate tracking. Independent custom
+CellEditor/GridValueControl state needs getValidationRevision(); its optional type
+annotation does not waive the runtime requirement. After preparation, a value or
+draft change during validation/final read rejects commit without an owner row write,
+rollback or retry. The surviving session keeps callback changes for another explicit
+commit. Grid's temporary clipboard/toggle editor is instead released after refusal.
+
+Missing/invalid tracking reports editReject reason validation-revision; an ordinary
+stale attempt uses validation-stale with empty diagnostic errors. Silent attempts
+still check but suppress editReject. The trusted beforeCellChange.newValue override
+remains outside revalidation. See the [exact protocol and checked custom examples](GRID_EDITOR_TYPES.md#validation-currentness-and-custom-revisions).
+
+PropertyGrid shares the revision protocol but checks after its veto hook too;
+inline stale state is retained, while a still-current ordinary veto restores the
+old display. Its distinct owner/event contract is documented [separately](GRID_EDITOR_TYPES.md#propertygrid-staged-and-inline-ownership).
+
 ## Keys, popups and geometry
 
 The shared cell policy remains Enter/F2 start, Enter commit, Escape cancel,
@@ -85,6 +122,48 @@ stays separate from editors and data/range/export indices.
 See [full edit contract](GRID_COMMON_CONTRACT.md), [typed editor API](GRID_EDITOR_TYPES.md)
 and [actual verification](VERIFICATION.md). Supported/tested rows and custom or
 unsupported controls must not be conflated when extending an application.
+
+## Masked and temporal edit sessions
+
+text({ mask: '00-00' }) uses standalone TextInput's live formatting, caret handling
+and bounded local keyboard history. Field values change while typing; DataStore
+changes only on owner commit. Enter/Tab or explicit owner commit writes the
+accepted value, Escape cancels the session, and blur alone does not write the row.
+Add an explicit completeness validator to reject partial masks; required() only
+checks nonempty values. Rejected input accepting no tokens leaves empty fields empty.
+The no-token-empty correction also applies to programmatic mask normalization;
+token grammar, raw-literal handling and whole-value capacity rules are unchanged.
+
+Default compact-mode mixed-token/capacity guards reject edits that would lose an untouched suffix;
+they do not add sparse slots. For AA-0000, replacing selected AB in AB-1234 with
+sequential XY can reject intermediate X. Use one-letter replacements or a complete
+compatible replacement. API writes/reset restart mask history, including silent
+or equal-value writes; veto preserves it.
+
+Opt in with text({ mask: 'AA-0000', maskMode: 'slots' }) for fixed positions:
+AB-1234 -> __-1234 -> X_-1234 -> XY-1234. Holes survive model/raw serialization
+and edit-session reopening; unmaskValue uses __1234. Do not remove markers when
+saving. Deletion clears slots, typing overwrites, selected replacement stays
+inside selected tokens, and paste overflow rejects. Fully empty model/raw/display
+reads stay ''; a focused empty native input can show the navigable scaffold.
+The required DOM guard uses customError for that scaffold, not valueMissing;
+required() and an explicit marker-based completeness validator remain separate.
+See INPUT_TYPES.md for marker restrictions, API shape validation and history.
+Slots are construction-only on text, not number, TextArea or JSON factories, and
+do not add commitInput. Owner store commit/cancel semantics remain unchanged.
+
+time preserves equivalent/partial native text and caret with a live normalized
+model. Partial/unparsed stored time is not completed by passive blur/API/refresh
+or 24-hour presentation. Its picker shows no selected hour/minute/AM/PM; 24
+indicates only mode. OK without a choice retains the partial value, Cancel
+restores it, and explicit time choices use existing defaults. Add completeness
+validation before owner commit when partial values are unacceptable.
+date/dateTime reject native edits that would truncate an untouched suffix,
+retaining value/selection; API prefix normalization is unchanged. Picker staging
+remains its existing OK/Cancel interaction, not a shared typed commit mode.
+Only number supports updateMode: 'commit' and commitInput; optional owner
+preparation does not add those methods to other controls. See
+[input contracts](INPUT_TYPES.md) and [test boundaries](INPUT_TESTING.md).
 
 ## Read presentation and portal font
 

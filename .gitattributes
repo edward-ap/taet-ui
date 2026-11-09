@@ -53,6 +53,7 @@ src/ui/gridEditorFactory.js -text
 src/ui/GridRowTransferController.js -text
 src/ui/gridSelectionState.js -text
 src/ui/GridTreeMove.js -text
+src/ui/gridEditorValidation.js -text
 
 # Preserve the immutable imported manifest hash across checkout/archive.
 provenance/source-snapshot.json -text

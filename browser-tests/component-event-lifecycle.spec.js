@@ -36,6 +36,7 @@ test('PropertyGrid silent editing validates, writes with provenance and refreshe
     const property = { name: 'name', type: 'custom', value: 'Before',
       set(value, options) { writes.push({ value, silent: options.silent, origin: options.origin }); },
       editor: gridEditors.custom(() => ({
+          getValidationRevision: () => 0, // Immutable captured value; no candidate write paths.
         mount(host) { host.append(document.createElement('input')); },
         getValue() { return 'After'; }, validate() { validations++; return { ok: valid }; },
         focus() {}, destroy() { destroyed++; }
@@ -72,6 +73,7 @@ test('PropertyGrid abandons edits cancelled or destroyed by application callback
       const property = { name: 'x', type: 'custom', value: 'Old',
         set() { if (phase === 'set') grid.destroy(); },
         editor: gridEditors.custom(() => ({
+          getValidationRevision: () => 0, // Immutable captured value; no candidate write paths.
           mount(host) { host.append(document.createElement('input')); }, getValue() { return 'New'; },
           validate() { if (phase === 'validate') grid.destroy(); return { ok: true }; },
           focus() {}, destroy() { destroys++; }

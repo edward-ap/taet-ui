@@ -139,6 +139,10 @@ try {
   const installed = await realpath(path.join(consumer, 'node_modules/taet-ui'));
   assert.ok(installed.startsWith(consumer + path.sep), 'Consumer must use the installed copy');
   await cp(path.join(root, 'test/types'), path.join(consumer, 'input'), { recursive: true });
+  // Compile and execute the exact shipped recipe against the installed package.
+  const customEditorRecipe = 'examples/ai-recipes/13-custom-editor.js';
+  assert.ok(files.has(customEditorRecipe), 'Tarball missing custom EditorControl recipe');
+  await cp(path.join(installed, customEditorRecipe), path.join(consumer, 'input/13-custom-editor.js'));
   await writeFile(path.join(consumer, 'tsconfig.json'), JSON.stringify({ compilerOptions: {
     target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true,
     skipLibCheck: false, exactOptionalPropertyTypes: true, noUncheckedIndexedAccess: true, verbatimModuleSyntax: true,
@@ -153,6 +157,14 @@ try {
   process.stdout.write(command(path.join(consumer, 'output/grid-editor-services-consumer.js'), [], consumer));
   process.stdout.write(command(path.join(consumer, 'output/input-consumer.js'), [], consumer));
   process.stdout.write(command(path.join(consumer, 'output/number-boolean-consumer.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/number-commit-consumer.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/number-commit-javascript.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/form-revision-consumer.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/form-revision-javascript.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/grid-revision-consumer.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/grid-revision-javascript.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/property-revision-consumer.js'), [], consumer));
+  process.stdout.write(command(path.join(consumer, 'output/property-revision-javascript.js'), [], consumer));
   process.stdout.write(command(path.join(consumer, 'output/choice-input-consumer.js'), [], consumer));
   process.stdout.write(command(path.join(consumer, 'output/date-time-consumer.js'), [], consumer));
   process.stdout.write(command(path.join(consumer, 'output/date-time-javascript.js'), [], consumer));

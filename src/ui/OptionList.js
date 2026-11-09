@@ -1,3 +1,4 @@
+import { validationRevision } from "../core/validationRevision.js";
 import { List } from "./List.js";
 import { DataStore } from "../core/DataStore.js";
 
@@ -108,6 +109,11 @@ export class OptionList extends List {
     if (item) {
       this._selectItemFromUser(item);
     }
+  }
+
+  [validationRevision]() {
+    if (this.selection._revision == null) return undefined;
+    return [this.selection, this.selection._revision, this.selection.destroyed, this.data, this.data.destroyed];
   }
 
   _getValue() {

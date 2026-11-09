@@ -1,6 +1,6 @@
 # API maturity
 
-0.6.0-rc.6 preserves the stable root and experimental status of retained APIs.
+0.6.0-rc.7 preserves the stable root and experimental status of retained APIs.
 Tier does not promote maturity: [TIERS](TIERS.md).
 Grid/TreeGrid remain experimental. Approved common-contract changes are recorded
 in the candidate manifest; maturity and tier boundaries are unchanged.
@@ -12,6 +12,11 @@ or reclassify existing stable DataStore methods. See [GRID_TRANSFER](GRID_TRANSF
 
 The opt-in TreeGrid moveNode/moveNodes subtree operation remains experimental,
 within one local tree only. See [TREE_GRID_MOVE](TREE_GRID_MOVE.md).
+
+NumberInput's opt-in `updateMode: 'commit'` keeps the default live contract and
+its existing stable classification. Its integration does not promote Grid,
+TreeGrid, PropertyGrid or the editor factories from experimental. See
+[NumberInput](INPUT_TYPES.md#numberinput) for the draft/commit contract.
 
 <!-- api-inventory:start -->
 ### Stable v0.x

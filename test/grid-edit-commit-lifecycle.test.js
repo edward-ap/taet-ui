@@ -18,7 +18,7 @@ for (const Table of [Grid, TreeGrid]) {
     const grid = new Table({ columns: [{ id: 'name' }] });
     grid.data.parse([{ id: 1, parentId: null, name: 'Old' }]);
     const counts = { destroy: 0, focus: 0, read: 0 };
-    const editor = { validate: () => ({ ok: true }), getValue: () => { counts.read++; return 'New'; },
+    const editor = { getValidationRevision: () => 0, validate: () => ({ ok: true }), getValue: () => { counts.read++; return 'New'; },
       focus: () => { counts.focus++; }, destroy: () => { counts.destroy++; } };
     grid._editing = { item: grid.data.get(1), id: 1, column: grid.getColumn('name'), oldValue: 'Old',
       origin: 'user', userAction: true, cellEditor: editor, cell: { classList: { remove() {} } } };

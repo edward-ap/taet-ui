@@ -81,6 +81,7 @@ export class MultiSelectDropDown extends DropDownList {
     }
 
     this._value = newValue;
+    ++this._valueRevision;
     this._syncInput(newValue);
     this.clearValidation({ silent: true });
     const isDirty = this.isDirty();

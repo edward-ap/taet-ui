@@ -68,7 +68,7 @@ test('Grid temporary paste editor preserves a mounted replacement opened from va
     const { Grid, gridEditors } = await import('/src/ui/grid-api.js');
     let grid, disposed = 0;
     grid = new Grid('#root', { height: 220, columns: [
-      { id: 'name', width: 180, editor: gridEditors.custom(context => ({ mount() {}, focus() {},
+      { id: 'name', width: 180, editor: gridEditors.custom(context => ({ mount() {}, focus() {}, getValidationRevision: () => 0,
         validate() { grid.startEdit(2, 'other'); return { ok: true }; },
         getValue: () => context.value, destroy() { disposed++; }
       })) },

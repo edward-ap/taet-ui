@@ -152,12 +152,20 @@ test('TabBar keyboard skips disabled tabs and leaves the tablist in both directi
   await expect(page.getByRole('tab', { name: 'Last', exact: true })).toBeFocused();
 });
 
-test('Dialog Form supports keyboard text, choice, checkbox, focus trap and return to opener', async ({ page }) => {
+test('Dialog Form supports keyboard text, decimal, choice, checkbox, focus trap and return to opener', { tag: '@input-editing' }, async ({ page }) => {
   await page.evaluate(async () => {
-    const { Button, Form, TextInput, SelectInput, CheckBox, Dialog, OverlayManager } = await import('/src/ui/all.js');
+    const { Button, Form, TextInput, NumberInput, SelectInput, CheckBox, Dialog, OverlayManager } = await import('/src/ui/all.js');
     const manager = new OverlayManager();
     const form = new Form();
     form.row(new TextInput({ name: 'name', label: 'Name' }));
+    const amount = new NumberInput({ name: 'amount', label: 'Amount', value: 0, step: 'any', clamp: false });
+    form.row(amount);
+    window.keyboardAmountChanges = [];
+    window.keyboardAmountFormChanges = [];
+    amount.events.on('change', event => window.keyboardAmountChanges.push(event.newValue));
+    form.events.on('change', event => {
+      if (event.path === 'amount') window.keyboardAmountFormChanges.push(event.newValue);
+    });
     const country = new SelectInput({ name: 'country', label: 'Country', searchable: true, overlayManager: manager });
     country.data.parse([{ id: 'ca', text: 'Canada' }, { id: 'us', text: 'United States' }]);
     form.row(country);
@@ -174,6 +182,18 @@ test('Dialog Form supports keyboard text, choice, checkbox, focus trap and retur
   await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toBeFocused();
   await page.keyboard.type('Keyboard user');
   await page.keyboard.press('Tab');
+  const amount = page.getByRole('spinbutton', { name: 'Amount', exact: true });
+  await expect(amount).toBeFocused();
+  await page.keyboard.press('ControlOrMeta+A');
+  await page.keyboard.type('1');
+  expect(await page.evaluate(() => ({ value: keyboardForm.value.get().amount, changes: keyboardAmountChanges, formChanges: keyboardAmountFormChanges }))).toEqual({ value: 1, changes: [1], formChanges: [1] });
+  await page.keyboard.type('.0');
+  await expect(amount).toHaveValue('1.0');
+  expect(await page.evaluate(() => ({ value: keyboardForm.value.get().amount, changes: keyboardAmountChanges, formChanges: keyboardAmountFormChanges }))).toEqual({ value: 1, changes: [1], formChanges: [1] });
+  await page.keyboard.type('5');
+  await expect(amount).toHaveValue('1.05');
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => ({ value: keyboardForm.value.get().amount, type: typeof keyboardForm.value.get().amount, changes: keyboardAmountChanges, formChanges: keyboardAmountFormChanges }))).toEqual({ value: 1.05, type: 'number', changes: [1, 1.05], formChanges: [1, 1.05] });
   await expect(page.locator('.dui-dropdown-list__display')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.dui-dropdown-list__search')).toBeFocused();
@@ -192,7 +212,7 @@ test('Dialog Form supports keyboard text, choice, checkbox, focus trap and retur
   await page.keyboard.press('Tab');
   await expect(page.getByRole('checkbox', { name: 'Notify' })).toBeFocused();
   await page.keyboard.press('Space');
-  expect(await page.evaluate(() => window.keyboardForm.value.get())).toEqual({ name: 'Keyboard user', country: 'ca', notify: true });
+  expect(await page.evaluate(() => window.keyboardForm.value.get())).toEqual({ name: 'Keyboard user', amount: 1.05, country: 'ca', notify: true });
   await page.keyboard.press('Tab');
   await expect(page.getByRole('textbox', { name: 'Name', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');

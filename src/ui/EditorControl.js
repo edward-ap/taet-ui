@@ -1,3 +1,4 @@
+import { validationRevision } from "../core/validationRevision.js";
 import { BaseControl } from "../core/BaseControl.js";
 import { normalizeMutationOptions } from "../core/mutationOptions.js";
 
@@ -19,6 +20,7 @@ export class EditorControl extends BaseControl {
     this._value = this._normalizeValue(
       Object.prototype.hasOwnProperty.call(options, "value") ? options.value : this._emptyValue
     );
+    this._valueRevision = 0;
     this._cleanValue = this._cloneValue(this._getValue());
     this.validators = Array.isArray(options.validators) ? [...options.validators] : [];
     this._input = null;
@@ -278,6 +280,11 @@ export class EditorControl extends BaseControl {
     return this._value;
   }
 
+  // Internal Form currentness stamp for accepted writes, including silent ABA.
+  [validationRevision]() {
+    return this._valueRevision;
+  }
+
   _getValidationValue() {
     return this._getValue();
   }
@@ -333,6 +340,7 @@ export class EditorControl extends BaseControl {
     }
 
     this._value = newValue;
+    ++this._valueRevision;
     this._syncInput(newValue);
     this.clearValidation({ silent: true });
 

@@ -34,8 +34,22 @@ test("Input Controls navigation and examples cover form input behavior", async (
   await expect(page.locator(".dui-example-host__output")).toHaveText("Password visible");
   await expect(page.locator('[data-dui-control-id="confirmation"] button')).toHaveCount(0);
   await navigate("Masked");
-  await page.getByRole("button", { name: "Read masked values" }).click();
-  await expect(page.locator(".dui-example-host__output")).toHaveText('{"phone":"+1 (555) 123-4567","reference":"AB1234","display":"AB-1234"}');
+  const compactMaskExample = page.locator(".dui-example-host").filter({
+    has: page.getByRole("heading", { name: "Formatted phone and raw reference", exact: true })
+  });
+  await compactMaskExample.getByRole("button", { name: "Read masked values" }).click();
+  await expect(compactMaskExample.locator(".dui-example-host__output")).toHaveText('{"phone":"+1 (555) 123-4567","reference":"AB1234","display":"AB-1234"}');
+  const slotsExample = page.locator(".dui-example-host").filter({
+    has: page.getByRole("heading", { name: "Positional reference with completeness validation", exact: true })
+  });
+  const slotsInput = slotsExample.getByRole("textbox", { name: "Reference*", exact: true });
+  await expect(slotsInput).toHaveValue("__-1234");
+  await slotsInput.focus();
+  await slotsInput.press("Home");
+  await slotsInput.pressSequentially("X");
+  await expect(slotsInput).toHaveValue("X_-1234");
+  await slotsInput.pressSequentially("Y");
+  await expect(slotsInput).toHaveValue("XY-1234");
   await navigate("DateInput");
   await expect(page.locator(".dui-doc-status")).toHaveText("experimental");
   await page.getByRole("button", { name: "Open calendar", exact: true }).click();
@@ -209,6 +223,46 @@ test("input documentation snippets mount and match live model values", async ({ 
     }
     return results;
   });
-  expect(results).toHaveLength(30);
+  expect(results).toHaveLength(31);
   for (const result of results) expect(result.matches, result.id).toBe(true);
+});
+
+
+test("positional mask documentation example preserves raw holes and requires completeness", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/browser-tests/recipes.html");
+  await page.evaluate(async () => {
+    const { maskedInputPage } = await import("/docs/src/pages/InputControls.pages.js");
+    const example = maskedInputPage.examples.find(item => item.title === "Positional reference with completeness validation");
+    if (!example) throw new Error("Missing slots documentation example");
+    window.slotsDocForm = example.create({ log: { write() {} } });
+    window.slotsDocForm.mount("#root");
+  });
+  const input = page.getByRole("textbox", { name: "Reference*", exact: true });
+  const read = () => page.evaluate(() => {
+    const field = window.slotsDocForm.getFields().find(item => item.name === "reference");
+    const validation = field.validate();
+    return { value: field.value.get(), raw: field.getRawValue(), display: field.getDisplayValue(),
+      form: window.slotsDocForm.value.get(), ok: validation.ok,
+      errors: validation.errors.map(error => error.message) };
+  });
+  await expect(input).toHaveValue("__-1234");
+  expect(await read()).toEqual({ value: "__-1234", raw: "__1234", display: "__-1234",
+    form: { reference: "__-1234" }, ok: false, errors: ["Complete every position"] });
+  await input.focus();
+  await input.press("Home");
+  await input.pressSequentially("X");
+  expect(await read()).toEqual({ value: "X_-1234", raw: "X_1234", display: "X_-1234",
+    form: { reference: "X_-1234" }, ok: false, errors: ["Complete every position"] });
+  await input.pressSequentially("Y");
+  expect(await read()).toEqual({ value: "XY-1234", raw: "XY1234", display: "XY-1234",
+    form: { reference: "XY-1234" }, ok: true, errors: [] });
+  await input.press("ControlOrMeta+A");
+  await input.press("Backspace");
+  expect(await read()).toEqual({ value: "", raw: "", display: "", form: { reference: "" },
+    ok: false, errors: ["Enter a reference"] });
+  await page.evaluate(() => window.slotsDocForm.destroy());
+  await expect(page.locator("#root")).toBeEmpty();
+  expect(errors).toEqual([]);
 });

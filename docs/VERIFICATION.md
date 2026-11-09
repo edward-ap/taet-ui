@@ -1,3 +1,807 @@
+# rc.7 publication preparation - 2026-11-09 (UTC)
+
+This candidate collects the accumulated input-editing and strict owner-validation
+work on top of `0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65`, previously published
+as rc.6. The full scope and breaking custom-editor migration are in CHANGELOG.md.
+NumberInput live mode, compact masks and existing API maturity remain the defaults;
+commit mode and positional slots are opt-in.
+
+Release inspection matched all 302 live source files against the approved final
+source freeze below. A separate review of production changes, declarations and
+focused regressions found no confirmed release blocker. All pre-existing local
+changes were preserved. Git metadata is now readable and was verified against
+origin/main without changing Git trust settings or repository ownership. The
+source-provenance script no longer overrides safe.directory.
+
+The completed Windows technical aggregate below remains evidence for that source
+freeze: 1348 units, 1305 Chromium cases, 3296 compatibility passes with 16 explicit
+clipboard skips, 42 bundle cases, installed TS/JS/browser consumers and 15 clean /
+15 intended mutant outcomes. Its documentation-only repack subsequently completed
+with 502 package entries; the pending wording below records the earlier writing
+stage and is not the current repack status.
+
+Release metadata advances to 0.6.0-rc.7. No runtime source is changed by this
+preparation. Normal Git text normalization may replace CRLF with LF for text
+files; imported/candidate bytes governed by .gitattributes remain preserved.
+A fresh clone, package inspection and the exact release commit's full GitHub CI
+are required before npm publication; earlier aggregate passes do not substitute
+for that final CI. Registry metadata separately confirms publication outcome.
+
+The macOS job's overall budget is increased from 30 to 90 minutes to accommodate
+the expanded 1305-case Chromium and 1104-case-per-engine compatibility matrix.
+Its two-worker limit, individual test timeouts and assertions are unchanged.
+No new native IME/clipboard, accessibility, DPI or host certification is claimed.
+Large-form currentness costs and other boundaries below remain applicable.
+
+The intended npm channel is next; latest and all existing versions/tags remain
+unchanged. This preparation does not create a GitHub release or release tag.
+
+---
+
+# Editor validation currentness - final local verification, 2026-11-09 (UTC)
+
+**The technical aggregate passed on the approved source freeze.** Original
+`test:all` passed at 21:25:29.863Z; the corrected remaining-gates continuation
+passed at 22:19:04.697Z. These are two explicitly linked runs on the same input,
+not a claim that the original overall runner passed. This is local Windows
+verification on SANDRA, version 0.6.0-rc.6, not publication or remote CI.
+
+## Implemented and reviewed scope
+
+- Form retains an explicit child `ok:false` even with empty diagnostics. Accepted
+  value, pending-candidate and supported membership revisions reject stale
+  validate/isValid/submit attempts, including silent A -> B -> A changes.
+- EditorControl subclasses retain the inherited value pipeline. Independent
+  custom fields/editors require a pure synchronous `getValidationRevision()`
+  stored number, bigint or symbol covering accepted-value and candidate changes.
+  Missing, invalid, unstable or throwing readers fail closed. A changed valid
+  token interrupts the attempt rather than fabricating an ordinary field error.
+- Grid/TreeGrid guard preparation, validation and final value reads against stale
+  values/candidates/sessions. Trusted beforeCellChange overrides remain supported
+  without revalidation. PropertyGrid staged/inline saves reject stale work; only
+  a still-current ordinary inline veto restores the previous field value.
+- Callback and method-accessor lifetime checks stop obsolete phases after destroy
+  or replacement. Protocol errors and stale attempts have separate editReject
+  diagnostics. Callback changes remain: no rollback, automatic retry, fallback
+  acceptance or global transaction guarantee. NumberInput commit mode remains
+  opt-in; live default, positional masks and partial-time behavior remain intact.
+
+Contracts: [editing](EDITOR_EDITING_CONTRACT.md),
+[custom fields](INPUT_TYPES.md#custom-fields-in-strict-form-validation),
+[table currentness](GRID_EDITOR_TYPES.md#validation-currentness-and-custom-revisions),
+and [Form mutations](MUTATIONS.md).
+
+## Sealed input and preservation
+
+The approved source-freeze file SHA-256 is
+`72bd0661d2db780def895b800570753d95b539982e7071b74be4978f05c1a6c7`;
+302 source files have ordered-tree SHA-256
+`4285d07152eff09096a2e0eb1bb48bf62f7b29b26ab5b28413a3075a696653cf`.
+The tree recipe is SHA-256 of UTF-8 JSON.stringify(freeze.hashes), retaining key
+order. Final run-after evidence and a subsequent read-only comparison matched all
+302 live files. Candidate/import manifest hashes stayed unchanged throughout the
+sealed aggregate; no source drift was detected. The earlier baseline had 300
+files; exact added/changed/preserved inventories are in the machine-readable
+summary. No commit, push, publication, security-setting change or Git ownership
+bypass was performed.
+
+Previously saved HEAD is 0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65.
+Git commands are unavailable under dubious ownership; source provenance honestly
+records revision null/state not-versioned. This is not proof of a clean Git tree.
+The independently reviewed provenance correction removed the safe.directory
+command override only: 9/9 focused tests and syntax passed; script SHA-256
+`4dde6f0c82c4c088ca8aaebdeb97ef425103de74f732cabd8e2b188a9175eb61`.
+
+Tools: Node v22.14.0, npm 10.9.2, Playwright 1.61.1, TypeScript 5.9.3,
+esbuild 0.28.2. Matching browser metadata: Chromium/headless shell 149.0.7827.55
+(revision 1228), Firefox 151.0 (1532), WebKit 26.5 (2311).
+
+## Completed commands and results
+
+Evidence root is `test-results/editor-contract-final/`. Original run is
+`final-20261109-node-02`; corrected direct-argv run is
+`final-20261109-continuation-03`. Full actual argv, timestamps, exit codes,
+stdout/stderr and input checks are retained in each runner-status/exit JSON and
+logs, and indexed by `summary.json`. Output paths below refer to the corrected
+run directory; no shell literal quotes were passed in its argv.
+
+| Gate / actual command family | Completed result |
+| --- | --- |
+| `npm.cmd run test:all` (original run; workers 2, port 5360) | Exit 0; 1348/1348 units, zero skips; syntax 587 files; API/package checks (302 resources, 43 imported and 48 candidate entries); installed NodeNext/Bundler TS and JS consumers; fresh build; Chromium 1305/1305; installed browser consumers, 476 runtime exports |
+| `node scripts/run-browser.js --config playwright.compat.config.js --workers=2 --retries=0 --reporter=line,json --output <compat-output>` (port 5361) | Exit 0; 3312 scheduled, 3296 passed, 16 explicitly supported clipboard skips; zero failures, unexpected, flaky or global errors; one attempt per case |
+| `node <npm-cli.js> run test:bundle -- --workers=2 --retries=0 --reporter=line,json --output <bundle-output>` (port 5362) | Exit 0; 42/42, 14 per engine; zero skips/unexpected/flaky |
+| `node <npm-cli.js> run test:input-regression` | Exit 0; 15 baseline passes plus 15 intended mutant failures; mutation proof passed in a temporary snapshot, checkout unchanged |
+| `node <npm-cli.js> pack --dry-run --json --ignore-scripts` | Exit 0; package inventory inspected |
+| `node <npm-cli.js> pack --json --ignore-scripts --pack-destination <run-directory>` | Exit 0; 502 entries; all 302 frozen source files match; forbidden content absent |
+| `node <npm-cli.js> run release:check` | Exit 0; local release prerequisites only, not publication or security certification |
+
+`<npm-cli.js>` was `C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js`.
+Windows WebKit remained capped at one worker. Overlapping original/continuation
+browser work stayed within four workers; later bundle/mutation gates were sequenced.
+
+Raw compatibility JSON was independently traversed, rather than trusting the
+runner's pass flag: Chromium 1104 passed; Firefox and WebKit each 1096 passed and
+8 skipped. Each non-Chromium engine skips exactly four input-isolated-clipboard,
+two masked-editing-regressions and two masked-slots-editing cases. These require
+the reviewed Chromium headless-shell in-memory clipboard; no OS clipboard
+permission or real clipboard acceptance is implied. The final
+editor-invariant-contract matrix itself is **142/142 in each engine, 426/426**,
+zero skips and no retries. It is an actual final run, not a sum of older checkpoints.
+
+The main aggregate archive was 1,816,956 bytes with 502 entries. It contains the
+prior checkpoint version of this document. This final documentation-only
+consolidation follows the browser gates and does not claim another browser run.
+A separate post-documentation repack/check records the final archive identity,
+packaged document hash and unchanged source evidence in the machine-readable
+summary; the final archive hash is intentionally not embedded in its own contents.
+At this section's writing that repack is pending, separately from the completed
+technical gates. No archive has been published.
+
+## Regression history retained, not reclassified
+
+- Focused adapter units passed 234/234. Pre-fix lookup and prepare/focus regressions
+  failed on their intended assertions (9 and 2); six final lifetime browser cases
+  failed 6/6 before the fix and passed 18/18 across engines after it.
+- Earlier full units 1284/1284 and 136-case-per-engine invariant matrix 408/408
+  are superseded checkpoints, not the final totals and not extra independent journeys.
+- An interrupted table-diagnostic fixture produced five Chromium failures by
+  incorrectly assuming Form-style paths. The correction checks exact offending
+  source identity, code, severity and owner context. Original log and list-only
+  inventory remain; the latter is not completed execution evidence.
+- The earlier original test:all attempt was interrupted with unknown exit status,
+  not classified as a crash or failed test. The subsequent PowerShell launcher
+  was blocked because script execution was disabled, before runner/gates started.
+  No policy bypass was used. The user then approved the direct Node alternative.
+- Original Node runner `final-20261109-node-02` ended **failed**, exit 1,
+  21:25:30.039Z, solely because compatibility output-path quoting caused ENOENT
+  before any test executed. Its successful test:all is reused; the failed launcher
+  is not relabeled green. Corrected continuation used direct argv, the same source
+  freeze and original auxiliary baseline, and finished all remaining gates.
+
+Earlier logs, red/green evidence, interrupted/blocked records and terminal runner
+JSON remain available in local evidence; summary.json retains their exact pointers.
+
+## Form validation performance: measured improvement and remaining cost
+
+Independently reviewed Form SHA-256:
+`81813fc9fc079b13cfdcb53955f37016a9766b94babb2b4796129301580e485a`.
+Live focused checks passed 266/266, zero failures/skips. The optimization retains
+full fresh currentness traversals, metadata lookup order and internal/public/internal
+checks at each boundary. It reuses operation-local traversal storage, removes
+redundant Set/result allocation and sets/restores captured reader guards once per
+phase. It does not cache topology/revisions or defer checks until the end.
+The faster unsafe traversal-cache prototype was rejected; its timings are excluded.
+
+The retained `form-optimization-evidence/REVIEW_REPORT.md`, `benchmark.mjs`,
+`benchmark-results.json` and manifest contain full methods, hashes and raw samples.
+`node benchmark.mjs` used Node v22.14.0 / V8 12.4.254.21-node.22, win32 x64,
+no document, current matching dependencies. Only validate was timed: construction,
+composition, result assertions and teardown excluded. Each variant had 20 global
+warmups of 50 fields, then 5 warmups and 11 samples per case, alternating variant
+order. Reviewer tests were paused; no broad suite was launched by the experiment,
+but unrelated machine activity was not globally inspected.
+
+Median milliseconds, strict reference -> optimized (optimized p90): plain 100
+fields 5.077 -> 3.947 (4.442); plain 300 54.438 -> 38.501 (42.180); plain 600
+220.842 -> 150.217 (168.546); nested 600 653.514 -> 247.658 (269.294).
+At 600 fields: stable validators 209.491 -> 159.503; public hooks
+259.111 -> 185.427; independent custom fields 245.209 -> 199.981; early silent
+ABA 1.991 -> 1.627. Plain 600 range was 148.674-173.213 ms; nested 600
+228.400-270.709 ms. Plain 1-field median was 0.023 -> 0.024 ms: no universal
+speedup is asserted. Full distributions and other sizes remain in the JSON.
+
+The pre-strict Form-only baseline measured plain 100/300/600 at
+0.180/0.633/1.445 ms with current dependencies, but lacks strict proof: it is
+neither a historical complete build nor a security-equivalent alternative.
+Dense flat scans remain quadratic. These unmounted Node measurements are not
+browser/mounted-control SLAs. No wall-clock thresholds were added to tests.
+
+## Boundaries and final documentation
+
+Cooperative hooks cannot prove hidden alias/closure mutations. Supported membership
+tracking does not cover private mutations or direct identity replace-and-restore.
+Currentness is bounded tracking, not rollback, retry or transaction isolation.
+There is no new certification of real OS IME/clipboard, physical keyboard layout,
+screen readers, mixed-DPI behavior, macOS/Linux or native WebView hosts.
+
+This section replaces only this task's accumulated progress prefixes. The entire
+97,527-byte pre-task history below, beginning with positional masks/partial time,
+is preserved byte-for-byte (SHA-256
+`de085f3658e4e53cd5e2360523e1abcd6f7728b12bfefe1c8e3d0fb4ec536ab0`).
+Exact before-edit backups and the current document hash are retained in the summary.
+
+---
+
+# Positional masks and partial time - 2026-11-09 (UTC)
+
+User-approved local continuation on SANDRA/Windows, same main HEAD
+0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65 and version 0.6.0-rc.6. Previous
+uncommitted NumberInput, TextArea, compact mask and temporal repairs are retained.
+No commit, push or publication. These changes supersede the partial-time and
+compact-only mask limitations recorded in earlier verification sections.
+
+## Implemented and reviewed contract
+
+- TextField/TextInput and gridEditors.text accept opt-in maskMode: 'slots'. The
+  default remains compact. Slot positions never shift: deleting AB from AB-1234
+  produces __-1234; typing X then Y produces X_-1234 then XY-1234. Positional holes
+  survive string value/raw serialization, Form import/reset and Grid/TreeGrid
+  commit/reopen. Raw retains the existing alphanumeric-literal convention.
+- Entirely empty token data produces empty model/raw/getDisplayValue strings.
+  While focused, only the native DOM shows a navigable scaffold. Focus/blur does
+  not change model, dirty state or history. Required native validity uses an owned
+  customError for that scaffold, rather than valueMissing; checkValidity remains
+  false. Blur restores native empty valueMissing. External custom errors survive;
+  ownership cleanup is deferred while readonly/disabled bars validation messages.
+- Slot mode validates its placeholder marker and positional API strings. A marker
+  must be one printable ASCII punctuation character absent from mask literals.
+  Malformed marker-bearing API strings reject before mutation. Fixed-position
+  overwrite/paste limits protect unselected data. Existing local history, veto,
+  API/silent/reset, reentry, teardown and synthetic composition guards remain.
+- Slots is not promised for NumberInput, TextArea, SelectInput or JSON factories.
+  No new owner runtime, parser grammar, locale behavior or deferred commit API.
+  NumberInput remains the only field with updateMode/commitInput support.
+- Partial/unrecognized TimeInput text, such as 1:, remains unchanged during passive
+  formatting in every hour mode. Incomplete picker values no longer highlight a
+  fabricated hour/minute/AM/PM selection; 24 can still indicate presentation mode.
+  Explicit AM/PM, wheel and step actions retain existing completion behavior.
+  Cancel restores partial text; OK without a value choice does not complete it.
+- required() still means nonempty, not complete. Existing validators express
+  optional completeness; combine one with required() for mandatory fields.
+  required:true remains a state/native attribute, not an installed library validator.
+
+Independent review checked exact pre-change runtime backups, narrow declarations,
+roundtrips, native-validity lifecycle, tests and all four edited documentation files.
+No blocking findings remained before the aggregate gates. Detailed contracts and
+examples are in INPUT_TYPES.md, INPUT_TESTING.md, GRID_EDITOR_MATRIX.md and the
+InputControls documentation page.
+
+## Reproductions and focused verification
+
+- Before the temporal fix, the browser baseline passed 0-23 but correctly failed
+  1-24 and 12-hour blur assertions (1: became 01: / 01: AM). New unit reproductions
+  also failed on the intended display and picker-highlight assertions.
+- Temporal units: 25 new plus 48 existing, 73/73 passed. Browser gate: 450/450 in
+  5.0 minutes, 150 per engine, including 29 new journeys, 116 previous editing/owner
+  journeys and five lifecycle tests per engine; no retries.
+- Before slot implementation, 11 initial unit cases and both raw/formatted browser
+  prefix-deletion cases failed on intended assertions. Slot units: 25 new plus
+  30 previous compact tests, 55/55 passed, including 264 positional roundtrip inputs.
+- New slot browser files contain 37 journeys / 111 selected engine executions.
+  Initial sweep: 104 passed and four explicit clipboard skips. The added native
+  validity lifecycle passed 3/3. All final cases are included in the aggregate below.
+  Empty-scaffold navigation is browser-tested; late caret restoration after undo
+  is separately unit-tested. No broader caret certification is inferred.
+- Focused offline installed-package consumers passed: strict NodeNext/Bundler,
+  positive text constructor/editor types and negative unsupported-editor options,
+  real-key edits, formatted/raw holes, JSON/API roundtrip, completeness and prior
+  compact/numeric/temporal checks. Source hashes matched the reviewed freeze.
+- New specs use the shared page-error fixture and input-editing tag; all three are
+  required by the matrix guard and selected in the 77-spec compatibility allowlist.
+
+Focused artifacts: test-results/partial-time-red-20261109.log,
+partial-time-final-three-engine-20261109.log, partial-time-consumers,
+mask-slots-red.log, mask-slots-initial.log, mask-slots-validity.log,
+mask-slots-verification.md and slots-consumers.
+
+## Aggregate gates
+
+- Fresh full/components/foundation build passed before browser runs.
+- npm test passed: 573 syntax files, API/package/provenance guards, 908/908 units
+  with zero skips, installed strict TS/JS consumers, TypeScript 5.9.3 and 476 runtime
+  exports. The subsequently edited documentation spec also passed node --check.
+- Full default Chromium final rerun passed: 1163/1163, no skips or failures,
+  26.2 minutes, two workers, port 5302; output slots-partial-time-full-chromium-final.
+- Full compatibility matrix passed: 2870 passed, 16 explicit clipboard skips,
+  no failures, 48.1 minutes, 77 selected specs across Chromium/Firefox/WebKit;
+  four global workers with the Windows WebKit one-worker cap, port 5301. The eight
+  clipboard cases are skipped on each engine without reviewed OS isolation.
+- Installed browser type consumers passed, including slots/partial-time real-key
+  cases, previous compact/numeric behavior and all nine built-in editor consumers.
+- Bundle/provenance/assets/exclusions/77-documentation-import guard passed; all
+  42 bundle browser tests passed across three engines in 47.6 seconds, two workers.
+- Historical decimal mutation proof passed: 15 clean baselines and all 15 expected
+  decimal-assertion mutant failures across three engines. Checkout unchanged;
+  isolated proof snapshot taet-input-regression-HeQmEL under the OS temporary directory.
+- Final offline package dry-run passed: 498 files, version 0.6.0-rc.6; no dist,
+  node_modules, test, browser-tests or test-results entries. Final read-only API
+  and package-boundary guards passed again.
+
+The initial concurrent four-worker full Chromium attempt had 1159 passed and
+three failures in 13.1 minutes: two outdated documentation test assumptions after
+adding the slots example, plus ERR_NO_BUFFER_SPACE while opening one local
+clipboard fixture. Documentation assertions are now scoped to the proper example,
+require all 31 snippets, and include a new exact slots example test. Focused docs
+passed 4/4; both clipboard variants passed again with one worker (17.4 seconds).
+The entire Chromium suite then passed with two workers; runtime was not changed
+for these corrections. Initial and final logs are retained separately.
+
+The test:all stages were run individually, without a redundant wrapper invocation.
+Browser ports/outputs are distinct; Windows WebKit remains capped at one worker.
+Aggregate logs and machine-readable results are under test-results/slots-partial-time-aggregate.
+Overlapping executions are not independent user-journey counts.
+
+## Preservation and remaining limits
+
+Runtime changed only in TextField.js and DateTimeInput.js; declarations changed in
+TextInput.d.ts, display-contracts.d.ts and grid-editor-options.d.ts. The other 295
+source/resources match the saved pre-continuation snapshot. NumberInput/TextArea,
+package version/dependencies and immutable imported provenance are unchanged.
+Only the reviewed grid-editor-options.d.ts candidate hash was refreshed; the other
+46 candidate hashes and previous owner integration are preserved.
+
+Frozen runtime SHA-256:
+- TextField.js: 4d156b34c5bf543ee05461d5f027a0fffd0df6e90a0a3e018be4dda0d7dacac0
+- DateTimeInput.js: a2f80a330cc34bc1e239974c2a1a898b81415674c5ed79686205c7137742b235
+
+No real OS IME, physical-layout, native macOS WebView, context-menu undo or system
+clipboard certification. Clipboard gestures use only the reviewed isolated Chromium
+headless backend; unsupported isolation on other engines is explicitly skipped.
+Compact behavior and ASCII token grammar remain unchanged. Switching existing
+saved compact data to slots is opt-in and requires the same mask/marker settings
+when restoring positional values. Full calendar/time validity, ranges and business
+rules still require explicit validators; permissive normalization is not validation.
+
+---
+
+# Mask and temporal native editing repairs - 2026-11-09 (UTC)
+
+User-approved local continuation on SANDRA/Windows, main HEAD
+0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65, version 0.6.0-rc.6. Existing uncommitted
+NumberInput live/commit, TextArea and test work is preserved. No commit, push or
+publication. Runtime changes in this package are limited to TextField.js and
+DateTimeInput.js; public declarations and dependency versions are unchanged.
+
+## Corrected behavior and scope
+
+- Masked native edits retain token-relative caret/selection, delete token data
+  around literals, and can be undone/redone through bounded control-local history.
+  Rejected input with no accepted token data stays empty rather than manufacturing
+  a literal-only value. This no-token-empty correction also applies to API
+  normalization; required() remains a nonempty check, not completeness validation.
+- Mask operations that would lose an untouched incompatible or over-capacity
+  suffix are rejected with original value/selection. The approved compact string
+  model has no sparse slots. Replacing a mixed prefix with several sequential
+  keys may be rejected at an unrepresentable intermediate state; replace one
+  position at a time or supply a complete compatible replacement together.
+- Mask history is one accepted edit per step, capped internally at 100 entries.
+  Accepted API/clear/reset writes, including equal/silent writes, start a new
+  history. Veto preserves it. Ordinary text and NumberInput native history are
+  not routed through this mask history implementation.
+- TimeInput retains equivalent/incomplete browser text during typing instead of
+  padding the first hour digit into the DOM before the next key. The normalized
+  model/events remain live; blur/API/reset/refresh/step/picker behavior remains
+  authoritative. Existing lossy clamp behavior still synchronizes visible text.
+- User-approved DateInput/DateTimeInput protection rejects insertions that would
+  truncate an unselected suffix. Compatible selected replacements work; API
+  prefix normalization is unchanged. Fallback input paths restore the captured
+  text and selection without publishing the truncated model.
+- Explicit nested API write plus beforeChange veto now leaves these editors' DOM
+  coherent with the surviving model. Existing outer-wins live mutation ordering
+  without veto is preserved; no general nested-write isolation is introduced.
+- Synthetic composing events retain the existing live normalized value phases.
+  Mask reconciliation preserves rejected selections and tolerates missing start
+  events using an inferred prior range. These are not real IME acceptance claims.
+
+Only NumberInput has the new updateMode/commitInput API. No implicit commit is
+added to getters, validation or destroy. Form and Grid/TreeGrid owner boundaries
+remain distinct from these live fields. See INPUT_TYPES.md, INPUT_TESTING.md and
+GRID_EDITOR_MATRIX.md for the exact behavior and limitations.
+
+## Reproductions and focused coverage
+
+Strict pre-fix browser assertions caught mask caret/deletion/undo and literal-only
+validation defects (11 failures and one already-passing case), TimeInput
+12:34 becoming 01:002:34, and Date/DateTime middle insertion discarding final
+digits. They failed on the intended value/selection assertions, not setup errors.
+Artifacts: test-results/mask-fix-red, temporal-fix-red, temporal-fix-suffix-red.
+Two later synthetic composition unit reproductions also failed before correction.
+Independent exact-backup runtime review and documentation review found no remaining
+blocking findings after those corrections.
+
+- Added 30 mask and 48 temporal unit tests.
+- Added masked-editing-regressions.spec.js and masked-owner-regressions.spec.js:
+  77 cases, 231 selected engine executions. The first sweep passed 215 with four
+  intentional clipboard skips; the final composition correction passed all 12
+  added executions. The full aggregate below covers the final code together.
+- Added date-time-editing.spec.js and date-time-editing-owners.spec.js:
+  116 cases, 348/348 across Chromium/Firefox/WebKit in 5.5 minutes. Coverage includes
+  native prefixes, calendar/clock segment replacement, selection, deletion,
+  history, modes, blur/API/reset/veto/reentry, fallback and Form/Grid/TreeGrid.
+- Existing masked-input.spec.js retains its assertions and now uses the shared
+  pageerror fixture and input-editing tag. The matrix guard requires all four new
+  files, and the compatibility allowlist includes them.
+- Installed-package consumer checks now use actual masked/temporal keyboard edits,
+  not only fill/API writes. Existing checks remain. Offline focused installation,
+  strict NodeNext/Bundler compilation and Chromium consumer execution passed.
+
+## Completed aggregate gates
+
+- Fresh full/components/foundation build passed before browser gates.
+- npm test passed: 568 syntax files, API/package/provenance guards, 858/858 units
+  with no skips, and installed TS/JS consumers with TypeScript 5.9.3 and 476
+  runtime exports.
+- Full default Chromium: 1096/1096, no skips, 12.4 minutes; four workers, port 5302,
+  output test-results/mask-temporal-full-chromium.
+- npm run test:types:browser passed, including new mask/temporal keyboard consumers,
+  previous NumberInput modes and all nine built-in editor consumers.
+- Bundle/provenance/assets/exclusions/77-documentation-import guard passed;
+  bundle browser suite 42/42 across three engines, 45.5 seconds, two workers,
+  port 5304, output test-results/mask-temporal-bundle. No concurrent rebuild.
+- Original decimal regression proof rerun after the shared TextField changes:
+  15 clean baselines passed and all 15 isolated unconditional-sync mutants failed
+  the required decimal assertion across three engines; checkout unchanged.
+- Full compatibility matrix: 2676 passed, 12 explicit isolated-clipboard skips,
+  no failures, 47.6 minutes across Chromium/Firefox/WebKit and 74 selected specs;
+  output test-results/mask-temporal-compat. Skips are the six clipboard cases on
+  each non-Chromium engine, whose OS isolation has not been certified.
+- Final offline npm pack --dry-run --json --offline passed: 498 files, version
+  0.6.0-rc.6; no dist, node_modules, test, browser-tests or test-results entries.
+  Final read-only API and package-boundary guards passed again.
+
+The test:all stages were run separately (npm test, fresh build/full browser gate,
+and installed browser types), rather than invoking that wrapper redundantly.
+Compatibility uses scripts/run-browser.js --config playwright.compat.config.js
+--workers=4, port 5301, and the Windows WebKit one-worker cap. Reports/logs are
+under test-results/mask-temporal-aggregate. Overlapping engine executions are not
+independent user-journey counts.
+
+## Preservation and explicit limits
+
+The other 298 source/resources match the saved current snapshot. TextField and
+DateTimeInput were independently compared with exact pre-change byte backups.
+NumberInput, TextArea, package.json and both Grid provenance manifests are
+unchanged by this package. No maturity, runtime dependency or exported API changes.
+
+The current runtime hashes are:
+- TextField.js: e3dd4bac592dc50df1f6f50242dcb760d71918eb379e6a19e08fc1fd8f66443e
+- DateTimeInput.js: 5f24902acae31b2c104a5d14e76746ad9f2dfb070278710d28690307ea893033
+
+Browser results are Chromium 149.0.7827.55, Firefox 151.0 and WebKit 26.5 on Windows,
+with Playwright 1.61.1/Node 22.14.0. No native macOS WebView, physical keyboard
+layout, actual IME, browser context-menu undo or OS clipboard certification.
+Clipboard gestures use only the reviewed isolated Chromium in-memory backend;
+unsupported engines are explicitly skipped, not silently simulated.
+
+Mask token grammar, raw alphanumeric-literal convention, optional-position rules
+and locale parsing are not expanded. Completeness and real calendar/time validity
+still require explicit validators. The pre-existing partial TimeInput model 1:
+passes required(); blur displays 01: in 1-24 mode or 01: AM in 12-hour mode while
+model stays 1:. An explicit HH:mm validator blocks Form/Grid/TreeGrid saving.
+This incomplete-text formatting limitation is recorded, not claimed fixed;
+see test-results/temporal-fix-boundary-probe.json. Date min/max text attributes
+are not automatic calendar-range validation.
+
+---
+
+# Opt-in NumberInput commit mode - 2026-11-09 (UTC)
+
+Local user-approved continuation on SANDRA/Windows, same main HEAD
+0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65 and version 0.6.0-rc.6. Existing
+uncommitted test and TextArea work is retained. No commit, push or publication.
+
+## Implemented boundary
+
+NumberInput now supports updateMode: 'live' | 'commit', with live unchanged as
+the default. The opt-in mode retains a native draft independently of the stored
+number, explicitly completes or cancels it, and exposes structured commit results,
+hasPendingInput and draftChange. API/clear/reset replacement remains immediate.
+Min/max, integer and precision normalization use the existing order at commit.
+The native number parser and locale/comma behavior are not extended.
+
+Form prepares pending fields before its beforeSubmit snapshot. Grid/TreeGrid and
+PropertyGrid use the optional editor prepareCommit phase before validation/read.
+Old custom editors without that hook retain their interface. Getters, validation
+and destroy never implicitly commit. Blur completes the field, not a table row.
+Readonly/disabled pending input is retained and refuses an owner save rather than
+silently substituting the old number. See INPUT_TYPES.md and GRID_EDITOR_TYPES.md
+for validation, veto, silent writes, cancellation and PropertyGrid inline limits.
+
+Independent current-source architecture review and a separate documentation pass
+found no remaining actionable findings. Review closed stale validator results,
+recursive commit/validate callbacks, normalization/option errors discarding drafts,
+mutable beforeChange payload contamination, and owner teardown/state holes.
+Core changes were compared with an exact pre-change backup; owner review used
+current sources and existing contracts/tests, not a complete pre-owner byte diff.
+
+## Added coverage
+
+- 46 core and 17 owner unit regressions; existing unique assertions retained.
+- 62 real browser journeys in number-input-commit.spec.js and
+  number-input-commit-owners.spec.js, selected by the input and compatibility gates.
+  They cover standalone, Form, Grid/TreeGrid and PropertyGrid; actual sequential
+  prefixes; model/event/dirty separation; Enter/Tab/Escape/blur/API; invalid/veto;
+  silent/reset/replacement; spin; reentry, teardown and ownership changes.
+- Installed-package TS/JSDoc fixtures use strict NodeNext and Bundler modes,
+  execution outside the repository, and a typed browser consumer for both modes,
+  Form submission and Grid commit. Existing consumer checks remain enabled.
+
+## Completed checks
+
+- npm run docs:api and the final read-only documentation inventory check passed.
+  Runtime export counts and maturity/tier boundaries are unchanged.
+- npm test passed: 562 syntax files; API and package boundaries; 780/780 units,
+  no skips; installed TS/JS consumers with TypeScript 5.9.3 and 476 runtime exports.
+- Fresh full/components/foundation build passed before aggregate browser runs.
+- Focused new cases: 186/186 across Chromium/Firefox/WebKit (165 plus 21 final
+  additions). Windows WebKit used one worker. The initial PropertyGrid fixture
+  was corrected to distinguish an inline editor from an explicit edit session.
+- Full default Chromium: 903/903, no skips, 10.4 minutes, four workers, port 5262,
+  output test-results/number-commit-full-chromium.
+- Bundle/provenance/assets/exclusions/77-documentation-import guard passed;
+  bundle browser gate 42/42 across three engines, 45.2 seconds, two workers,
+  port 5264, output test-results/number-commit-bundle. No rebuild raced the tests.
+- npm run test:types:browser passed, including the new installed NumberInput
+  consumer and all nine existing built-in editor consumers.
+- Historical decimal mutation rechecked in a disposable source copy:
+  15/15 clean baselines passed and all 15 restored unconditional-sync mutants
+  failed the expected decimal assertion, across three engines. The checkout
+  NumberInput SHA-256 was unchanged throughout this proof.
+- Full compatibility: 2101 passed, eight explicit clipboard-backend skips, no
+  failures, 36.1 minutes. All 70 selected specs ran across three engines; the eight
+  skips are the unsupported Firefox/WebKit isolated clipboard backend, not numeric
+  commit or composition exclusions. Output: test-results/number-commit-compat.
+- Final offline npm pack dry-run passed: 498 files, version 0.6.0-rc.6; generated
+  dist, tests, browser-tests, test-results and node_modules excluded. No publication.
+
+The test:all stages are executed separately: npm test, a fresh build/full browser
+gate, and installed browser types. Browser commands use scripts/run-browser.js;
+the compatibility gate adds --config playwright.compat.config.js --workers=4
+and port 5261, with Windows WebKit capped at one. Logs are under
+test-results/number-commit-aggregate; focused reports are number-commit-flows and
+number-commit-flows-final-corrected. Engine repetitions overlap other suites and
+are not counts of independent user journeys.
+
+## Preservation and limitations
+
+The saved 300-source/resource snapshot differs only in the 15 intended source
+and declaration files for NumberInput/TextField and its owners; 285 remain
+byte-identical, including the previously corrected TextArea. Only six reviewed
+Grid/editor candidate hashes changed; the previous 41 candidate entries and
+immutable imported source-snapshot hash remain unchanged. The imported manifest
+SHA-256 is 9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67.
+
+These are local browser results on Chromium 149.0.7827.55, Firefox 151.0 and
+WebKit 26.5 with Playwright 1.61.1/Node 22.14.0. They do not certify native macOS
+WebView, physical keyboard layouts or a real IME session. Existing synthetic
+composition checks and the strictly isolated Chromium clipboard backend retain
+their stated limits. Application validators remain a separate phase from numeric
+commit; a later owner veto/validation failure does not roll back an already
+completed field commit. No new atomic multi-field rollback contract is claimed.
+
+---
+
+# TextArea composing-key guard correction - 2026-11-09 (UTC)
+
+Local continuation on SANDRA/Windows, same main HEAD
+0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65, preserving the two uncommitted test
+packages below. The requested runtime change is restricted to TextArea's
+keydown guard: ignore defaultPrevented, isComposing and legacy keyCode 229 before
+running Enter/Tab commands. NumberInput's policy, public declarations, dependency
+versions and Grid provenance are unchanged. No commit, push or publication.
+
+The former input-composition-known-gap.spec.js is replaced by active
+input-composition-keyboard.spec.js regressions. All four original desired
+assertions remain, with normal keyboard recovery, default behavior, a
+host-prevented key and readonly/disabled recovery added. There is no fixme or
+TAET_UI_COMPOSITION_PROBE opt-in path in the active file. It is included in the
+focused input and three-engine compatibility gates.
+
+Composition/keyCode flags are synthetic dispatch. Recovery uses browser keyboard
+input, not a physical IME session. The earlier expected assertion failures below
+remain historical evidence of the corrected defect, not current skipped coverage.
+
+## Checks
+
+- Final new keyboard regressions: 27/27 across Chromium/Firefox/WebKit, one worker,
+  after the platform-aware native Tab helper change (53.7 seconds).
+- Expanded focused regressions: 159/159 across the same engines (4.6 minutes),
+  including composition lifecycle, editing, remaining-input lifecycle, foundation,
+  basic Form, keyboard acceptance and Grid edit-commit lifecycle.
+- Isolated handler fixture: the original handler violates all four original
+  desired assertions; the corrected handler violates none. No checkout rollback.
+- Fresh full/components/foundation build passed before the aggregate browser runs.
+- npm test passed: 556 syntax files; API inventory and package/provenance guards;
+  717/717 units; installed TS/JS consumers with TypeScript 5.9.3, NodeNext/Bundler
+  and 476 runtime exports.
+- Full default Chromium: 841/841 passed, no fixme skips (9.8 minutes), four workers,
+  port 5242, output test-results/textarea-guard-full-chromium.
+- Bundle/provenance/assets/77-documentation-import guard passed; bundle suite
+  passed 42/42 on three engines (46.5 seconds), two workers, port 5244.
+- Installed browser consumers/types passed, including all nine built-in editors.
+- Focused discovery lists 255 executions in eight files (85 journeys), not counted
+  as a separate test pass. Independent final read-only review found no actionable
+  findings after the native Tab helper adjustment.
+- Expanded compatibility: 1915 passed and eight explicit clipboard-backend skips,
+  no TextArea skips (34.4 minutes), 68 selected specs across three engines. Four
+  workers with Windows WebKit capped at one; port 5241; output
+  test-results/textarea-guard-compat. Engine repetitions overlap the full suite.
+- Final npm pack dry-run: 498 files, version 0.6.0-rc.6; generated dist, test,
+  browser-test, test-result and node_modules trees excluded. No publication.
+- The 299 other source/resources match the saved current snapshot. TextArea is
+  byte-for-byte its original file plus the guard line and one blank line. Its
+  SHA-256 is f50f24213a837d373e2885764c713cb6a4f6847b23635324e1c71669ddbdf0d3.
+  NumberInput remains afa7a817a04c2e2193c0403254a478796cf6de2e93ec9fbe921d627c26bcd0f9.
+
+The test:all stages were run separately: npm test, fresh build/full browser suite,
+and installed browser types. These are local Windows/browser results, not a
+remote CI, macOS native WebView or actual IME acceptance claim.
+
+## Numeric draft investigation, without a runtime change
+
+A blur-only clamp change is insufficient: ControlCellEditor reads value.get(),
+and Grid/TreeGrid validate and read before destroying an editor. Enter/Tab and
+API commits need not blur first. Form.submit also takes a value snapshot before
+beforeSubmit without explicitly finishing editing. Numeric draft policy therefore
+needs an explicit owner integration, not a change to one blur listener.
+
+Unresolved choice: live parseable model/events while typing (temporarily outside
+min/max), versus last committed model plus a separate draft and one value event
+cycle on commit. The latter gives a clear Escape transaction but changes the
+stable live-value contract, so it needs an explicit opt-in/migration decision.
+Empty/null versus incomplete badInput, validators/veto, silent API writes, reset,
+spin and destruction must remain separately defined. The investigation did not
+add any draft/commit/locale API or change current NumberInput behavior.
+
+---
+
+# Input history, clipboard and composition follow-up - 2026-11-09 (UTC)
+
+Local follow-up to the editor-coverage package below on SANDRA/Windows, same
+main HEAD 0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65. Existing uncommitted work is
+preserved. Runtime, declarations, dependencies, version and Grid provenance are
+unchanged. No commit, push, publication or user OS clipboard operation occurred.
+
+## Added coverage and observed limits
+
+- 15 real browser keyboard Undo/Redo cases: TextInput, single/multiline TextArea,
+  integer/fractional NumberInput; append, selection replacement and deletion.
+  Compare bare controls, exact model/events and text/textarea selection. Number
+  inputs expose null selection offsets, so their caret restoration is unverified.
+- Four real keyboard clipboard cases, including fractional paste 1.05, run only
+  in a fresh reviewed Chromium 149.0.7827.55 headless-shell process. The exact-tag
+  implementation uses ClipboardNonBacked in memory. Version/executable/headless
+  guards fail before gestures on an unreviewed launch. No shared OS clipboard
+  is read or overwritten. Firefox/WebKit are explicit unsupported-backend skips.
+- 17 explicitly synthetic composition lifecycle cases cover Form-owned teardown,
+  repeated input, exact value phases, NumberInput guards and Grid/TreeGrid editor
+  isolation/recovery. They do not certify real native IME candidate behavior.
+- Four separate TextArea composing-key regressions remain fixme by default.
+  Opt-in reproduction failed all 12 desired assertions across three engines,
+  with no setup/global/teardown errors: composing Enter emits enterKey when
+  acceptsReturn:false; composing Tab inserts a tab when acceptsTab:true.
+  Both isComposing:true and keyCode229 reproduce. Runtime was not changed.
+- The observational policy probe records 240 cases, not regression assertions.
+  It compares native/Tæt controls under nine context-locale/lang combinations.
+  min:10 plus typed 12 becomes 102 under live clamp; clamp:false preserves 12.
+  Keyboard comma behavior varies by engine and locale/lang, matching native
+  controls. See INPUT_TESTING.md for exact traces and the unresolved UX choices.
+- NATIVE_ACCEPTANCE.md now distinguishes the recorded 7 November Apple Silicon
+  build/echo smoke from unverified current native input acceptance. No new host
+  build/launch occurred; MacBook was reported offline during this pass.
+
+## Checks for this follow-up
+
+Focused evidence completed before aggregate gates:
+- Keyboard history: 90/90 (15 cases x 3 engines x 2 repetitions).
+- Isolated clipboard: 4 passed Chromium, 8 explicit Firefox/WebKit skips.
+- Composition lifecycle: 51/51 across Chromium/Firefox/WebKit.
+- Known-gap opt-in probe: 12/12 expected desired-assertion failures, not a green
+  pass; ordinary standalone mode explicitly skips all 12.
+- Policy probe: 240 observations, zero page errors, all runtime source hashes
+  unchanged; full reproduction details live in ignored test-results.
+
+Completed aggregate gates:
+- npm test passed: 556 syntax files, API/package boundaries, 717/717 units and
+  installed TS/JS consumers (TypeScript 5.9.3, NodeNext/Bundler, 476 exports).
+- Full default Chromium: 832 passed, four known-gap fixme skips (9.4 minutes),
+  four workers, port 5223, output test-results/input-second-full-chromium.
+- Fresh build and bundle/provenance/assets/77-doc-import guard passed.
+- Bundle suite: 42/42 across three engines (40.9 seconds), two workers, port 5224.
+- Installed browser types/consumers passed, including all nine built-in editors.
+- Focused tag selection lists 228 engine executions in seven files (76 journeys);
+  list-only evidence is not counted as a separate execution pass.
+- Expanded compatibility: 1888 passed, eight explicit clipboard-backend skips
+  (28.2 minutes), Chromium/Firefox/WebKit, four workers with Windows WebKit capped
+  at one, port 5222, output test-results/input-second-compat. The 67 selected specs
+  contain 632 scheduled executions per engine; clipboard runs only on Chromium.
+- Refreshed historical decimal mutation proof: 15/15 clean baselines passed and
+  15/15 mutant runs failed the required 1.0-to-1 assertion. The isolated snapshot
+  and reports are retained at OS temp taet-input-regression-2PFkoa; checkout
+  NumberInput SHA-256 remains afa7a817a04c2e2193c0403254a478796cf6de2e93ec9fbe921d627c26bcd0f9.
+- Final npm package dry-run: 498 files, version 0.6.0-rc.6; no test, browser-test,
+  test-result, node_modules or dist trees. Nothing was published.
+
+The prior package's completed results below remain historical evidence. They are
+not relabeled as passes for the new files. Native OS clipboard, physical keyboard,
+actual IME and current native WebView acceptance remain unverified. Public
+min/max normalization and locale support contracts have not been changed.
+
+---
+
+# Input editing coverage hardening - 2026-11-09 (UTC)
+
+Uncommitted test-only work on main, based on `0ca41c6836e3a6e4e0b9f87a3d968ec55ef74d65`
+(0.6.0-rc.6), verified locally on Windows x64, Node 22.14.0 and Playwright 1.61.1.
+No runtime source, declaration, dependency, API maturity or Grid candidate hash
+was changed. No commit, push or publication was performed.
+
+## Changed coverage
+
+- NumberInput browser cases expand from 17 to 38 while retaining existing assertions:
+  actual default/any/fractional step, -0.05, equal-valued prefixes, keyboard
+  replacement/deletion, blur/refocus and disabled/readonly recovery.
+- Existing Grid/TreeGrid adapter, live demo and keyboard-only Dialog/Form journeys
+  now type decimal drafts sequentially and retain exact model/event/store checks.
+- New TextInput/TextArea journeys check middle insertion, selection replacement,
+  deletion, caret position and refocus. An automatic pageerror fixture checks body
+  and afterEach errors, including an exact-error self-check.
+- A shared Node value-phase harness retains distinct teardown cases and
+  choice-specific assertions. NumberInput model normalization/reset/spin coverage
+  is expanded. A Node guard prevents tagged editor specs from silently leaving
+  the selected three-engine gate.
+- `test:inputs` selects 44 tagged journeys (132 engine executions). Compatibility
+  now selects 64 spec files, including the existing high-risk input and Grid
+  lifecycle regressions. These overlap the broad suites.
+- `test:input-regression` verifies five journeys against an unchanged snapshot and
+  the historical decimal defect on all three engines. The checker never patches
+  the checkout and rejects setup failures, missing inputs and timeouts as proof.
+  Strategy and explicit acceptance limits: [INPUT_TESTING](INPUT_TESTING.md).
+
+## Verification
+
+- `npm test`: passed, including API inventory/package boundaries, all 716 Node
+  tests, installed TS/JS consumers (NodeNext/Bundler) and 476 runtime exports.
+  All 47 approved Grid candidate hashes passed.
+- Final `npm run test:syntax`: passed, 551 JavaScript files.
+- Build plus full Chromium via `node scripts/run-browser.js --workers=8
+  --output=test-results/input-audit-full-chromium`, port 5201: 796/796 passed.
+- `npm run test:types:browser`: passed, including installed editor, input,
+  data/model and component consumers.
+- Expanded compatibility via `node scripts/run-browser.js --config
+  playwright.compat.config.js --workers=4 --output=test-results/input-audit-compat-final`,
+  port 5202: 1788/1788 passed (596 per engine), 32.2 minutes. The configured
+  Windows WebKit single-worker cap remained active.
+- Final build, `node scripts/check-bundle.js`, and the bundle browser config
+  with two workers, port 5203: 42/42 passed across the three engines.
+- `node scripts/check-input-regression.js --all-engines`: 15/15 unchanged
+  baseline journeys passed; all 15 mutant journeys failed the exact expected
+  intermediate-value assertion (expected "1.0", received "1").
+- `npm pack --dry-run --json`: passed, 498 files; generated dist, dependencies,
+  tests and reports were excluded. This was inspection, not publication.
+
+The `test:all` stages were run individually as npm test, build/full Chromium,
+and test:types:browser rather than repeating the same aggregate command.
+No unrelated source changes followed those browser checks. The final scripts and
+matrix guard were covered by the final syntax pass; the guard also ran in the
+716-case unit gate.
+
+NumberInput SHA-256 before/after mutation verification:
+`afa7a817a04c2e2193c0403254a478796cf6de2e93ec9fbe921d627c26bcd0f9`.
+The successful five-journey proof retained its source snapshot, reports and
+summary.json in the OS temporary directory `taet-input-regression-T2Ec3W`.
+Broad gate logs remain under ignored `test-results/input-audit-*`.
+
+## Exploratory failures and limits
+
+An initial focused run passed 130/132 cases: the two new noneditable WebKit
+journeys sent Backspace, which navigated to about:blank. The same behavior was
+reproduced on bare native inputs. Only that noneditable gesture was removed;
+typing/Delete/ArrowUp, display/model/events and recovery assertions remain,
+and editable Backspace remains covered. Both focused WebKit recovery cases passed.
+A bare Chromium comparison also motivated explicit refocus after clearing readonly.
+
+The first extended mutation baseline was rejected because the copied demo's recipe
+dependency was missing. Another iteration rejected an overly specific expected-failure
+classification. Neither counted as a successful proof. The final checker requires
+all five clean baselines and the observed 1.0-to-1 assertion on every mutant.
+
+These are Windows browser/package results, not a remote CI, macOS or native WebView
+acceptance claim. Native IME, OS clipboard, undo/redo, comma-decimal locale/keypad
+behavior and constrained draft/commit policy remain explicit follow-up decisions
+in INPUT_TESTING.md. No new support policy or runtime workaround was introduced.
+
+---
 # rc.6 publication candidate - 2026-11-08
 
 The 0.6.0-rc.6 candidate combines the NumberInput fix and completed local checks

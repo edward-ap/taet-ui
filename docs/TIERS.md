@@ -17,6 +17,11 @@ component-specific compilers/factories stay with their concrete controls.
 No general JSON engine is introduced. Legacy aliases remain for retained APIs.
 [Deferred APIs and Reader transition](EXTENSIONS.md).
 
+NumberInput draft/commit behavior stays in the existing input component, and
+owner preparation stays in Form and the existing table/property editors. It adds
+no foundation transaction engine, new tier, or maturity promotion. See
+[typed input behavior](INPUT_TYPES.md#numberinput).
+
 <!-- tier-inventory:start -->
 
 ## Foundation symbols

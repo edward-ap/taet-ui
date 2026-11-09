@@ -20,22 +20,37 @@ async function start(page,id=1){expect(await page.evaluate(id=>grid.startEdit(id
 async function openPopup(page,kind){if(kind==='select')await page.locator('.dui-dropdown-list__display').press('ArrowDown');else await page.locator('.dui-date-time-input__button').click();await expect(popup(page)).toHaveCount(1);}
 test.beforeEach(({page})=>page.on('pageerror',error=>{throw error}));
 for(const facade of ['Grid','TreeGrid']){
- for(const kind of kinds)test(`${facade} ${kind} actual input preserves typed commit cancel and parse`,async({page})=>{
+ for(const kind of kinds)test(`${facade} ${kind} actual input preserves typed commit cancel and parse`,{tag:kind==='number'?['@input-editing']:[]},async({page})=>{
   await mount(page,facade,kind);await start(page);
   if(kind==='select'){
    await openPopup(page,kind);await page.locator('.dui-dropdown-list__search').press('End');await page.keyboard.press('Enter');await expect(popup(page)).toHaveCount(0);
   }else if(kind==='checkbox')await page.locator('.dui-grid__editor-host input[type=checkbox]').check();
   else if(kind==='switch')await page.locator('.dui-grid__editor-host .dui-switch__visual').click();
   else if(kind==='radio')await page.locator('.dui-radio-group__content').press('End');
+  else if(kind==='number'){const input=page.locator('.dui-grid__editor-host input');await input.press('ControlOrMeta+A');await input.pressSequentially(String(changed[kind]));}
   else await page.locator('.dui-grid__editor-host input').fill(String(changed[kind]));
   await page.keyboard.press('Enter');await expect(page.locator('.dui-grid__editor-host')).toHaveCount(0);
   expect(await page.evaluate(()=>grid.data.get(1).value)).toEqual(changed[kind]);
   expect(await page.evaluate(()=>events.map(e=>e.name))).toEqual(['cellChange','editCommit']);expect(await page.evaluate(()=>writes.length)).toBe(1);
-  await start(page);await page.evaluate(v=>ed.control.value.set(v),initial[kind]);await page.keyboard.press('Escape');
+  await start(page);
+  if(kind==='number'){
+   const input=page.locator('.dui-grid__editor-host input');await input.press('ControlOrMeta+A');await input.pressSequentially('1.0');await expect(input).toHaveValue('1.0');await input.pressSequentially('5');await expect(input).toHaveValue('1.05');
+   expect(await page.evaluate(()=>({draft:ed.getValue(),value:grid.data.get(1).value,writes:writes.length}))).toEqual({draft:1.05,value:changed.number,writes:1});
+  }else await page.evaluate(v=>ed.control.value.set(v),initial[kind]);
+  await page.keyboard.press('Escape');
   await expect(page.locator('.dui-grid__editor-host')).toHaveCount(0);expect(await page.evaluate(()=>grid.data.get(1).value)).toEqual(changed[kind]);
   expect(await page.evaluate(()=>events.map(e=>e.name))).toEqual(['cellChange','editCommit','editCancel']);
   await page.evaluate(()=>grid.data.parse(grid.data.all().map(x=>({...x})),{silent:true,origin:'import'}));
-  expect(await page.evaluate(()=>({value:grid.data.get(1).value,type:typeof grid.data.get(1).value}))).toEqual({value:changed[kind],type:typeof changed[kind]});await page.evaluate(()=>grid.destroy());
+  expect(await page.evaluate(()=>({value:grid.data.get(1).value,type:typeof grid.data.get(1).value}))).toEqual({value:changed[kind],type:typeof changed[kind]});
+  if(kind==='number'){
+   expect(await page.evaluate(()=>writes.length)).toBe(1);
+   await start(page);const input=page.locator('.dui-grid__editor-host input');await input.press('ControlOrMeta+A');await input.pressSequentially('1.0');await expect(input).toHaveValue('1.0');await input.pressSequentially('5');await expect(input).toHaveValue('1.05');
+   await input.press('Tab');
+   await expect(page.locator('.dui-grid__editor-host input')).toBeFocused();
+   expect(await page.evaluate(()=>({value:grid.data.get(1).value,type:typeof grid.data.get(1).value,column:grid._editing.column.id,writes:writes.length,events:events.map(e=>e.name)}))).toEqual({value:1.05,type:'number',column:'tail',writes:2,events:['cellChange','editCommit','editCancel','cellChange','editCommit']});
+   await page.keyboard.press('Escape');expect(await page.evaluate(()=>writes.length)).toBe(2);
+  }
+  await page.evaluate(()=>grid.destroy());
  });
  test(`${facade} boolean pointer focus respects an application target-click callback`,async({page},testInfo)=>{
   for(const kind of ['checkbox','switch']){

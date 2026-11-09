@@ -114,11 +114,17 @@ class DateTimeInputBase extends EditorControl {
     this._pickerButton = pickerButton;
     this._message = message;
 
-    this.disposables.addEventListener(input, "input", () => {
-      this._setValue(this._fromInputValue(input.value), {
-        origin: "user",
-        userAction: true
+    this._rememberNativeInput();
+    this.disposables.addEventListener(input, "beforeinput", event => this._handleBeforeInput(event));
+    this.disposables.addEventListener(input, "input", event => this._handleInput(event));
+    for (const type of ["focus", "keydown", "select", "compositionstart"]) {
+      this.disposables.addEventListener(input, type, () => {
+        if (input.value === this._acceptedNativeText) this._nativeSelectionBefore = this._captureNativeInput();
       });
+    }
+    this.disposables.addEventListener(input, "compositionend", () => {
+      this._nativeEditBefore = null;
+      if (input.value === this._acceptedNativeText) this._nativeSelectionBefore = this._captureNativeInput();
     });
 
     this.disposables.addEventListener(input, "blur", () => {
@@ -192,13 +198,111 @@ class DateTimeInputBase extends EditorControl {
     return value;
   }
 
+  _captureNativeInput() {
+    const input = this._input;
+    return { text: input.value, start: input.selectionStart ?? input.value.length,
+      end: input.selectionEnd ?? input.value.length, direction: input.selectionDirection ?? "none" };
+  }
+
+  _rememberNativeInput() {
+    if (!this._input) return;
+    this._acceptedNativeText = this._input.value;
+    this._nativeSelectionBefore = this._captureNativeInput();
+  }
+
+  _nativePrefixLength(text) {
+    return text.length;
+  }
+
+  _wouldTruncateNativeSuffix(before, text, inputType = "") {
+    if (!before || (inputType && !inputType.startsWith("insert"))) return false;
+    const suffix = before.text.slice(before.end);
+    const insertedLength = text.length - before.text.length + before.end - before.start;
+    return suffix.length > 0 && insertedLength > 0 &&
+      text.startsWith(before.text.slice(0, before.start)) && text.endsWith(suffix) &&
+      this._nativePrefixLength(text) < text.length;
+  }
+
+  _handleBeforeInput(event) {
+    if (!this._input || this.destroyed) return;
+    const before = this._captureNativeInput();
+    this._nativeEditBefore = before;
+    if (!event.cancelable || event.data == null) return;
+    const text = before.text.slice(0, before.start) + event.data + before.text.slice(before.end);
+    if (this._wouldTruncateNativeSuffix(before, text, event.inputType)) {
+      event.preventDefault();
+      this._nativeEditBefore = null;
+    }
+  }
+
+  _handleInput(event = {}) {
+    const input = this._input;
+    if (!input || this.destroyed) return;
+    const text = input.value;
+    let before = this._nativeEditBefore;
+    this._nativeEditBefore = null;
+    if (!before && this._acceptedNativeText != null) {
+      before = inferNativeEdit(this._acceptedNativeText, text, this._nativeSelectionBefore);
+    }
+    if (this._wouldTruncateNativeSuffix(before, text, event.inputType)) {
+      // Noncancelable beforeinput, IME and older hosts still must not publish a
+      // truncated value. Restore the exact pre-edit text/selection before events.
+      input.value = before.text;
+      input.setSelectionRange?.(before.start, before.end, before.direction);
+      this._rememberNativeInput();
+      return false;
+    }
+    const value = this._fromInputValue(text);
+    const normalized = this._normalizeValue(value);
+    const edit = this._canPreserveNativeInput(text, normalized)
+      ? { input, text, value: normalized }
+      : null;
+    this._nativeInputSync = edit;
+    const writeRevision = this._nativeWriteRevision;
+    try {
+      // Keep the established live model and event pipeline. Only its immediate
+      // DOM echo is suppressed for equivalent text: padding would destroy the
+      // editing buffer and move the caret before the next character arrives.
+      // Lossy normalization (clamping or truncation) still updates visible text.
+      return super._setValue(value, { origin: "user", userAction: true });
+    } finally {
+      if (this._nativeInputSync === edit) this._nativeInputSync = null;
+      // A veto after a nested API write restores EditorControl's captured old
+      // text. Keep the final DOM coherent with the surviving model instead.
+      if (!this.destroyed && this._nativeWriteRevision !== writeRevision) this._syncInput(this._value);
+    }
+  }
+
+  _canPreserveNativeInput(text, value) {
+    return text === value;
+  }
+
+  _setValue(value, options = {}) {
+    // Explicit writes (including callback reentry and same-value writes) replace
+    // native text immediately. They must never inherit a typing transaction.
+    this._nativeWriteRevision = (this._nativeWriteRevision ?? 0) + 1;
+    this._nativeInputSync = null;
+    this._nativeEditBefore = null;
+    this._nativeSelectionBefore = null;
+    return super._setValue(value, options);
+  }
+
   _syncInput(value) {
+    const edit = this._nativeInputSync;
+    this._nativeInputSync = null;
+    if (edit && edit.input === this._input && edit.text === this._input?.value &&
+        Object.is(edit.value, value) && !this.disabled && !this.isReadOnly()) {
+      this._rememberNativeInput();
+      return;
+    }
     if (this._input) {
       const inputValue = this._toInputValue(value);
 
       if (this._input.value !== inputValue) {
         this._input.value = inputValue;
       }
+      this._nativeEditBefore = null;
+      this._rememberNativeInput();
     }
   }
 
@@ -357,6 +461,10 @@ export class DateInput extends DateTimeInputBase {
   _normalizeStringValue(value) {
     const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
     return match ? match[1] : value;
+  }
+
+  _nativePrefixLength(text) {
+    return this._normalizeStringValue(text).length;
   }
 
   _dateToValue(date) {
@@ -588,6 +696,10 @@ export class TimeInput extends DateTimeInputBase {
   }
 
   _toInputValue(value) {
+    // Only complete canonical values have a display hour/period. Formatting
+    // partial or arbitrary text would invent missing parts or hide their absence.
+    if (!isCompleteTimeValue(value)) return value ?? "";
+
     if (this.hourMode === "12") {
       return formatTime12(value);
     }
@@ -603,6 +715,23 @@ export class TimeInput extends DateTimeInputBase {
     return normalizeTimeValue(value, {
       hourMode: this.hourMode
     });
+  }
+
+  _canPreserveNativeInput(text, value) {
+    if (text === value) return true;
+    const match = text.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if (!match) return false;
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] ?? 0);
+    const suffix = match[3]?.toUpperCase();
+    if (suffix) {
+      if (hours === 12) hours = 0;
+      if (suffix === "PM") hours += 12;
+    } else if (this.hourMode === "1-24" && hours === 24) {
+      hours = 0;
+    }
+    // Formatting is reversible only if the existing parser did not clamp.
+    return hours <= 23 && minutes <= 59 && formatTimeParts(hours, minutes) === value;
   }
 
   _appendExtraButtons(group) {
@@ -755,6 +884,7 @@ export class TimeInput extends DateTimeInputBase {
     }
 
     const pickerValue = this._getPickerValue();
+    const complete = isCompleteTimeValue(pickerValue);
     const { hours, minutes } = getTimeParts(pickerValue);
     const activeMode = this.hourMode;
     const suffix = hours >= 12 ? "PM" : "AM";
@@ -764,7 +894,7 @@ export class TimeInput extends DateTimeInputBase {
 
     this._hourWheel.replaceChildren(
       ...hourItems.map(hour =>
-        this._createPickerButton(String(hour).padStart(2, "0"), activeHour === hour, () => {
+        this._createPickerButton(String(hour).padStart(2, "0"), complete && activeHour === hour, () => {
           this._setTimeFromPicker(hour, minutes);
         })
       )
@@ -772,17 +902,17 @@ export class TimeInput extends DateTimeInputBase {
 
     this._minuteWheel.replaceChildren(
       ...minuteItems.map(minute =>
-        this._createPickerButton(String(minute).padStart(2, "0"), minutes === minute, () => {
+        this._createPickerButton(String(minute).padStart(2, "0"), complete && minutes === minute, () => {
           this._setTimeFromPicker(activeHour, minute);
         })
       )
     );
 
     this._modeColumn.replaceChildren(
-      this._createPickerButton("AM", activeMode === "12" && suffix === "AM", () => {
+      this._createPickerButton("AM", complete && activeMode === "12" && suffix === "AM", () => {
         this._setPickerMode("AM");
       }),
-      this._createPickerButton("PM", activeMode === "12" && suffix === "PM", () => {
+      this._createPickerButton("PM", complete && activeMode === "12" && suffix === "PM", () => {
         this._setPickerMode("PM");
       }),
       this._createPickerButton("24", activeMode !== "12", () => {
@@ -964,6 +1094,14 @@ export class DateTimeInput extends DateTimeInputBase {
 
   _fromInputValue(value) {
     return this._normalizeStringValue(value);
+  }
+
+  _canPreserveNativeInput(text, value) {
+    return text.replace(" ", "T") === value;
+  }
+
+  _nativePrefixLength(text) {
+    return this._normalizeStringValue(text).length;
   }
 
   _dateToValue(date) {
@@ -1169,10 +1307,9 @@ export class DateTimeInput extends DateTimeInputBase {
       return;
     }
 
-    const parts = parseDateTimeValue(this._getPickerValue()) ?? {
-      hours: 0,
-      minutes: 0
-    };
+    const selectedParts = parseDateTimeValue(this._getPickerValue());
+    const complete = selectedParts !== null;
+    const parts = selectedParts ?? { hours: 0, minutes: 0 };
     const activeMode = this.hourMode;
     const suffix = parts.hours >= 12 ? "PM" : "AM";
     const hourItems = activeMode === "12" ? range(1, 12) : range(1, 24);
@@ -1181,7 +1318,7 @@ export class DateTimeInput extends DateTimeInputBase {
 
     this._hourWheel.replaceChildren(
       ...hourItems.map(hour =>
-        this._createPickerButton(String(hour).padStart(2, "0"), activeHour === hour, () => {
+        this._createPickerButton(String(hour).padStart(2, "0"), complete && activeHour === hour, () => {
           this._setTimeFromPicker(hour, parts.minutes);
         })
       )
@@ -1189,17 +1326,17 @@ export class DateTimeInput extends DateTimeInputBase {
 
     this._minuteWheel.replaceChildren(
       ...minuteItems.map(minute =>
-        this._createPickerButton(String(minute).padStart(2, "0"), parts.minutes === minute, () => {
+        this._createPickerButton(String(minute).padStart(2, "0"), complete && parts.minutes === minute, () => {
           this._setTimeFromPicker(activeHour, minute);
         })
       )
     );
 
     this._modeColumn.replaceChildren(
-      this._createPickerButton("AM", activeMode === "12" && suffix === "AM", () => {
+      this._createPickerButton("AM", complete && activeMode === "12" && suffix === "AM", () => {
         this._setPickerMode("AM");
       }),
-      this._createPickerButton("PM", activeMode === "12" && suffix === "PM", () => {
+      this._createPickerButton("PM", complete && activeMode === "12" && suffix === "PM", () => {
         this._setPickerMode("PM");
       }),
       this._createPickerButton("24", activeMode !== "12", () => {
@@ -1476,6 +1613,10 @@ function normalizeTimeValueWithOptions(value, options = {}) {
   return formatTimeParts(hours, minutes);
 }
 
+function isCompleteTimeValue(value) {
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
 function formatTime12(value) {
   if (!value) {
     return "";
@@ -1580,4 +1721,21 @@ function clampNumber(value, min, max) {
   }
 
   return Math.max(min, Math.min(max, Math.trunc(number)));
+}
+
+// With no beforeinput snapshot, infer the smallest native replacement. Prefer
+// the recorded selection when it describes the actual edit (including repeats).
+function inferNativeEdit(previous, text, selection) {
+  if (previous === text) return null;
+  if (selection?.text === previous &&
+      text.startsWith(previous.slice(0, selection.start)) &&
+      text.endsWith(previous.slice(selection.end))) {
+    return selection;
+  }
+  let start = 0;
+  while (start < previous.length && start < text.length && previous[start] === text[start]) start++;
+  let suffix = 0;
+  while (suffix < previous.length - start && suffix < text.length - start &&
+      previous[previous.length - 1 - suffix] === text[text.length - 1 - suffix]) suffix++;
+  return { text: previous, start, end: previous.length - suffix, direction: "none" };
 }

@@ -18,10 +18,11 @@ the small public example or a required runtime dependency of this toolkit.
 
 Still unverified: actual IME composition; complete physical keyboard/pointer flow;
 screen readers; mixed-monitor DPI; native file dialogs/clipboard; other WebView hosts.
-macOS will be tested after GitHub publication from a separate consumer project.
-macOS native acceptance is currently unverified and is not a preview-release blocker.
-Linux native acceptance is also unverified.
-No claim of tested macOS/Linux can be inferred from portable browser automation.
+The historical Windows stand did not establish macOS/Linux acceptance. A later
+bounded Apple Silicon build/echo smoke is recorded below; complete native input
+acceptance remains unverified and is not a preview-release blocker. Linux native
+acceptance is also unverified. Portable browser automation alone cannot certify
+either native host.
 
 The source-only [minimal Tauri example](../examples/tauri-minimal/README.md) has its
 own separate Windows build/run smoke: 7/7 programmatic checks, local assets/Noto,
@@ -47,3 +48,42 @@ every key/pointer path, actual IME, screen readers, mixed-monitor DPI, native
 clipboard/file dialogs or macOS/Linux. The rc.2 release metadata update does not
 claim a new native run on the later release SHA. No stand EXE, profile, private
 fixture or raw diagnostic evidence is included in this source-only release.
+
+
+## Later Apple Silicon evidence and current input gap
+
+The minimal example README and the 2026-11-07 entries in [VERIFICATION.md](VERIFICATION.md)
+record a macOS 26.5.1 arm64 build with Rust/Cargo 1.99.1, Xcode/SDK 26.5 and a
+maintainer-observed native Rust echo response. After the keyboard/WebKit fixes,
+prepare and release build passed again with matching final assets; the final
+rebuilt executable was not manually retested. These are historical, bounded
+observations, not results for the current uncommitted editor-test changes.
+
+The 2026-11-09 input audit ran on Windows/SANDRA. The connected-computer catalog
+reported the MacBook offline, and no new native host was built or launched. The
+repository's minimal Windows host had no built release executable in its local
+target directory. Browser keyboard Undo/Redo, synthetic composition events and
+any headless browser clipboard tests are separate from native WebView acceptance.
+
+Before claiming native input support, use an exact, identified consumer build and
+record OS/architecture, WebView version, bundle/source hash, keyboard layout and
+IME. Run this compact manual matrix with non-private fixture text:
+
+- TextInput/TextArea: select a middle substring, type over it, Undo, Redo, then
+  copy/cut/paste by the platform shortcuts. Check visible text, selection and the
+  application's model/events. Include readonly/disabled and blur/refocus.
+- NumberInput: type 1.05 and -0.05 character by character; retain the 1.0 prefix;
+  replace/select/delete, Undo/Redo and paste a decimal. Try comma and keypad
+  decimal under each claimed keyboard/locale, without assuming they are equivalent.
+- Composition: confirm and cancel an actual candidate in text and textarea;
+  press Enter/Tab while composing; repeat after blur/reopen. Confirm/cancel in
+  Grid/TreeGrid must not accidentally commit/cancel the cell or submit its Dialog.
+- Repeat the numeric path in Form and both Grid adapters. Observe draft/model
+  separation, Enter/Tab commit and Escape cancel; record exact source/event counts.
+- Keep constrained numeric drafts (positive minimum, maximum, integer/precision)
+  separate from the unconstrained decimal baseline. Resolve their UX contract
+  before judging a native-host result against a new policy.
+
+Do not capture the user's private clipboard or change an existing keyboard/IME
+configuration as part of an unattended test. Browser-protocol keyboard events
+inside headless engines are not physical keyboard or native IME evidence.

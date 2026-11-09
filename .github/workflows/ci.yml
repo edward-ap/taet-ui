@@ -60,7 +60,8 @@ jobs:
     # Avoid paying for both push and PR runs of the same feature branch.
     if: github.event_name != 'push' || github.ref == 'refs/heads/main'
     runs-on: macos-latest
-    timeout-minutes: 30
+    # Expanded editing suite retains two workers and every existing assertion.
+    timeout-minutes: 90
     env:
       TAET_UI_WORKERS: '2'
     steps:

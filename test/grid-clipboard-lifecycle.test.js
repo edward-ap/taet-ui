@@ -82,7 +82,7 @@ for (const phase of ['factory', 'validate', 'getValue', 'destroy', 'beforeCellCh
     let grid, disposed = 0, writes = 0;
     const editor = gridEditors.custom(context => {
       if (phase === 'factory') grid.destroy();
-      return { mount() {}, focus() {},
+      return { mount() {}, focus() {}, getValidationRevision: () => 0,
         validate() { if (phase === 'validate') grid.destroy(); return { ok: true }; },
         getValue() { if (phase === 'getValue') grid.destroy(); return context.value; },
         destroy() { disposed++; if (phase === 'destroy') grid.destroy(); }
@@ -101,7 +101,7 @@ for (const phase of ['factory', 'validate', 'getValue', 'destroy', 'beforeCellCh
 test('Grid immediate cleanup preserves a replacement editor and releases guards after throwing', () => {
   let grid, disposed = 0, replacementDisposed = 0, fail = true;
   const replacement = { cellEditor: { destroy() { replacementDisposed++; } } };
-  const editor = gridEditors.custom(context => ({ mount() {}, focus() {},
+  const editor = gridEditors.custom(context => ({ mount() {}, focus() {}, getValidationRevision: () => 0,
     validate() { if (fail) throw new Error('Failed'); grid._editing = replacement; return { ok: true }; },
     getValue: () => context.value, destroy() { disposed++; }
   }));

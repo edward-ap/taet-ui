@@ -1,3 +1,4 @@
+import { captureGridValidation } from "./gridEditorValidation.js";
 import { BaseControl } from "../core/BaseControl.js";
 import { DataStore } from "../core/DataStore.js";
 import { SelectionModel } from "../core/SelectionModel.js";
@@ -259,6 +260,11 @@ export class PropertyGrid extends BaseControl {
     cell.classList.add("dui-property-grid__value--editing");
     editor.mount(cell);
     this._editing = { row, cell, editor, oldValue: row.property.value };
+    editor._bindGridKeys?.(event => {
+      if (!["Enter", "Escape"].includes(event.key)) return;
+      event.stopPropagation();
+      this._handleKeyDown(event);
+    });
     queueMicrotask(() => {
       if (!this.destroyed && this._editing?.editor === editor) editor.focus();
     });
@@ -270,27 +276,45 @@ export class PropertyGrid extends BaseControl {
   }
 
   commitEdit(options = {}) {
-    if (!this._editing) return false;
-    const editing = this._editing;
-    const validation = editing.editor.validate?.() ?? { ok: true };
-    if (this.destroyed || this._editing !== editing) return false;
-    if (validation.ok === false) return false;
-    const newValue = editing.editor.getValue();
-    if (this.destroyed || this._editing !== editing) return false;
-    const change = this._createPropertyChange(editing.row, editing.oldValue, newValue, options, true);
-    if (!options.silent) this.events.emit("beforePropertyChange", change);
-    if (change.cancel || this.destroyed || this._editing !== editing ||
-        this.getPropertyControl(editing.row.propertyKey) !== editing.row) return false;
-    this._commitPropertyValue(editing.row.property, newValue, change);
-    if (this.destroyed || this._editing !== editing) return true;
-    editing.row.value = newValue;
-    this._finishEdit();
-    if (!options.silent && !this.destroyed && !Object.is(editing.oldValue, newValue)) {
-      delete change.cancel;
-      this.events.emit("propertyChange", change);
-      if (!this.destroyed) this.events.emit("afterPropertyChange", { ...change });
-    }
-    return true;
+    if (!this._editing || this._commitSession || this._inlineCommit || this.destroyed) return false;
+    const editing = this._editing, editor = editing.editor, row = editing.row, property = row.property;
+    const readOnly = property.readOnly, type = property.type;
+    const current = () => !this.destroyed && !this.disabled && this._editing === editing &&
+      editing.editor === editor && editor.destroyed !== true && row.property === property &&
+      property.readOnly === readOnly && property.type === type && this.getPropertyControl(row.propertyKey) === row;
+    this._commitSession = editing;
+    try {
+      if (!current()) return false;
+      const prepared = editor.prepareCommit?.(options);
+      if (!current() || prepared?.ok === false) return false;
+      const snapshot = captureGridValidation(editor, current);
+      let newValue;
+      const validationCurrent = () => this._acceptValidationSnapshot(snapshot, row, editing.oldValue, newValue, options, current);
+      if (!validationCurrent()) return false;
+      const validate = editor.validate;
+      if (!current() || !snapshot.alive()) return false;
+      const validation = validate?.call(editor) ?? { ok: true };
+      if (!current() || !snapshot.alive()) return false;
+      const valid = validation.ok;
+      if (!validationCurrent() || valid === false) return false;
+      const getValue = editor.getValue;
+      if (!current() || !snapshot.alive()) return false;
+      newValue = getValue.call(editor);
+      if (!validationCurrent()) return false;
+      const change = this._createPropertyChange(row, editing.oldValue, newValue, options, true);
+      if (!options.silent) this.events.emit("beforePropertyChange", change);
+      if (!current() || !validationCurrent() || change.cancel) return false;
+      this._commitPropertyValue(property, newValue, change);
+      if (this.destroyed || this._editing !== editing) return true;
+      row.value = newValue;
+      this._finishEdit();
+      if (!options.silent && !this.destroyed && !Object.is(editing.oldValue, newValue)) {
+        delete change.cancel;
+        this.events.emit("propertyChange", change);
+        if (!this.destroyed) this.events.emit("afterPropertyChange", { ...change });
+      }
+      return true;
+    } finally { this._commitSession = null; }
   }
 
   cancelEdit(options = {}) {
@@ -440,6 +464,7 @@ export class PropertyGrid extends BaseControl {
   }
 
   _handleKeyDown(event) {
+    if (event.defaultPrevented || event.isComposing || event.keyCode === 229 || this.destroyed || this.disabled) return;
     const row = this._rowFromTarget(event.target);
     if (event.target.closest?.(".dui-grid__control-editor") && !this._editing) return;
     if (event.key === "Enter" && this._editing) { event.preventDefault(); this.commitEdit({ origin: "user", userAction: true }); }
@@ -640,27 +665,61 @@ export class PropertyGrid extends BaseControl {
   }
 
   _handleInlineEditorChange(row, editor, event) {
-    const oldValue = row.property.value;
-    const newValue = editor.getValue();
-    if (Object.is(oldValue, newValue)) return;
-    const validation = editor.validate?.() ?? { ok: true };
-    if (this.destroyed || this.getPropertyControl(row.propertyKey) !== row || editor.destroyed === true || validation.ok === false) return;
-    const change = this._createPropertyChange(row, oldValue, newValue, {
-      origin: event.origin ?? "user",
-      userAction: event.userAction === true
-    }, true);
-    this.events.emit("beforePropertyChange", change);
-    if (this.destroyed || this.getPropertyControl(row.propertyKey) !== row) return;
-    if (change.cancel) {
-      editor.control?.value?.set(oldValue, { silent: true, origin: "system" });
-      return;
+    if (this.destroyed || this._inlineCommit || this._commitSession) return false;
+    const entry = this._inlineEditors.find(item => item.row === row && item.editor === editor);
+    if (!entry) return false;
+    const property = row.property, oldValue = property.value;
+    const disabled = this.disabled, readOnly = property.readOnly, type = property.type;
+    const current = () => !this.destroyed && this.disabled === disabled && editor.destroyed !== true &&
+      this._inlineEditors.includes(entry) && entry.editor === editor && row.property === property &&
+      property.readOnly === readOnly && property.type === type && this.getPropertyControl(row.propertyKey) === row;
+    const options = { origin: event.origin ?? "user", userAction: event.userAction === true, silent: event.silent === true };
+    this._inlineCommit = entry;
+    try {
+      const snapshot = captureGridValidation(editor, current);
+      let newValue;
+      const validationCurrent = () => this._acceptValidationSnapshot(snapshot, row, oldValue, newValue, options, current);
+      if (!validationCurrent()) return false;
+      let getValue = editor.getValue;
+      if (!current() || !snapshot.alive()) return false;
+      newValue = getValue.call(editor);
+      if (!validationCurrent()) return false;
+      if (Object.is(oldValue, newValue)) return false;
+      const validate = editor.validate;
+      if (!current() || !snapshot.alive()) return false;
+      const validation = validate?.call(editor) ?? { ok: true };
+      if (!current() || !snapshot.alive()) return false;
+      const valid = validation.ok;
+      if (!validationCurrent() || valid === false) return false;
+      getValue = editor.getValue;
+      if (!current() || !snapshot.alive()) return false;
+      newValue = getValue.call(editor);
+      if (!validationCurrent()) return false;
+      const change = this._createPropertyChange(row, oldValue, newValue, options, true);
+      if (!options.silent) this.events.emit("beforePropertyChange", change);
+      if (!current() || !validationCurrent()) return false;
+      if (change.cancel) {
+        editor.control?.value?.set(oldValue, { silent: true, origin: "system" });
+        return false;
+      }
+      this._commitPropertyValue(property, newValue, change);
+      if (!current()) return true;
+      row.value = newValue;
+      delete change.cancel;
+      if (!options.silent) this.events.emit("propertyChange", change);
+      if (!this.destroyed && !options.silent) this.events.emit("afterPropertyChange", { ...change });
+      return true;
+    } finally { this._inlineCommit = null; }
+  }
+
+  _acceptValidationSnapshot(snapshot, row, oldValue, newValue, options, current) {
+    if (snapshot.current()) return true;
+    if (current() && snapshot.alive() && !options.silent) {
+      this.events.emit("editReject", {
+        ...this._createPropertyChange(row, oldValue, newValue, options), ...snapshot.rejection()
+      });
     }
-    this._commitPropertyValue(row.property, newValue, change);
-    if (this.destroyed || this.getPropertyControl(row.propertyKey) !== row) return;
-    row.value = newValue;
-    delete change.cancel;
-    this.events.emit("propertyChange", change);
-    if (!this.destroyed) this.events.emit("afterPropertyChange", { ...change });
+    return false;
   }
 
   _disposeInlineEditors() {

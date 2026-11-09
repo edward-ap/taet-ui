@@ -26,7 +26,7 @@ are also unverified. Preserve these limits in release notes.
 
 The macOS CI job uses Node 22 and two browser workers: test:all, the Firefox and
 WebKit compatibility projects, and all three bundle projects. It has a
-30-minute timeout and runs for pull requests, main pushes and manual dispatch,
+90-minute timeout for the expanded editing matrix and runs for pull requests, main pushes and manual dispatch,
 not duplicate feature-branch pushes. It does not compile or certify a native
 Tauri host. Local full-engine runs are recorded separately; verify the remote
 job for the exact proposed commit before calling CI successful.

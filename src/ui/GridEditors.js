@@ -1,3 +1,4 @@
+import { gridValidationSource } from "./gridEditorValidation.js";
 import { CheckBox } from "./CheckBox.js";
 import { DateInput, DateTimeInput, TimeInput } from "./DateTimeInput.js";
 import { NumberInput } from "./NumberInput.js";
@@ -59,8 +60,10 @@ export class ControlCellEditor {
     this._rootKeyDown = event => {
       // A closed searchable Select owns Enter in standalone use. In a cell it
       // commits; ArrowDown/Alt+ArrowDown still opens its choice popup.
-      if (["Enter", "Escape"].includes(event.key) && this.control instanceof SelectInput &&
-          this.element?.querySelector('[aria-haspopup="listbox"]')?.getAttribute("aria-expanded") === "false") {
+      if (["Enter", "Escape"].includes(event.key) && (
+          (this.control instanceof NumberInput && this.control.updateMode === "commit") ||
+          (this.control instanceof SelectInput &&
+          this.element?.querySelector('[aria-haspopup="listbox"]')?.getAttribute("aria-expanded") === "false"))) {
         this._forwardGridKey(event);
       }
     };
@@ -110,32 +113,66 @@ export class ControlCellEditor {
     }
   }
 
+  get [gridValidationSource]() {
+    return this.control;
+  }
+
+  prepareCommit(options = {}) {
+    this._assertUsable("prepareCommit");
+    const control = this.control;
+    if (!this._isControlCurrent(control)) return { ok: false };
+    const commitInput = control.commitInput;
+    if (!this._isControlCurrent(control)) return { ok: false };
+    return commitInput?.call(control, options) ?? { ok: true };
+  }
+
   getValue() {
     this._assertUsable("getValue");
-    return this.control.value.get();
+    const control = this.control;
+    if (!this._isControlCurrent(control)) return;
+    const valueApi = control.value;
+    if (!this._isControlCurrent(control)) return;
+    const get = valueApi.get;
+    if (!this._isControlCurrent(control) || control.value !== valueApi || !this._isControlCurrent(control)) return;
+    // An interrupted lookup has no successful value; owners discard this read.
+    const value = get.call(valueApi);
+    return this._isControlCurrent(control) && control.value === valueApi && this._isControlCurrent(control)
+      ? value : undefined;
   }
 
   validate(context = {}) {
     this._assertUsable("validate");
-
-    if (typeof this.control.validate !== "function") {
-      return {
-        source: this.control,
-        ok: true,
-        errors: [],
-        value: this.getValue()
-      };
+    const control = this.control;
+    const stopped = () => ({ source: control, ok: false, errors: [] });
+    if (!this._isControlCurrent(control)) return stopped();
+    const validate = control.validate;
+    if (!this._isControlCurrent(control)) return stopped();
+    if (typeof validate !== "function") {
+      const valueApi = control.value;
+      if (!this._isControlCurrent(control)) return stopped();
+      const getValue = this.getValue;
+      if (!this._isControlCurrent(control)) return stopped();
+      const value = getValue.call(this);
+      return this._isControlCurrent(control) && control.value === valueApi && this._isControlCurrent(control)
+        ? { source: control, ok: true, errors: [], value } : stopped();
     }
+    const validationContext = { ...this.context, ...context };
+    if (!this._isControlCurrent(control)) return stopped();
+    return validate.call(control, validationContext);
+  }
 
-    return this.control.validate({
-      ...this.context,
-      ...context
-    });
+  _isControlCurrent(control) {
+    return this.control === control && !this.destroyed && !this._destroying &&
+      control.destroyed !== true && !control._destroying;
   }
 
   focus() {
     this._assertUsable("focus");
-    return this.control.focus({ preventScroll: true });
+    const control = this.control;
+    if (!this._isControlCurrent(control)) return;
+    const focus = control.focus;
+    if (!this._isControlCurrent(control)) return;
+    return focus.call(control, { preventScroll: true });
   }
 
   destroy() {

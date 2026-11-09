@@ -1,5 +1,29 @@
 # Tæt UI changes
 
+## 0.6.0-rc.7 - editing contracts and validation currentness, 2026-11-09
+
+- **Breaking for independent custom editors:** strict Form, Grid/TreeGrid and
+  PropertyGrid validation/commit requires getValidationRevision() for independently
+  owned value/candidate state. Ordinary built-in and authoritative EditorControl
+  usage keeps automatic tracking. Existing value/method return types are unchanged.
+  See [field migration](docs/INPUT_TYPES.md#custom-fields-in-strict-form-validation)
+  and [cell-editor migration](docs/GRID_EDITOR_TYPES.md#validation-currentness-and-custom-revisions).
+- Reject accepted/candidate changes during validation and final reads, including
+  silent ABA, without rollback or automatic retry. Grid/TreeGrid's trusted
+  beforeCellChange override remains; PropertyGrid also checks after its veto hook,
+  restoring the old inline display only when an ordinary veto is still current.
+- Add PropertyGrid editReject for validation-revision/validation-stale refusals.
+  Ordinary invalid-value behavior is unchanged; silent attempts suppress the event.
+  See [PropertyGrid ownership and event details](docs/GRID_EDITOR_TYPES.md#propertygrid-staged-and-inline-ownership).
+
+- Add opt-in NumberInput updateMode: 'commit', explicit commitInput/cancelInput, pending-draft state and owner prepareCommit integration. Live remains the default; getters, validation and destruction do not implicitly save drafts.
+- Add opt-in positional TextInput/TextField maskMode: 'slots' alongside the existing compact mode. Preserve holes through raw/formatted serialization and owner roundtrips, with a DOM-only empty scaffold and bounded control-local undo/redo.
+- Correct compact-mask caret, selection, deletion and history; reject mask/date-time edits that would silently truncate untouched suffixes. Preserve incomplete TimeInput text through passive formatting and avoid fabricated picker selections.
+- Keep TextArea composing-key guards, expand keyboard/composition and isolated-clipboard regression coverage, and ship a checked custom EditorControl recipe and normative editing contract. Synthetic composition and in-memory clipboard tests do not certify native OS input.
+- Remove the source-provenance script's Git safe.directory override. Git ownership checks remain active; unavailable metadata is reported honestly.
+- Preserve zero runtime dependencies and API maturity boundaries. Strict Form currentness adds measurable cost for large forms; measured limits and native acceptance gaps remain documented in VERIFICATION.md.
+- Target npm next without promoting latest or changing previously published versions.
+
 ## 0.6.0-rc.6 - NumberInput decimal-entry fix, 2026-11-08
 
 - Preserve numerically equivalent intermediate text such as `1.` and `1.0` during user input, allowing decimals such as `1.05` to be typed character by character.

@@ -1,3 +1,4 @@
+import { validationRevision } from "../core/validationRevision.js";
 import { BaseControl } from "../core/BaseControl.js";
 
 export class CodeBlock extends BaseControl {
@@ -12,6 +13,7 @@ export class CodeBlock extends BaseControl {
     this.language = options.language ?? "text";
     this.copyButton = options.copyButton !== false;
     this._code = String(options.code ?? options.value ?? "");
+    this._valueRevision = 0;
     this._codeElement = null;
     this._copyElement = null;
     this.value = Object.freeze({
@@ -75,6 +77,7 @@ export class CodeBlock extends BaseControl {
     }
 
     this._code = newValue;
+    ++this._valueRevision;
     if (this._codeElement) {
       this._codeElement.textContent = newValue;
     }
@@ -90,6 +93,10 @@ export class CodeBlock extends BaseControl {
     }
 
     return true;
+  }
+
+  [validationRevision]() {
+    return this._valueRevision;
   }
 
   async copy(options = {}) {

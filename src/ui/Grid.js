@@ -1,3 +1,4 @@
+import { captureGridValidation } from "./gridEditorValidation.js";
 import { mountGridEditor, releaseGridEditor, handleGridEditorKeyDown, startAdjacentGridEdit, gridEditActivation } from "./gridEditorLifecycle.js";
 import { compareGridStrings } from "./gridStringCompare.js";
 import { gridIntrinsicWidth } from "./gridIntrinsicWidth.js";
@@ -1786,24 +1787,49 @@ export class Grid extends GridCore {
     if (!editing || this.destroyed || this._commitSession || this._startingEdit) return false;
     const mutation = normalizeMutationOptions(options);
     this._commitSession = editing;
+    const cellEditor = editing.cellEditor;
+    let snapshot;
     const current = () => !this.destroyed && this._editing === editing;
+    const targetCurrent = () => current() && !this.disabled && !editing.disposed &&
+      editing.cellEditor === cellEditor && cellEditor.destroyed !== true && this.data.get(editing.id) === editing.item &&
+      this.getColumn(editing.column.id) === editing.column && editing.column.hidden !== true;
     const event = { source: this, item: editing.item, id: editing.id, column: editing.column,
       columnId: editing.column.id, oldValue: editing.oldValue,
       origin: mutation.origin, userAction: mutation.userAction };
     const reject = (reason, details = {}) => {
       if (!mutation.silent) this.events.emit("editReject", { ...event, reason, ...details });
-      if (current()) editing.cellEditor.focus();
+      if (targetCurrent() && (!snapshot || snapshot.alive())) cellEditor.focus();
       return false;
     };
     try {
-      const validation = editing.cellEditor.validate({ ...event, grid: this });
-      if (!current()) return false;
-      event.newValue = editing.cellEditor.getValue();
-      if (!current()) return false;
-      if (validation.ok === false) return reject("validation", { validation });
+      if (!targetCurrent()) return false;
+      const prepared = editing.cellEditor.prepareCommit?.({ ...event, grid: this, ...mutation });
+      if (!targetCurrent()) return false;
+      if (prepared?.ok === false) return reject("prepare-commit", { newValue: prepared.value });
+      snapshot = captureGridValidation(cellEditor, targetCurrent);
+      const validationCurrent = () => {
+        if (snapshot.current()) return true;
+        if (targetCurrent() && snapshot.alive()) {
+          const { reason, validation } = snapshot.rejection();
+          reject(reason, { validation });
+        }
+        return false;
+      };
+      if (!validationCurrent()) return false;
+      const validate = cellEditor.validate;
+      if (!targetCurrent() || !snapshot.alive()) return false;
+      const validation = validate.call(cellEditor, { ...event, grid: this });
+      if (!targetCurrent() || !snapshot.alive()) return false;
+      const valid = validation.ok;
+      if (!targetCurrent() || !validationCurrent()) return false;
+      const getValue = cellEditor.getValue;
+      if (!targetCurrent() || !snapshot.alive()) return false;
+      event.newValue = getValue.call(cellEditor);
+      if (!targetCurrent() || !validationCurrent()) return false;
+      if (valid === false) return reject("validation", { validation });
       const before = { ...event, cancel: false };
       if (!mutation.silent) this.events.emit("beforeCellChange", before);
-      if (!current()) return false;
+      if (!targetCurrent() || !snapshot.alive()) return false;
       // Only the draft is editable through beforeCellChange; identity and
       // provenance continue to describe this commit attempt.
       event.newValue = before.newValue;
@@ -3298,11 +3324,30 @@ export class Grid extends GridCore {
       for (const method of ["validate", "getValue", "destroy"]) {
         if (typeof editor?.[method] !== "function") throw new TypeError(`Grid cell editor must implement ${method}().`);
       }
-      const validation = editor.validate({ ...event, grid: this, ...mutation, reason: toggle ? "toggle" : "clipboard" });
-      if (!current()) return false;
-      if (validation?.ok === false) return reject("validation", { validation });
-      event.newValue = editor.getValue();
-      if (!current()) return false;
+      const prepared = editor.prepareCommit?.({ ...event, grid: this, ...mutation, reason: toggle ? "toggle" : "clipboard" });
+      if (!current() || editor.destroyed === true) return false;
+      if (prepared?.ok === false) return reject("prepare-commit", { newValue: prepared.value });
+      const snapshot = captureGridValidation(editor, current);
+      const validationCurrent = () => {
+        if (snapshot.current()) return true;
+        if (current() && snapshot.alive()) {
+          const { reason, validation } = snapshot.rejection();
+          reject(reason, { validation });
+        }
+        return false;
+      };
+      if (!validationCurrent()) return false;
+      const validate = editor.validate;
+      if (!current() || !snapshot.alive()) return false;
+      const validation = validate.call(editor, { ...event, grid: this, ...mutation, reason: toggle ? "toggle" : "clipboard" });
+      if (!current() || !snapshot.alive()) return false;
+      const valid = validation?.ok;
+      if (!current() || !validationCurrent()) return false;
+      if (valid === false) return reject("validation", { validation });
+      const getValue = editor.getValue;
+      if (!current() || !snapshot.alive()) return false;
+      event.newValue = getValue.call(editor);
+      if (!current() || !validationCurrent()) return false;
       releaseGridEditor(this, temporary);
       if (!current()) return false;
       const before = { ...event, cancel: false };

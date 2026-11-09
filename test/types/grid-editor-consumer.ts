@@ -42,23 +42,20 @@ export const textEditor = gridEditors.text<Row>(context => {
 export let customCreated = 0, customDestroyed = 0;
 export const customEditor = createGridEditorFactory<Row, number, string>(context => {
   const inner = textEditor.createCellEditor(context); customCreated++;
-  return {
-    mount: container => inner.mount(container),
-    getValue: () => inner.getValue(),
-    validate: validation => inner.validate(validation),
-    focus: () => inner.focus(),
-    destroy() { inner.destroy(); customDestroyed++; }
-  };
+  // Retain the actual library adapter: a plain forwarding object loses its
+  // private currentness capability and would need its own complete revision hook.
+  const destroy = inner.destroy.bind(inner);
+  inner.destroy = () => { destroy(); customDestroyed++; };
+  return inner;
 }, { activation: 'edit', filterType: 'text' });
 export const resolverSources: ('present' | 'absent')[] = [];
 export function activationEditor(onMount: () => void, onDestroy: () => void) {
   return createGridEditorFactory<Row, number, string>(context => {
     const inner = gridEditors.text<Row>().createCellEditor(context);
-    return {
-      mount(host) { inner.mount(host); onMount(); },
-      getValue: () => inner.getValue(), validate: context => inner.validate(context),
-      focus: () => inner.focus(), destroy() { inner.destroy(); onDestroy(); }
-    };
+    const mount = inner.mount.bind(inner), destroy = inner.destroy.bind(inner);
+    inner.mount = host => { const mounted = mount(host); onMount(); return mounted; };
+    inner.destroy = () => { destroy(); onDestroy(); };
+    return inner;
   });
 }
 export const columns: GridEditorColumn<Row>[] = [

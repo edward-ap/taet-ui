@@ -3,14 +3,22 @@ const rows=(page,kind)=>page.locator(`.editor-matrix__${kind} [data-dui-grid-row
 const cell=(page,kind,id,column)=>page.locator(`.editor-matrix__${kind} [data-dui-grid-row-id="string:${id}"] [data-dui-grid-column-id="${column}"]`);
 const popup=page=>page.locator('.dui-overlay-root > .dui-dropdown-list__popup:visible, .dui-overlay-root > .dui-date-time-picker:visible, .dui-overlay-root > .dui-time-picker:visible');
 test.beforeEach(async({page})=>{page.on('pageerror',e=>{throw e});await page.goto('/examples/grid-editors/');await expect(page.locator('.dui-grid')).toHaveCount(2);await expect(rows(page,'grid').first()).toBeVisible()});
-test('matrix shows raw types, formatter-independent number drafts and exactly one write per commit',async({page})=>{
+test('matrix shows raw types, formatter-independent number drafts and exactly one write per commit',{tag:'@input-editing'},async({page})=>{
  expect(await page.evaluate(()=>editorMatrix.editorKinds)).toEqual(['text','number','select','checkbox','switch','date','time','dateTime','radio']);
  await expect(page.locator('.editor-matrix__values')).toContainText('number    null: null');
  for(const [kind,value]of [['grid','-2.75'],['tree','4.25']]){
-  await expect(cell(page,kind,'zero','number')).toHaveText(kind==='grid'?'0.00':'-2.75');await cell(page,kind,'zero','number').dblclick();const input=page.locator(`.editor-matrix__${kind} .dui-grid__editor-host input`);await expect(input).toHaveValue(kind==='grid'?'0':'-2.75');await input.fill(value);await input.press('Enter');await expect(input).toHaveCount(0);
+  await expect(cell(page,kind,'zero','number')).toHaveText(kind==='grid'?'0.00':'-2.75');await cell(page,kind,'zero','number').dblclick();const input=page.locator(`.editor-matrix__${kind} .dui-grid__editor-host input`);await expect(input).toHaveValue(kind==='grid'?'0':'-2.75');await input.press('ControlOrMeta+A');await input.pressSequentially(value);await input.press('Enter');await expect(input).toHaveCount(0);
   expect(await page.evaluate(()=>editorMatrix.data.get('zero').number)).toBe(Number(value));
  }
  expect(await page.evaluate(()=>editorMatrix.counters)).toEqual({cellChange:2,editCommit:2,editReject:0,storeChange:2});
+ for(const kind of ['grid','tree']){
+  await cell(page,kind,'zero','number').dblclick();const input=page.locator(`.editor-matrix__${kind} .dui-grid__editor-host input`);
+  await input.press('ControlOrMeta+A');await input.pressSequentially('1.0');await expect(input).toHaveValue('1.0');await input.pressSequentially('5');await expect(input).toHaveValue('1.05');
+  await input.press(kind==='grid'?'Escape':'Enter');await expect(input).toHaveCount(0);
+  expect(await page.evaluate(()=>({value:editorMatrix.data.get('zero').number,type:typeof editorMatrix.data.get('zero').number}))).toEqual({value:kind==='grid'?4.25:1.05,type:'number'});
+  expect(await page.evaluate(()=>editorMatrix.counters)).toEqual({cellChange:kind==='grid'?2:3,editCommit:kind==='grid'?2:3,editReject:0,storeChange:kind==='grid'?2:3});
+ }
+
  await cell(page,'grid','readonly','number').dblclick();await expect(page.locator('.dui-grid__editor-host')).toHaveCount(0);
  expect(await page.evaluate(()=>editorMatrix.grid.startEdit('readonly','text'))).toBe(false);
  await page.evaluate(()=>editorMatrix.destroy());await expect(page.locator('#root')).toBeEmpty();

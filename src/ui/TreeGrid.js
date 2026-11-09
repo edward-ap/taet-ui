@@ -1,3 +1,4 @@
+import { captureGridValidation } from "./gridEditorValidation.js";
 import { createTreeGridNodeDragController } from "./TreeNodeDragController.js";
 import { moveTreeGridNodes } from "./GridTreeMove.js";
 
@@ -1146,7 +1147,17 @@ export class TreeGrid extends GridCore {
 
     this._commitSession = editing;
 
+    const cellEditor = editing.cellEditor;
+
+    let snapshot;
+
     const current = () => !this.destroyed && this._editing === editing;
+
+    const targetCurrent = () => current() && !this.disabled && !editing.disposed &&
+
+      editing.cellEditor === cellEditor && cellEditor.destroyed !== true && this.data.get(editing.id) === editing.item &&
+
+      this.getColumn(editing.column.id) === editing.column && editing.column.hidden !== true;
 
     const event = { source: this, item: editing.item, id: editing.id, column: editing.column,
 
@@ -1158,7 +1169,7 @@ export class TreeGrid extends GridCore {
 
       if (!mutation.silent) this.events.emit("editReject", { ...event, reason, ...details });
 
-      if (current()) editing.cellEditor.focus();
+      if (targetCurrent() && (!snapshot || snapshot.alive())) cellEditor.focus();
 
       return false;
 
@@ -1166,21 +1177,61 @@ export class TreeGrid extends GridCore {
 
     try {
 
-      const validation = editing.cellEditor.validate({ ...event, grid: this });
+      if (!targetCurrent()) return false;
 
-      if (!current()) return false;
+      const prepared = editing.cellEditor.prepareCommit?.({ ...event, grid: this, ...mutation });
 
-      event.newValue = editing.cellEditor.getValue();
+      if (!targetCurrent()) return false;
 
-      if (!current()) return false;
+      if (prepared?.ok === false) return reject("prepare-commit", { newValue: prepared.value });
 
-      if (validation.ok === false) return reject("validation", { validation });
+      snapshot = captureGridValidation(cellEditor, targetCurrent);
+
+      const validationCurrent = () => {
+
+        if (snapshot.current()) return true;
+
+        if (targetCurrent() && snapshot.alive()) {
+
+          const { reason, validation } = snapshot.rejection();
+
+          reject(reason, { validation });
+
+        }
+
+        return false;
+
+      };
+
+      if (!validationCurrent()) return false;
+
+      const validate = cellEditor.validate;
+
+      if (!targetCurrent() || !snapshot.alive()) return false;
+
+      const validation = validate.call(cellEditor, { ...event, grid: this });
+
+      if (!targetCurrent() || !snapshot.alive()) return false;
+
+      const valid = validation.ok;
+
+      if (!targetCurrent() || !validationCurrent()) return false;
+
+      const getValue = cellEditor.getValue;
+
+      if (!targetCurrent() || !snapshot.alive()) return false;
+
+      event.newValue = getValue.call(cellEditor);
+
+      if (!targetCurrent() || !validationCurrent()) return false;
+
+      if (valid === false) return reject("validation", { validation });
 
       const before = { ...event, cancel: false };
 
       if (!mutation.silent) this.events.emit("beforeCellChange", before);
 
-      if (!current()) return false;
+      if (!targetCurrent() || !snapshot.alive()) return false;
 
       // Only the draft is editable through beforeCellChange; identity and
 

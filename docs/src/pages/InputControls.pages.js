@@ -64,11 +64,18 @@ export const maskedInputPage = {
   id: "masked-input", title: "Masked", status: "stable",
   keywords: ["TextInput", "mask", "phone", "format", "raw", "form"],
   description: "TextInput with a positional mask and a choice of formatted or raw model values.",
-  imports: importsFor(["Button", "Form", "TextInput"]),
+  imports: importsFor(["Button", "Form", "TextInput", "required"]),
   paragraphs: [
     "Masked is a TextInput configuration. Mask tokens 0 and 9 accept digits, A and a accept ASCII letters, and * accepts letters or digits. Other characters are literals. The tokens do not distinguish required from optional positions.",
-    "An empty masked field automatically shows its mask as a muted placeholder, including while focused. The hint disappears as you type and returns when you clear the field. Set placeholder to override it, or use an empty string to hide it. The hint is never part of the model value.",
-    "By default value.get() includes formatting. unmaskValue: true stores only alphanumeric characters while preserving the formatted display. A mask filters characters; add validators when every position must be filled."
+    "In default compact mode, an empty masked field automatically shows its mask as a muted placeholder, including while focused. The hint disappears as you type and returns when you clear the field. Set placeholder to override it, or use an empty string to hide it. The hint is never part of the model value.",
+    "By default value.get() includes formatting. In compact mode, unmaskValue: true and getRawValue() remove punctuation but retain alphanumeric mask literals: ID-000 with input 12 displays ID-12 and returns ID12. Rejected input accepting no tokens leaves an empty field empty. Programmatic normalization also returns empty when no token is accepted; token grammar, raw-literal handling and whole-value capacity rules are unchanged. required() checks nonempty values; add explicit completeness validation.",
+    "Native edits retain position and use bounded mask-local keyboard Undo/Redo, one accepted edit per step. API writes, clear and reset restart history, including silent or equal-value writes; veto preserves it. Native context-menu history and actual IME are not certified.",
+    "In compact mode, edits losing an untouched incompatible or over-capacity suffix are rejected. With AA-0000 and AB selected in AB-1234, sequential XY can reject intermediate X. Replace one letter at a time or supply a complete compatible replacement. Use opt-in slots for empty positions; neither mask mode is deferred commit.",
+    "In compact mode, placeholderChar does not create empty slots, and maxLength is not a native cap with a mask. Synthetic composition retains composing DOM until reconciliation while model events stay live and normalized. Rejected composition restores pre-edit selection; missing compositionstart is handled against the accepted value. This is not real IME certification.",
+    "maskMode: 'slots' is construction-only on standard TextField/TextInput and gridEditors.text, not TextArea, NumberInput, custom editor DOM or JSON factories. It keeps positions: AB-1234 becomes __-1234, then X_-1234 and XY-1234. Delete clears tokens; typing overwrites; selected replacement stays within selected tokens; collapsed paste overwrites successive positions and token overflow rejects.",
+    "Slots placeholderChar defaults to _ and must be one printable ASCII punctuation character absent from mask literals. The mask needs a token and no CR/LF. Invalid configuration throws TypeError. Partial formatted/raw strings preserve all holes and alphanumeric literals: __-1234 / __1234, ID-12_ / ID12_. API strings with holes must match the full formatted or raw shape or throw before mutation; marker-free compact input is normalized then padded.",
+    "All-empty slots value/raw/getDisplayValue remain empty strings. Focused empty native DOM shows a navigable scaffold; blur clears it. Custom placeholder changes only the HTML hint. Required native validity uses an owned customError for empty scaffolds rather than valueMissing; external custom errors are preserved, and own-error cleanup is deferred while native validation is barred. Application required() still only checks nonempty values; use the marker completeness validator below.",
+    "Slots use the same live model, bounded local history and synthetic composition limits. No real IME, native context-menu history, macOS host or system clipboard certification is implied."
   ],
   examples: [inputExample("Formatted phone and raw reference", function createMaskExample({ log }) {
     const phone = new TextInput({ name: "phone", label: "Phone", mask: "+0 (000) 000-0000", value: "15551234567" });
@@ -83,15 +90,26 @@ export const maskedInputPage = {
       log.write("Fields cleared; the gray masks show the expected format.");
     } }));
     return form;
-  }, "Clear the fields to see their automatic mask hints, then enter a phone number or reference. 0 marks a digit and A marks a letter; punctuation is inserted automatically.")],
+  }, "Clear the fields to see their automatic mask hints, then enter a phone number or reference. 0 marks a digit and A marks a letter; punctuation is inserted automatically."),
+  inputExample("Positional reference with completeness validation", function createSlotExample() {
+    const completeReference = value => value === "" || !value.includes("_")
+      ? null : "Complete every position";
+    return new Form({ name: "slotFields", labelWidth: 112 }).row(new TextInput({
+      name: "reference", label: "Reference", mask: "AA-0000", maskMode: "slots",
+      placeholderChar: "_", value: "__-1234", required: true,
+      validators: [required("Enter a reference"), completeReference]
+    }));
+  }, "Type X then Y in the first two positions. The optional completeness validator accepts empty; required() adds the nonempty rule.")],
   options: [...inputOptions,
+    { name: "maskMode", type: '"compact" | "slots"', description: "Construction only; compact default, slots retains positional holes." },
+    { name: "placeholderChar", type: "string", description: "Slots hole marker; default _, one printable ASCII punctuation character absent from mask literals." },
     { name: "mask", type: "string", description: "Token pattern, for example AA-0000." },
-    { name: "placeholder", type: "string", description: "Empty-field hint; defaults to the mask. An explicit empty string disables the hint." },
-    { name: "unmaskValue", type: "boolean", description: "Default false; true stores alphanumeric text only." }
+    { name: "placeholder", type: "string", description: "HTML empty-field hint; defaults to mask in compact mode or scaffold in slots. Empty string disables the hint, not the focused slots scaffold." },
+    { name: "unmaskValue", type: "boolean", description: "Default false; true stores raw text, retaining alphanumeric literals and, in slots mode, hole markers." }
   ],
   methods: [...inputMethods("string"),
-    { name: "getDisplayValue()", type: "string", description: "Formatted text shown by the editor." },
-    { name: "getRawValue()", type: "string", description: "Alphanumeric content with punctuation removed." }
+    { name: "getDisplayValue()", type: "string", description: "Formatted model text; empty slots return empty even when focused DOM shows its scaffold." },
+    { name: "getRawValue()", type: "string", description: "Raw content retains alphanumeric literals; slots also retains hole markers." }
   ], events: inputEvents, notes: inputNotes
 };
 
@@ -103,6 +121,7 @@ export const dateInputPage = {
   paragraphs: [
     "DateInput and DateTimeInput are experimental exports. DateInput stores YYYY-MM-DD; DateTimeInput stores YYYY-MM-DDTHH:mm. Empty values are empty strings.",
     "These are local calendar values without timezone information. Pass canonical strings when loading a model. A Date object is converted using its local calendar fields.",
+    "Native edits that would truncate an untouched suffix are rejected with value and selection retained. Selected same-length replacements work; API prefix normalization is unchanged. Typing stays live, without updateMode or commitInput.",
     "Open the calendar to select a date. The combined picker stages changes until OK and supports Cancel. Normalization is not complete date validation; use validators for valid dates and business ranges."
   ],
   examples: [inputExample("Date and combined date/time", function createDateExample({ log }) {
@@ -124,20 +143,25 @@ export const timeInputPage = {
   id: "time-input", title: "TimeInput", status: "experimental",
   keywords: ["clock", "time", "12-hour", "24-hour", "AM", "PM", "form"],
   description: "Time-of-day input with 24-hour or AM/PM presentation and a staged time picker.",
-  imports: importsFor(["Form", "TimeInput"]),
+  imports: importsFor(["Form", "TimeInput", "required"]),
   paragraphs: [
-    "TimeInput is experimental. Its model value is a 24-hour HH:mm string regardless of the displayed hour mode; an empty value is an empty string. It represents a time of day without a date or timezone.",
-    "Use hour12: true for AM/PM display. stepMinutes sets the increment used by the step buttons. In the picker, OK commits the staged selection and Cancel discards it."
+    "TimeInput is experimental. Its canonical model format is a 24-hour HH:mm string regardless of the displayed hour mode; incomplete strings may remain, and completeness requires an explicit validator. An empty value is an empty string. It represents a time of day without a date or timezone.",
+    "Equivalent or partial native text and caret remain visible while model/events stay live and normalized: typed 1 can display 1 with model 01:00. API writes, reset, blur, stepping and picker actions synchronize authoritatively. Parser/clamp/validation rules are unchanged; there is no updateMode or commitInput.",
+    "Partial or unparsed stored text such as 1: stays unchanged during blur, API synchronization, refresh and 24-hour presentation; it is not displayed as 01: AM. The picker shows no selected hour/minute/AM/PM for partial values; 24 indicates only mode. Explicit AM/PM, wheel or step choices create a complete time using existing defaults. OK without a new choice does not complete partial text; Cancel restores it.",
+    "Use hour12: true for AM/PM display. stepMinutes sets the increment used by the step buttons. The optional completeness validator below accepts empty or canonical HH:mm. Pair it with required() for a mandatory field; required: true alone does not install validation."
   ],
   examples: [inputExample("24-hour and AM/PM", function createTimeExample({ log }) {
+    const completeTime = value => value === "" || /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(value)
+      ? null : "Enter a complete time (HH:mm)";
     const officeTime = new TimeInput({ name: "officeTime", label: "24-hour time", value: "14:30", stepMinutes: 15,
+      required: true, validators: [required("Choose a time"), completeTime],
       onChange: event => log.write("24-hour model: " + event.newValue) });
-    const reminder = new TimeInput({ name: "reminder", label: "AM/PM time", value: "14:30", hour12: true, stepMinutes: 30,
+    const reminder = new TimeInput({ name: "reminder", label: "AM/PM time", value: "14:30", hour12: true, stepMinutes: 30, validators: [completeTime],
       onChange: event => log.write("AM/PM model: " + event.newValue) });
     return new Form({ name: "scheduleTimes", labelWidth: 112 }).row(officeTime).row(reminder);
   })],
   options: [...inputOptions,
-    { name: "value", type: "string | Date", description: "Time normalized to HH:mm." },
+    { name: "value", type: "string | Date", description: "Canonical HH:mm when recognized; incomplete/unparsed strings can remain." },
     { name: "hour12", type: "boolean", description: "AM/PM display; default false." },
     { name: "hourMode", type: '"0-23" | "1-24" | "12"', description: "Display mode; use without conflicting hour12 options." },
     { name: "stepMinutes", type: "number", description: "Step-button increment; default 15 minutes." }

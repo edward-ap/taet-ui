@@ -12,6 +12,7 @@ export class Panel extends BaseControl {
 
     this.controls = Object.create(null);
     this.items = [];
+    this._childrenRevision = 0;
     this.css = options.css ?? "";
     this.className = options.className ?? "";
     this.bordered = options.bordered === true || options.border === true;
@@ -112,6 +113,7 @@ export class Panel extends BaseControl {
 
     if (!this.items.includes(control)) {
       this.items.push(control);
+      ++this._childrenRevision;
     }
 
     control._setParent?.(this);
@@ -348,6 +350,7 @@ export class Panel extends BaseControl {
   }
 
   _forgetControl(control) {
+    if (this.items.includes(control)) ++this._childrenRevision;
     this.items = this.items.filter(item => item !== control);
 
     for (const [key, value] of Object.entries(this.controls)) {

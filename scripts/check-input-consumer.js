@@ -55,6 +55,8 @@ export async function checkInputBrowserConsumer(page, url) {
     assert.equal(await page.locator('#root input').count(), 0);
     assert.equal(await page.evaluate(() => closingInput.value.get()), phase === 'beforeChange' ? 'Old' : 'New');
   }
+  await checkMaskedKeyboardConsumer(page);
+  await checkSlotsKeyboardConsumer(page);
   console.log('Installed inputs browser OK: typed recipe, native writes, silent DOM, validation, mask/password and teardown');
   await page.evaluate(async () => {
     const recipe = await import('/output/number-boolean-consumer.js');
@@ -103,4 +105,124 @@ export async function checkInputBrowserConsumer(page, url) {
   assert.equal(await number.inputValue(), '2');
   await page.evaluate(() => directNumber.destroy());
   console.log('Installed numeric/boolean browser OK: spin/wheel, nullable validation, silent writes, clicks, readonly and indicator');
+}
+
+// Keyboard edits exercise the installed public control, never private edit methods.
+async function checkMaskedKeyboardConsumer(page) {
+  const field = page.locator('#root input');
+  const snapshot = () => page.evaluate(() => {
+    const field = document.querySelector('#root input');
+    return { value: maskConsumer.value.get(), display: field.value,
+      selection: [field.selectionStart, field.selectionEnd] };
+  });
+  await page.evaluate(async () => {
+    const { TextInput } = await import('taet-ui/inputs');
+    const { required } = await import('taet-ui');
+    window.maskConsumer = new TextInput('#root', { mask: '00:00', validators: [required('Required')] });
+  });
+  await field.pressSequentially('abc:');
+  assert.deepEqual(await snapshot(), { value: '', display: '', selection: [0, 0] });
+  assert.equal(await page.evaluate(() => maskConsumer.validate().ok), false);
+  await field.pressSequentially('1234');
+  assert.deepEqual(await snapshot(), { value: '12:34', display: '12:34', selection: [5, 5] });
+  await field.press('Home');
+  await field.press('Shift+ArrowRight');
+  await field.press('Shift+ArrowRight');
+  await field.pressSequentially('09');
+  assert.deepEqual(await snapshot(), { value: '09:34', display: '09:34', selection: [3, 3] });
+  await field.press('ControlOrMeta+z');
+  assert.equal((await snapshot()).display, '03:4');
+  await field.press('ControlOrMeta+z');
+  assert.deepEqual(await snapshot(), { value: '12:34', display: '12:34', selection: [0, 2] });
+  await page.evaluate(() => maskConsumer.value.clear({ silent: true }));
+  await field.pressSequentially('12');
+  const beforeSeparator = await snapshot();
+  await field.pressSequentially('3');
+  assert.equal((await snapshot()).display, '12:3');
+  await field.press('ControlOrMeta+z');
+  assert.deepEqual(await snapshot(), beforeSeparator);
+  await field.press('ControlOrMeta+Shift+z');
+  assert.equal((await snapshot()).display, '12:3');
+  for (const action of ['api', 'silent', 'reset']) {
+    await page.evaluate(action => {
+      if (action === 'reset') maskConsumer.value.reset();
+      else maskConsumer.value.set('45:67', { silent: action === 'silent' });
+    }, action);
+    const boundary = await snapshot();
+    await field.press('ControlOrMeta+z');
+    assert.deepEqual(await snapshot(), boundary, action + ' clears masked history');
+    await field.press('End');
+    await field.press('Backspace');
+  }
+  await page.evaluate(() => {
+    maskConsumer.value.set('12:34');
+    maskConsumer.events.on('beforeChange', event => { if (event.newValue === '99:34') event.cancel = true; });
+  });
+  await field.press('Home');
+  await field.press('Shift+ArrowRight');
+  await field.pressSequentially('8');
+  const accepted = await snapshot();
+  await field.press('Home');
+  await field.press('Shift+ArrowRight');
+  await field.press('Shift+ArrowRight');
+  // insertText is one browser edit; it does not read or alter the OS clipboard.
+  await page.keyboard.insertText('99');
+  assert.equal((await snapshot()).display, accepted.display);
+  assert.deepEqual((await snapshot()).selection, [0, 2]);
+  await field.press('ControlOrMeta+z');
+  assert.equal((await snapshot()).display, '12:34', 'Veto leaves accepted undo history intact');
+  await page.evaluate(async () => {
+    maskConsumer.destroy();
+    const { TextInput } = await import('taet-ui/inputs');
+    window.maskConsumer = new TextInput('#root', { mask: 'AA-00', value: 'AB12' });
+  });
+  await field.press('Home');
+  await field.press('Shift+ArrowRight');
+  const mixed = await snapshot();
+  await field.press('Delete');
+  assert.deepEqual(await snapshot(), mixed, 'Incompatible token compaction rejects with selection retained');
+  await page.evaluate(() => maskConsumer.destroy());
+  console.log('Installed mask keyboard OK: partial replacement/caret, literal rejection, required, separator undo/redo and API history boundaries');
+}
+
+async function checkSlotsKeyboardConsumer(page) {
+  const field = page.locator('#root input');
+  for (const unmaskValue of [false, true]) {
+    await page.evaluate(async unmaskValue => {
+      const { createSlotsInput } = await import('/output/input-consumer.js');
+      const { required } = await import('taet-ui');
+      window.slotsConsumer = createSlotsInput(document.querySelector('#root'), unmaskValue);
+      slotsConsumer.addValidator(required('Required'));
+    }, unmaskValue);
+    await field.press('Home');
+    await field.press('Shift+ArrowRight');
+    await field.press('Shift+ArrowRight');
+    await field.press('Backspace');
+    assert.equal(await field.inputValue(), '__-1234');
+    assert.deepEqual(await page.evaluate(() => ({ value: slotsConsumer.value.get(), raw: slotsConsumer.getRawValue(),
+      valid: slotsConsumer.validate().ok })), { value: unmaskValue ? '__1234' : '__-1234', raw: '__1234', valid: true });
+    const saved = await page.evaluate(() => JSON.stringify({ value: slotsConsumer.value.get() }));
+    await page.evaluate(saved => {
+      slotsConsumer.value.clear({ silent: true });
+      slotsConsumer.value.set(JSON.parse(saved).value, { silent: true });
+      slotsConsumer.addValidator(() => slotsConsumer.getRawValue().includes('_') ?
+        { code: 'complete-mask', message: 'Complete the mask' } : null);
+    }, saved);
+    assert.equal(await field.inputValue(), '__-1234', 'JSON/API roundtrip preserves holes');
+    assert.deepEqual(await page.evaluate(() => slotsConsumer.validate().errors.map(error => error.code)), ['complete-mask']);
+    await field.press('Home');
+    await field.pressSequentially('X');
+    assert.equal(await field.inputValue(), 'X_-1234');
+    await field.pressSequentially('Y');
+    assert.equal(await field.inputValue(), 'XY-1234');
+    assert.deepEqual(await page.evaluate(() => ({ raw: slotsConsumer.getRawValue(), valid: slotsConsumer.validate().ok })),
+      { raw: 'XY1234', valid: true });
+    await field.press('ControlOrMeta+a');
+    await field.press('Backspace');
+    assert.deepEqual(await page.evaluate(() => ({ value: slotsConsumer.value.get(), raw: slotsConsumer.getRawValue(),
+      display: slotsConsumer.getDisplayValue(), valid: slotsConsumer.validate().ok })),
+      { value: '', raw: '', display: '', valid: false });
+    await page.evaluate(() => slotsConsumer.destroy());
+  }
+  console.log('Installed slots keyboard OK: positional deletion/refill, formatted/raw values, JSON/API roundtrip, required versus completeness and empty collapse');
 }

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.6.0-rc.6",
-  "changeSet": "macos-firefox-resize-editor-2026-11-07",
-  "note": "User-authorized and reviewed Grid/TreeGrid viewport-resize editor preservation. Only these two candidate hashes change; imported provenance and the other 45 candidate hashes are preserved.",
+  "packageVersion": "0.6.0-rc.7",
+  "changeSet": "editor-validation-currentness-2026-11-09",
+  "note": "User-approved strict custom editor revisions and no-stale-save guards, independently reviewed. Five existing Grid runtime/type hashes are updated and the reviewed table snapshot helper is added; the other 42 candidate hashes and immutable imported provenance are preserved. PropertyGrid and Form changes are recorded by the complete source freeze.",
   "importManifestSha256": "9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67",
   "files": [
     {
@@ -78,12 +78,12 @@
     {
       "path": "src/ui/grid-editor-contracts.d.ts",
       "importedSha256": "e6398ea5197fb9b83f2e120105ab5d3f2243e2a2000f4b4b79e9c80eb9b8b90b",
-      "sha256": "997577e61823ef127b700d7a5355e4d8ddc5f6f75d261157bad1567813f56dd4"
+      "sha256": "aa8213611b2856fe72f934aa9dd82b2b2a50fc44b3d62eedfb8eb30d79b96854"
     },
     {
       "path": "src/ui/grid-editor-options.d.ts",
       "importedSha256": "248269880ba7b41fbe9aac2c529883f08c6723eb8c2238d4302eee2ad22561ab",
-      "sha256": "248269880ba7b41fbe9aac2c529883f08c6723eb8c2238d4302eee2ad22561ab"
+      "sha256": "d38238dfe29ad0f3a5ff331908a365f080eb66003d8d96d52f1991a363b69f6b"
     },
     {
       "path": "src/ui/grid-events.d.ts",
@@ -103,7 +103,7 @@
     {
       "path": "src/ui/Grid.js",
       "importedSha256": "8784367eb52a32ad3799286b1a7730c3373ad60544e1f22f90bd3efa5a7e497a",
-      "sha256": "646bf4902a17d068896204d64de68bcf967bc8ac70208d82b891221385599690"
+      "sha256": "16da50638593de8530c9080a648db13ea2f3616e45652be852586fcfec51e9e5"
     },
     {
       "path": "src/ui/GridColumnReorderController.js",
@@ -148,12 +148,12 @@
     {
       "path": "src/ui/GridEditors.d.ts",
       "importedSha256": "5caee5c609f7835baf8a12e75fed14cf4fd2839fea9c75a7b4ba8624f741243c",
-      "sha256": "5caee5c609f7835baf8a12e75fed14cf4fd2839fea9c75a7b4ba8624f741243c"
+      "sha256": "f85599af5188b3eca664af13a950ae40b4b1b27dc6eec8a839fe7e98d38eafa2"
     },
     {
       "path": "src/ui/GridEditors.js",
       "importedSha256": "40864c67ff0ea5dcbdde46faed0f940244e46b9e20cdfd8f72782af0f8923ff6",
-      "sha256": "df9a3edfcddda4d6c9f861834927f76a7b00d1323ff61e74aed9352f05ac5d57"
+      "sha256": "0318c667e743ed6060795939bc2bafa968191f0c3fb1f6a75dfcf805ce561259"
     },
     {
       "path": "src/ui/GridExporters.d.ts",
@@ -238,7 +238,12 @@
     {
       "path": "src/ui/TreeGrid.js",
       "importedSha256": "4729994205f2fe3e2287f8931d41e813af328def5172fec05d5e8f60e31bdf11",
-      "sha256": "59c37c5e9c2a88c9242556dc7b8fa356c153bbe1d95b7d1d35fd7e77f42de3c2"
+      "sha256": "6075ba609b4f68c2d2a30db635d31f7ef81d58bebb305865ff6b3b69b6197283"
+    },
+    {
+      "path": "src/ui/gridEditorValidation.js",
+      "importedSha256": null,
+      "sha256": "9d0b06a8439668bb430733fa7a18f377942ba580090231aabe9f8c764879e052"
     }
   ]
 }

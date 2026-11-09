@@ -1,5 +1,8 @@
 # Typed input controls
 
+Start with the short [editing contract](EDITOR_EDITING_CONTRACT.md) for value
+ownership, operation outcomes, owner saves and callback boundaries.
+
 This page documents the typed npm package; its package imports are intentional.
 For portable JavaScript application setup, use the consolidated bundle as described
 in [BUILD](BUILD.md). Standalone bundles do not currently ship flattened declarations.
@@ -89,6 +92,94 @@ events carry validation results, not mutation origin/userAction. The required
 flag affects state and native input attributes; it does not install a required
 validator. Add the actual rule explicitly.
 
+## Custom fields in strict Form validation
+
+Form still accepts live BaseControl children and discovers fields through
+value.get/set/clear. Non-field children need no revision method.
+A value field, however, must have library-owned currentness tracking or a valid
+getValidationRevision() hook before Form.validate(), isValid() or submit() can
+succeed. Value reads/writes remain usable on a legacy untracked field; validation
+fails with a FormError whose code is 'validationRevision', severity is 'error',
+and control/path identify the field. The missing-hook message is
+'Custom Form fields must implement getValidationRevision().'
+
+### Recommended: authoritative EditorControl value
+
+Use [createWidgetField](../examples/ai-recipes/13-custom-editor.js), a runnable
+application recipe whose exact JavaScript is compiled and executed by the
+[installed TS consumer](../test/types/form-revision-consumer.ts) and
+[JSDoc consumer](../test/types/form-revision-javascript.js). It returns an
+EditorControl<string> subclass with the inherited frozen value API. No public
+revision hook is added to EditorControl.
+
+Pass a widget with mount(host), writeDisplay(text), onInput(listener) returning
+an unsubscribe function, and destroy(). The field owns the widget and subscription,
+even before mounting; destroying the owning Form releases them. writeDisplay is
+render-only and must not emit onInput. onInput reports edits immediately through
+value.set(text, { origin: 'user', userAction: true }); the widget contract has no
+hidden draft. Silent API loads still render. Veto/readonly rejection restores
+accepted display through the inherited pipeline.
+
+Keep accepted state in EditorControl rather than overriding _getValue() to poll
+the widget. An unreported widget mutation can desynchronize its display, but must
+not silently become the Form value. Save the accepted submit event.value, not a
+separate reread of the widget. The recipe demonstrates value/lifecycle integration;
+widget-specific focus, accessibility and native behavior remain adapter work.
+
+Protected overrides remain supported. Overrides of _getValue(), _setValue() or
+_getValidationValue() must preserve the inherited ownership/write contract or
+supply a complete public hook for independent state. Merely inheriting a tracked
+base does not certify an override that bypasses it.
+
+### Independent custom state: revision hook
+
+Implement getValidationRevision(): ValidationRevision, where ValidationRevision
+is number | bigint | symbol. The type-only ValidationRevisionSource describes the
+hook; RevisionedFormField combines it with the existing FormField shape. These
+types are available through taet-ui, taet-ui/experimental, taet-ui/all and
+taet-ui/components. FormField keeps an optional hook for structural compatibility;
+getFields() remains FormField[]. Its set/clear return types remain unknown, so
+existing void-returning custom setters do not need to become boolean setters.
+
+The [checked RevisionArrayField](../test/types/form-revision-consumer.ts) shows an
+independent field with copied string-array input/output, a stored token, explicit
+pending-candidate transitions and void setters. The JSDoc consumer also includes
+a small bigint-based field. Preserve these rules when adapting another model:
+
+- Return the stored token without mutation, rendering, events or hidden commit.
+  Form may read it repeatedly. Do not return a fresh symbol on each read.
+- A number is a nonnegative safe integer and must increase without overflow;
+  a bigint is nonnegative and must increase; symbols must be fresh and never
+  reused. Tokens are not value hashes. Silent A -> B -> A needs two advances.
+- Advance at the accepted write point, after any no-op/veto decision and before
+  render or post-write callbacks. Also advance for changing/cancelling the
+  candidate that validate() checks, even when accepted value is unchanged.
+- Every native/API/import/model write must participate. Updating a token only in
+  an ordinary change listener is insufficient: silent writes can skip it and an
+  earlier listener can reenter Form first. A model-owned revision is suitable only
+  when that model updates it synchronously before notifying observers.
+- Advance the token when replacing the source/model or changing what value.get()
+  reads. Form tracks the value API object, not replacement of the get function;
+  invisible closure/alias changes remain the adapter's responsibility.
+- Avoid live mutable aliases. The string-array example copies input and output;
+  nested objects need their own ownership/copy policy. Neither a hook nor the
+  inherited base observes arbitrary in-place mutation or external validator state.
+
+Missing/noncallable/invalid/throwing or unstable readers produce validationRevision
+errors. Strings, arrays, objects, promises, negative counters and unsafe numeric
+integers are not tokens. Observed counter decreases are rejected. An ordinary
+valid token change is an interrupted validation (possibly errors:[]), not a bad
+field value or synthetic validationRevision error. No automatic retry or rollback
+occurs. Shape/currentness checks cannot prove that a custom implementation reports
+every hidden change; this is a cooperative contract, not snapshot isolation.
+
+See the [short contract](EDITOR_EDITING_CONTRACT.md) for owner phases. Independent
+Grid/TreeGrid and PropertyGrid CellEditor/GridValueControl state uses the same token
+protocol, with different owner rejection payloads and unchanged method return
+types. See [table integration](GRID_EDITOR_TYPES.md#validation-currentness-and-custom-revisions)
+and [PropertyGrid staged/inline rules](GRID_EDITOR_TYPES.md#propertygrid-staged-and-inline-ownership),
+including conditional ordinary veto restoration.
+
 ## Text presentation
 
 TextInputOptions includes text/mask/password settings, placeholders, maxLength,
@@ -97,14 +188,138 @@ The options-only constructor supports composition before mount; the container
 overload mounts immediately. General property writes do not imply a render update;
 use documented setters or refresh when appropriate.
 
-getDisplayValue reports formatted text, while getRawValue removes mask literals.
-With unmaskValue: true, value.get also returns the unmasked value. Password
+getDisplayValue reports formatted model text. In default compact mode, getRawValue removes
+non-ASCII-alphanumeric characters, not literal positions: alphanumeric mask
+literals remain. Mask ID-000 with input 12 displays ID-12 and returns raw ID12.
+With unmaskValue: true, value.get uses that same raw convention. Slots mode also
+retains hole markers, as described below. Password
 visibility setters return boolean and do nothing on an ordinary text field.
 The existing togglePasswordVisible argument optionally sets an explicit state.
 
 Installed-package checks compile strict TS/JSDoc with NodeNext and Bundler, compare
 runtime identities, execute value/validation/subclass cases in Node, and exercise
 the compiled recipe, native input, mask/password, silent DOM and teardown in Chromium.
+
+## Compact masked native editing
+
+A mask is TextInput configuration, not a separate control or deferred-value mode.
+Tokens 0/9 accept ASCII digits, A/a ASCII letters and * ASCII letters or digits;
+other characters are literals. Paired tokens do not mean required/optional.
+With the default maskMode: compact, the model remains a compact formatted string
+(or the existing unmaskValue form),
+not sparse slots. The mask is the default empty-field placeholder; explicit
+placeholder overrides it. placeholderChar does not create visible empty slots,
+and maxLength is not applied as a native length cap while a mask is active.
+
+Native insertion, selection replacement and deletion use the edit position and
+retain a meaningful caret instead of moving it to the end. Backspace/Delete at
+separators target token data. Invalid input preserves the previous value and
+selection. Input accepting no token data leaves an empty field empty instead of
+introducing only formatting literals.
+
+Edits are rejected if compaction would lose an untouched incompatible or
+over-capacity suffix. Deleting AB from AB-1234 with mask AA-0000 is rejected.
+Selecting AB and typing XY sequentially can also reject the first X: the remaining
+digits cannot occupy the second letter slot. Replace one letter at a time or
+supply the complete compatible replacement together. Token grammar, raw-literal
+handling and whole-value capacity rules remain unchanged. The formatter now
+returns empty when no token is accepted, including programmatic normalization;
+that correction is not limited to native edits. There is no sparse/raw-slot model
+or new locale grammar.
+
+Masked keyboard Undo/Redo uses bounded control-local history, one accepted edit
+per step rather than native browser word grouping, restoring value and selection.
+Successful programmatic writes, clear and reset start a new history, including
+silent and equal-value writes. Veto preserves prior history. Disabled/readonly
+user edits and history operations are rejected; teardown releases history.
+Native context-menu Undo/Redo and OS-host history are not certified.
+
+Synthetic composing input keeps live normalized model/events while avoiding
+rewrites of composing native text until composition-end/blur reconciliation.
+Rejected composition restores the pre-edit selection; synthetic input lacking
+compositionstart is reconciled against the accepted value. API replacements
+remain authoritative. Actual IME sessions remain unverified.
+See [testing boundaries](INPUT_TESTING.md).
+
+required() still checks nonempty values, not mask completeness. Partial masks can
+pass it; add an explicit completeness validator when needed. For AA-0000, use
+/^[A-Za-z]{2}-[0-9]{4}$/ for formatted values or /^[A-Za-z]{2}[0-9]{4}$/ for
+unmaskValue values; adapt the rule for alphanumeric literals. The required option
+alone installs no validator. TextInput, TextArea and temporal controls have no
+updateMode/commitInput API; only NumberInput offers that opt-in mode.
+
+## Opt-in positional mask slots
+
+Construct TextInput with maskMode: 'slots' to preserve empty token positions.
+The default remains 'compact'; mode is construction-only, without a setter.
+Slots use the standard TextField/TextInput editor and gridEditors.text, with
+selection-capable text/search/tel/url/password input types. TextArea, NumberInput,
+custom createElement overrides and JSON factories do not gain this option.
+
+Token grammar is unchanged. placeholderChar defaults to '_' and must be exactly
+one printable ASCII punctuation character (not whitespace or alphanumeric), absent
+from the mask's literals. A slots mask must contain at least one editable token
+and no CR/LF. Invalid mode/configuration throws TypeError. Treat the mask and
+marker as construction configuration; changing properties is not a migration API.
+
+Deletion clears selected tokens without shifting other positions. For AA-0000,
+AB-1234 becomes __-1234, then X_-1234 and XY-1234 as X and Y are entered.
+Collapsed insertion overwrites successive fixed positions instead of shifting.
+A selection replacement is bounded by its selected tokens; shorter text clears
+remaining selected tokens. Collapsed paste can overwrite successive positions
+through the end, but excess token data beyond capacity rejects the edit rather
+than truncating untouched data. Literal separators may be supplied or omitted;
+incompatible input characters are filtered by the token grammar. Whole canonical
+formatted/raw paste from the first slot preserves positions, including holes and
+alphanumeric literals. No native edit promises arbitrary native undo grouping.
+
+If any token is populated, formatted value/getDisplayValue spans the whole mask,
+including leading, middle and trailing markers. getRawValue drops punctuation
+literals but retains markers and ASCII alphanumeric literals. unmaskValue: true
+uses that raw string as the model: __-1234 becomes __1234; ID-12_ becomes ID12_.
+Both canonical full formatted and full raw strings round-trip through value.set,
+Form serialization and Grid editor values. Do not strip markers before saving.
+API input containing a marker must match the complete positional formatted or raw
+shape, with compatible token characters and exact literals; otherwise it throws
+TypeError before mutation. Marker-free compact input still uses the prior
+formatter and pads empty positions, rather than adopting strict API parsing.
+
+When all tokens are empty, value.get(), getRawValue() and getDisplayValue() are
+all ''. A focused empty native input shows the editable scaffold for navigation;
+blur restores empty native text. The scaffold is not model data. The default
+HTML placeholder is the scaffold; a custom placeholder only changes the hint,
+not the focused editor scaffold. maxLength is not a native cap with a mask.
+For required fields, an empty focused scaffold keeps checkValidity() false via
+an owned customError, rather than native valueMissing. That owned error is
+removed on blur or a populated value; external custom errors are preserved.
+If native validation is barred (!willValidate), owned-error cleanup is deferred.
+This DOM validity guard does not install an application validator.
+
+Slots remain live, not draft/commit. They share bounded control-local history
+(up to 100 accepted value-changing edits), API/silent/equal-value/reset history
+boundaries, veto, disabled/readonly and teardown behavior with compact masks.
+Synthetic composition preserves native composing text until reconciliation while
+normalized model/events stay live. Real IME, native context-menu history, macOS
+host integration and system clipboard are not certified by this mode.
+
+An optional completeness validator accepts empty values but rejects hole markers;
+add required() separately for a mandatory field:
+
+```ts
+import { TextInput } from 'taet-ui/inputs';
+import { required } from 'taet-ui';
+const completeReference = (value: string) =>
+  value === '' || !value.includes('_') ? null : 'Complete every position';
+const reference = new TextInput({
+  mask: 'AA-0000', maskMode: 'slots', placeholderChar: '_',
+  value: '__-1234', required: true,
+  validators: [required('Enter a reference'), completeReference]
+});
+```
+
+Use the configured marker in the validator. Marker collision restrictions make
+this check valid for normalized slots strings; do not apply it to compact mode.
+required() alone still accepts a partially populated slots value.
 
 ## NumberInput
 
@@ -131,7 +346,7 @@ is ''). Finite numbers normalize by integer truncation, optional min/max clampin
 then precision rounding. Precision must be within JavaScript's toFixed range.
 Clearing does not become min. reset restores the numeric clean baseline.
 
-During user input, numerically equivalent intermediate text such as `1.` and
+In the default `updateMode: 'live'`, numerically equivalent intermediate text such as `1.` and
 `1.0` stays in the native editor so decimals can be typed character by character.
 Public values/events remain numeric; equivalent prefixes do not emit changes.
 Blur normalizes display text, including with clamp: false. API writes (including
@@ -150,6 +365,72 @@ validation is unrestricted and spinning uses increment or defaults to 1; it no
 longer converts 'any' to NaN and clears the field. The declarations describe
 existing alias options too. Inherited text presentation members do not turn this
 control into a general masked/password editor; its mounted input is numeric.
+
+### Opt-in numeric commit mode
+
+Set `updateMode: 'commit'` at construction to keep native typing separate from
+committed numeric values. Omitting it keeps the existing live behavior. For
+example, `new NumberInput({ min: 10, updateMode: 'commit' })` lets the user type
+`1` then `12` before clamping, rather than clamping the first prefix to 10.
+`gridEditors.number({ updateMode: 'commit' })` opts in through the existing factory.
+There is no runtime mode setter or new locale parser.
+
+While pending, `value.get()`, value events and dirty tracking retain the committed
+`number | null`. `getRawValue()` and `getDisplayValue()` also describe that stored
+value, not a draft-text accessor. `hasPendingInput()` reports a native input draft,
+including numerically equivalent text. Subscribe with `events.on('draftChange',
+handler)` for `text`, `badInput`, `pending`, `source`, `origin` and `userAction`.
+This separate notification does not manufacture numeric change/dirty events.
+Native bad input can expose empty text despite a visibly incomplete buffer.
+
+- `commitInput(options?)` returns `{ ok, changed, status, value }`. `ok` is true
+  only for `committed` or `unchanged`; `value` is the current committed value.
+  Other statuses are `invalid`, `vetoed`, `readonly`, `disabled`, `destroyed` and
+  `superseded`. `changed` reports an accepted write, not overall success: a
+  callback can destroy/supersede an attempt after its value write. Check `ok`,
+  not just `changed`, before continuing an owner save. With no pending draft, the result is unchanged (success), including in live mode.
+  Recursive commits are refused as superseded.
+- A successful commit applies the existing integer, clamp and precision order,
+  clears the draft and normalizes the native display. An equal numeric result
+  emits no numeric change. Genuine empty input commits null; native badInput is
+  rejected rather than silently converted to null. Invalid input, veto and
+  disabled/readonly refusal retain the pending draft for correction or cancel.
+- `cancelInput(options?)` restores the committed display, clears pending validation
+  and returns whether a draft existed. It does not undo a completed value write.
+  After destruction it returns false; `commitInput()` returns destroyed.
+- Standalone Enter commits; Escape cancels a pending draft. Tab is not trapped
+  and commits through blur. Blur commits the field only. Prevented/composing
+  keys are ignored. Owners may handle Enter/Escape before the standalone field.
+- `validate()` checks the normalized candidate without committing it or emitting
+  numeric changes. Bad input yields a `numberInput` error. Validation can update
+  error UI and emit validate; it is not side-effect-free. `commitInput()` itself
+  does not enforce application validators on valid numeric text. Call validate
+  explicitly or use the owner's validation/save pipeline.
+- `value.set`, clear and reset remain immediate replacements, including silent
+  and equal-value writes: they discard the draft and synchronize the display.
+  A later value veto does not restore that discarded draft. API hydration remains
+  allowed while disabled/readonly; merely entering those states retains the draft.
+  Refresh retains a pending draft. `silent` suppresses value/draft notifications,
+  not synchronization or dirty tracking. Normalization/configuration exceptions
+  still propagate; a failing normalization does not discard the current draft.
+- Spin uses a valid pending number plus the increment in one immediate normalized
+  write; bad input cannot spin. Spinning is not deferred until a later blur.
+  Destroy discards pending input without committing. Reentrant replacement or
+  teardown stops stale completion phases; this is not rollback of callback effects.
+
+Form.submit prepares pending fields, including nested forms, before beforeSubmit
+and validation. Form value reads and validation never commit. A beforeSubmit veto
+or later validation failure does not undo already completed field commits. A
+pending disabled/readonly field blocks submission rather than saving its stale
+committed value. See [live form mutations](MUTATIONS.md) and the
+[owner editor protocol](GRID_EDITOR_TYPES.md#explicit-draft-preparation).
+
+Native comma/locale behavior and real IME support are not expanded by this mode.
+See [test boundaries](INPUT_TESTING.md). Existing live-mode subscribers need no
+migration; opt-in subscribers should use draftChange for draft UI and ordinary
+change for committed numbers, and explicitly finish editing before saving. The
+[checked package consumer](../test/types/number-commit-browser.ts) demonstrates
+NumberInput, Form and Grid construction through public imports.
 
 ## CheckBox and Switch
 
@@ -315,6 +596,49 @@ all value event payloads receive strings, and synchronous validation is explicit
 min/max/step populate native attributes on text inputs; they do not enforce calendar
 ranges, prevent out-of-range dates or install business validators.
 
+Direct typing remains live. TimeInput preserves equivalent/partial native text
+and its caret while value.get(), events and validation receive the existing
+normalized model: typing 1 can display 1 while the model is 01:00. This is display
+preservation, not a pending commit transaction. Lossy clamping still normalizes
+the visible text. API writes (including unchanged/silent writes), clear/reset,
+blur, step buttons and picker actions remain authoritative synchronization points.
+Parser, hour-mode, locale and validation rules are unchanged. Incomplete or
+unparsed stored text such as 1: remains that text on blur, API synchronization,
+refresh and a switch to 24-hour presentation; AM/PM formatting does not turn it
+into 01: AM. This does not undo parser normalization of recognized input such as
+1 to 01:00. Passive display synchronization does not complete an unparsed value.
+
+For partial values, the picker does not mark an hour, minute, AM or PM selected;
+the 24 button indicates only the display mode. Explicit AM/PM, wheel or step
+choices still create a complete time using existing defaults. Cancel restores
+the latest committed partial value; OK without a new choice does not complete it.
+The DateTime picker similarly avoids selected time markers when its value cannot
+be parsed. These display changes do not add strict validation.
+
+Use a separate optional completeness validator for canonical HH:mm values:
+
+```ts
+import { TimeInput } from 'taet-ui/inputs';
+import { required } from 'taet-ui';
+const completeTime = (value: string) =>
+  value === '' || /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(value)
+    ? null : 'Enter a complete time (HH:mm)';
+const optionalTime = new TimeInput({ validators: [completeTime] });
+const requiredTime = new TimeInput({
+  required: true, validators: [required('Choose a time'), completeTime]
+});
+```
+
+The empty string passes the optional validator. required() adds the nonempty
+rule; required: true alone is presentation/native state, not automatic validation.
+The regex checks the normalized string, not how it was originally entered.
+
+DateInput/DateTimeInput reject native insertions or replacements that would
+truncate an untouched suffix through prefix normalization, retaining the prior
+value and selection. Selected same-length compatible replacements still work.
+Programmatic writes retain existing prefix normalization; the guard is not
+stricter date validation or a new deferred edit API.
+
 TimeInput hourMode supports '0-23', '1-24' and '12'; '24' aliases '1-24'. Constructor
 aliases mode, hour12/hour24 and format also exist; avoid conflicting settings.
 12-hour settings take precedence. Use canonical 00..23 model strings regardless of
@@ -391,6 +715,10 @@ acceptsTab: true inserts a tab through the user value pipeline. tabInsert now em
 only after an applied insertion on a live control, including veto/readonly/teardown
 handling. These events carry value (not newValue) and use events.on; they are not
 constructor callbacks. API insertText remains possible in readonly mode.
+Already-prevented key events and composing events (isComposing or legacy
+keyCode 229) do not invoke these Enter/Tab commands. Ordinary keyboard handling
+resumes for subsequent non-composing events; this guard does not claim native
+IME candidate support.
 
 ## Letter controls and DropDownList
 

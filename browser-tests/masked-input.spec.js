@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./input-test-fixture.js";
 
-test("masked fields show empty format hints without changing values or validation", async ({ page }) => {
+test("masked fields show empty format hints without changing values or validation", { tag: "@input-editing" }, async ({ page }) => {
   await page.goto("/browser-tests/recipes.html");
   await page.evaluate(async () => {
     const { Form, TextInput, required } = await import("/src/ui/index.js");

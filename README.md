@@ -4,10 +4,11 @@ Compact desktop UI controls for embedded WebViews. Build screens with live
 JavaScript objects, explicit ownership, events, commands and data models.
 No JSX, virtual DOM, runtime npm dependencies or CDN.
 
-**0.6.0-rc.6 is a pre-1.0 release candidate; published rc.3, rc.4 and rc.5 artifacts remain unchanged.** Grid/TreeGrid and Advanced remain experimental.
+**0.6.0-rc.7 is a pre-1.0 release candidate; previously published artifacts remain unchanged.** Grid/TreeGrid and Advanced remain experimental.
+Independent custom field/cell editors now require `getValidationRevision()` for strict owner validation. See the [rc.7 migration notes](CHANGELOG.md) and [editing contract](docs/EDITOR_EDITING_CONTRACT.md).
 Source packages and standalone WebView ZIPs are separate delivery choices.
 The npm preview channel uses `next`: `npm install taet-ui@next`; publication
-status is recorded in the matching GitHub prerelease notes.
+status is available in the [npm version list](https://www.npmjs.com/package/taet-ui?activeTab=versions).
 
 Display name: **Tæt UI**. Package and technical names: **taet-ui**.
 Repository: [edward-ap/taet-ui](https://github.com/edward-ap/taet-ui).
@@ -137,8 +138,8 @@ the maintainer exercised the native Rust echo. See the example notes for the
 difference between that smoke check and full native acceptance.
 
 For TypeScript or resolver-based apps, `npm pack --pack-destination ..` creates
-the local `taet-ui-0.6.0-rc.6.tgz`. Install that file in your app with
-`npm install ../taet-ui-0.6.0-rc.6.tgz`. Bare package names need a resolver or
+the local `taet-ui-0.6.0-rc.7.tgz`. Install that file in your app with
+`npm install ../taet-ui-0.6.0-rc.7.tgz`. Bare package names need a resolver or
 browser import map; installing a tarball does not create native browser URLs.
 
 | Import | Scope |

@@ -95,6 +95,154 @@ standalone UI classes remain outside this recipe subset; no permissive index
 signature hides that boundary. Built-in factories override `label` with `''` and `value` with the
 cell value, even when options contain those properties.
 
+## Explicit draft preparation
+
+`gridEditors.number({ updateMode: 'commit' })` uses NumberInput's opt-in pending
+native draft; default number editors remain live. `ControlCellEditor.prepareCommit`
+forwards the action metadata to an optional control `commitInput` method, or
+succeeds when that method is absent. A raw `CellEditor` may implement synchronous
+`prepareCommit(context)` returning `{ ok, value?, status? }`. It remains optional;
+independent custom state also follows the strict revision contract below.
+`getValue()`, `validate()` and `destroy()` must
+not be used to commit drafts.
+
+Grid and TreeGrid call preparation before validation/getValue and beforeCellChange
+in commitEdit. Grid also prepares its temporary clipboard/toggle editor before
+validation and readback. A failed preparation rejects with reason `prepare-commit`;
+it does not write the row. Current-session guards apply across this callback phase
+as well, including teardown or a replacement editor. PropertyGrid session commit
+uses the same prepare/validate/read sequence before beforePropertyChange.
+
+Enter/Escape in a commit-mode numeric cell go to the owner, preserving table
+commit/cancel and Tab traversal. Blur completes the numeric field only: Grid and
+TreeGrid do not write the row until their explicit commit path. Escape/cancel or
+destroying the editor still discards that cell session without saving the row,
+even if blur already committed its local field value. PropertyGrid inline editors
+instead propagate ordinary control changes after validation, including a completed
+numeric commit; they are not a staged row session. Their ordinary property veto
+restores the old control value silently only while the checked state is current.
+A stale attempt preserves newer callback state instead; see the PropertyGrid
+boundary below.
+
+In a staged session, a failed validator or owner veto may follow a successful
+numeric field commit;
+it does not roll that field value back, but prevents the owner write and retains
+the session. Pending disabled/readonly numeric fields refuse preparation rather
+than writing the older committed value. Silent commits suppress semantic events
+and still prepare, validate and synchronize. See [NumberInput](INPUT_TYPES.md#numberinput)
+for structured results, pending-state events and native input limitations.
+
+## Validation currentness and custom revisions
+
+Grid and TreeGrid begin value-currentness checks **after prepareCommit**. Legitimate
+normalization/completion during preparation is allowed. They capture revisions,
+check before validation, after validate and its ok read, then after final getValue.
+A value/candidate change during those phases refuses the current commit before the
+owner write. This includes accepted silent A -> B -> A and pending-only changes.
+There is no automatic retry or rollback. A surviving mounted editor keeps callback
+changes and remains available for another explicit commit; callback teardown or
+replacement still wins. No later phase refocuses a destroyed editor.
+
+Independent CellEditor and GridValueControl implementations must provide a pure,
+synchronous, stable getValidationRevision(): ValidationRevision. It is optional in
+the structural declarations because built-ins already carry private tracking, not
+because independent untracked state can be committed. The same ValidationRevision
+and ValidationRevisionSource types used by Form are re-exported from
+taet-ui/grid/editors. Existing getValue, validate and value.set return types stay
+unchanged; GridValueControl still uses its existing boolean value setter contract.
+
+Use a stored nonnegative safe-integer counter, increasing nonnegative bigint, or
+fresh nonreused symbol, advancing before post-write callbacks for every accepted
+value and validation-relevant candidate change. Getters must not mutate/commit;
+a value hash misses ABA. See [custom field rules](INPUT_TYPES.md#independent-custom-state-revision-hook)
+for token, alias and external-state obligations. A public hook adds checks and
+cannot override an internal stamp or lifecycle/source-identity guard.
+
+ControlCellEditor automatically preserves both adapter identity and its owned
+control's tracking. An ordinary EditorControl subclass with authoritative inherited
+state needs no public hook. Prefer decorating and returning the actual built-in
+adapter instead of rebuilding an opaque forwarding object that loses its tracking.
+An independent raw wrapper needs its own complete hook. There is no public built-in
+revision getter or universal editor manager to poll.
+
+Currentness refusals use editReject unless silent:
+- reason 'validation-revision' means a missing/noncallable/invalid/throwing/unstable
+  reader or observed counter decrease. validation is { source: cellEditor,
+  ok: false, errors: [...] }; each protocol error has source: offending editor or
+  control, severity: 'error', code: 'validationRevision' and message.
+- reason 'validation-stale' means an otherwise valid currentness proof was lost.
+  validation has source: cellEditor, ok:false and errors:[]. Callback changes remain.
+
+These protocol errors use source, unlike FormError's control/path. No validation
+value property is required. CellEditorValidation.errors remains readonly unknown[];
+application code must narrow errors before inspecting their fields. Ordinary
+application validation failure still uses reason 'validation'. Lifecycle removal
+can simply stop the attempt rather than notifying or refocusing an obsolete editor.
+
+The boundary ends before the trusted beforeCellChange hook. Its existing newValue
+override is deliberately not revalidated, and revision checks do not follow it.
+That hook is not a field beforeChange value override. Silent commits skip the
+trusted veto phase/events but still prepare, validate and check currentness.
+
+Grid's temporary clipboard/toggle editors use the same post-prepare protection and
+are released exactly once even on refusal; the rejected attempt does not write its
+cell. This is an editing-path contract, not system-clipboard certification. Callback
+side effects, accepted earlier cells and unrelated model state are not rolled back.
+
+The checked [TS consumer](../test/types/grid-revision-consumer.ts) and
+[JSDoc consumer](../test/types/grid-revision-javascript.js) demonstrate raw editors,
+wrapped controls, automatic inherited tracking, preparation, accepted/pending ABA,
+final-read changes, diagnostics and retained sessions. Actual gate outcomes belong
+in [VERIFICATION](VERIFICATION.md).
+
+## PropertyGrid staged and inline ownership
+
+PropertyGrid uses the same strict revision protocol and automatic built-in adapter
+tracking. Independent CellEditor/GridValueControl state needs the same hook even
+when the wrapped control has no application validator. Its owner phases differ:
+
+- A staged commit prepares, captures currentness, validates/checks, reads the final
+  value/checks, dispatches beforePropertyChange/checks, then writes. Rejection keeps
+  the surviving session for another explicit commitEdit attempt.
+- Inline propagation starts from an ordinary wrapped-control change event. It
+  captures currentness before its initial getValue, checks/no-ops if unchanged,
+  validates/checks, reads again/checks, then dispatches beforePropertyChange/checks
+  before writing. A stale attempt leaves the callback's value/candidate visible
+  and editable, without an owner property write or synthetic restoring change.
+  Another ordinary control change starts a fresh inline attempt; commitEdit is
+  not a new inline retry API.
+
+Neither path retries or rolls back callback effects. PropertyGrid checks currentness
+**after beforePropertyChange too**. Unlike Grid/TreeGrid's beforeCellChange, this
+hook never supplied a newValue override API. A still-current ordinary inline veto
+silently restores the old control value as before. If that callback changes the
+accepted value or candidate, currentness refusal takes precedence even when cancel
+is also true: the newer callback state is retained. An ordinary validation failure
+still refuses without a new rejection event or automatic restoration.
+
+Subscribe through events.on('editReject', handler); there is no onEditReject option.
+The new event covers only reason 'validation-revision' or 'validation-stale'. Its
+property identity/provenance fields are source: PropertyGrid, target, property,
+group, name, oldValue, newValue, origin and userAction, without cancel. newValue may
+be undefined if failure preceded the first successful read; otherwise it is the
+last captured value. Nested validation uses the same CellEditorValidation shape
+above: source is the editor, protocol errors identify their offender with source,
+while stale errors is []. This is not FormError's control/path shape.
+
+Silent attempts still check currentness and suppress editReject/semantic events.
+A silent control value.set remains hydration and does not manufacture an inline
+change event. Existing initial disabled/readonly inline API hydration is not newly
+prohibited; in-flight state/lifetime/row changes interrupt, and staged commits keep
+their existing disabled gate. Scoped guards prevent a nested change/commit from
+saving midway through the current attempt without locking independent owners.
+
+The checked [TS consumer](../test/types/property-revision-consumer.ts) and
+[JSDoc consumer](../test/types/property-revision-javascript.js) cover staged and
+inline usage, strict diagnostics, ordinary invalid compatibility, explicit retry,
+silent refusal and inherited tracking. See the exact [event declarations](../src/ui/collection-contracts.d.ts)
+and [test boundaries](INPUT_TESTING.md); no universal widget or native-host guarantee
+is implied.
+
 ## Select choices and borrowed services
 
 `gridEditors.select<TRow, TRowId, TChoice, TChoiceId>()` keeps table records and
@@ -232,6 +380,8 @@ provenance stay bound to the captured cell and current action. Parse failure,
 validation failure, veto and writer rejection emit editReject with reasons
 clipboard-parse, validation, before-cell-change and write-rejected respectively.
 Parse failures expose error (unknown); validation failures expose validation.
+The same revision checks add validation-revision and validation-stale refusals as
+described above; temporary editors are also released after those refusals.
 Read-only/missing cells and unchanged values are skipped without a rejection.
 
 Programmatic clipboard calls default to api/false; native clipboard and pointer/
@@ -286,21 +436,24 @@ sets factory metadata. Both accept either a live `GridValueControl` or a raw
 validation; `ControlCellEditor` supplies a successful result if it has no
 validator. A raw cell editor supplies **all** of mount/getValue/validate/focus/
 destroy. The grids call its `validate()` during commit. Do not return a control
-descriptor. Cleanup belongs to the editor instance and its owning grid.
+descriptor. Independent state must also satisfy the revision contract above; an
+optional validator does not make revision tracking optional. Cleanup belongs to
+the editor instance and its owning grid.
 
 `SharedGridEditingEvents` declares the common event fields, using `unknown` for
 heterogeneous cell values. The separate maps describe existing differences:
 
 | Contract | Grid | TreeGrid |
 | --- | --- | --- |
-| beforeEditStart | Cancellable event | Not emitted |
-| editCommit | `changed`, `writeResult` booleans | No such flags; includes `cancel` |
+| beforeEditStart | Cancellable event | Cancellable event |
+| editCommit | `changed`, `writeResult` booleans | Same flags; retains legacy `cancel` |
 | editReject.columnId | Present | Present, including validation rejection |
 | editReject.validation | Editor result on validation failure | Editor result on validation failure |
 
 Use `GridEditingEvents` or `TreeGridEditingEvents` only for the corresponding
 component. Their event maps do not declare every unrelated Grid event. A shared
-listener cannot assume Grid-only commit flags. Editor events do not universally
+listener can use the common commit flags; legacy TreeGrid cancel does not veto a
+completed write. Editor events do not universally
 contain the factory's `rowIndex`; store the creation context when needed.
 
 ## Verification

@@ -13,7 +13,7 @@ export async function sourceProvenance(root) {
  for(const dir of ['src','scripts'])await visit(dir);
  for(const name of ['package.json','package-lock.json']){hash.update(name+'\0');hash.update(await readFile(path.join(root,name)));hash.update('\0');files++;}
  let git={revision:null,state:'not-versioned'};
- const command=args=>execFileSync('git',['-c','safe.directory='+root.split(path.sep).join('/'),'-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ const command=args=>execFileSync('git',['-C',root,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
  try{
   if(path.resolve(command(['rev-parse','--show-toplevel']))===path.resolve(root)){
    let revision=null;try{revision=command(['rev-parse','HEAD']);}catch{}

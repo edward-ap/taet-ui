@@ -490,6 +490,7 @@ export class SelectInput extends TextField {
     }
 
     this._value = newValue;
+    ++this._valueRevision;
     this._syncInput(newValue);
     this.clearValidation({ silent: true });
     const isDirty = this.isDirty();

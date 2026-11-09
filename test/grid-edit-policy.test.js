@@ -11,7 +11,7 @@ for (const Table of [Grid, TreeGrid]) {
     grid.events.on('editCommit', event => events.push(event));
     for (const value of ['Old', 'New']) {
       grid._editing = { id:1, item:grid.data.get(1), column:grid.getColumn('name'), oldValue:grid.data.get(1).name,
-        cellEditor:{ validate:() => ({ ok:true }), getValue:() => value, destroy() {}, focus() {} } };
+        cellEditor:{ getValidationRevision:() => 0, validate:() => ({ ok:true }), getValue:() => value, destroy() {}, focus() {} } };
       assert.equal(grid.commitEdit(), true);
     }
     assert.deepEqual(events.map(event => [event.changed, event.writeResult]), [[false, false], [true, true]]);

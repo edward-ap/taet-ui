@@ -10,6 +10,7 @@ import { checkDateTimeBrowserConsumer } from './check-date-time-consumer.js';
 import { checkRemainingInputBrowserConsumer } from './check-remaining-input-consumer.js';
 import { checkSpecializedInputBrowserConsumer } from './check-specialized-input-consumer.js';
 import { checkIndicatorInputBrowserConsumer } from './check-indicator-input-consumer.js';
+import { checkNumberCommitBrowserConsumer } from './check-number-commit-consumer.js';
 
 // The caller supplies a freshly installed, compiled consumer outside the checkout.
 // Only this test harness creates DOM hosts; the compiled recipe uses Tæt UI editors.
@@ -395,6 +396,20 @@ export async function checkGridEditorBrowserConsumer(consumer) {
     await page.goto(url);
     await page.evaluate(async()=>{const {verifyGridTransfer}=await import('/output/grid-transfer-consumer.js');verifyGridTransfer(document.querySelector('#root'));});
     console.log('Installed browser Grid transfer OK: independent stores and typed mapping');
+    await page.goto(url);
+    await page.evaluate(async () => {
+      const host = document.querySelector('#root');
+      const typed = await import('/output/grid-revision-consumer.js');
+      const checkedJs = await import('/output/grid-revision-javascript.js');
+      typed.checkGridRevisionBrowser(host);
+      checkedJs.checkJavascriptRevisionBrowser(host);
+      const properties = await import('/output/property-revision-consumer.js');
+      const propertyJs = await import('/output/property-revision-javascript.js');
+      properties.checkPropertyRevisionBrowser(host);
+      propertyJs.checkPropertyRevisionJavascript(host);
+    });
+    console.log('Installed Grid/TreeGrid revision consumers OK: direct/custom controls, accepted/pending/final-read ABA, protocol diagnostics, retry and trusted overrides');
+    console.log('Installed PropertyGrid revision consumers OK: typed strict diagnostics, staged custom hooks, inline inherited tracking, silent suppression and unchanged ordinary validation');
     await checkGridEditorServices(page, url);
     await checkInputBrowserConsumer(page, url);
     await checkChoiceInputBrowserConsumer(page, url);
@@ -402,6 +417,7 @@ export async function checkGridEditorBrowserConsumer(consumer) {
     await checkRemainingInputBrowserConsumer(page, url);
     await checkSpecializedInputBrowserConsumer(page, url);
     await checkIndicatorInputBrowserConsumer(page, url);
+    await checkNumberCommitBrowserConsumer(page, url);
     await page.goto(url);
     await page.evaluate(async () => {
       const recipe = await import('/output/remaining-components-browser.js');

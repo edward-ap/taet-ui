@@ -142,6 +142,7 @@ function attachFakeEditor(grid, value, options = {}) {
   let destroyCount = 0;
   const item = grid.data.get("a");
   const cellEditor = {
+    getValidationRevision: () => 0, // This fixture returns an immutable captured value.
     getValue: () => value,
     validate: () => options.validation ?? { ok: true, errors: [], value },
     focus() {

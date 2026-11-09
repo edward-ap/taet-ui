@@ -36,6 +36,7 @@ test('PropertyGrid does not focus a cancelled or destroyed editor in a later mic
     const make = action => {
       const grid = new PropertyGrid({ source: [{ properties: [{ name: 'x', type: 'custom', value: 'X',
         editor: gridEditors.custom(() => ({
+          getValidationRevision: () => 0, // Immutable captured value; no candidate write paths.
           mount(host) { host.append(document.createElement('input')); }, getValue() { return 'X'; },
           validate() { return { ok: true }; }, focus() { focused++; }, destroy() { destroyed++; }
         }))

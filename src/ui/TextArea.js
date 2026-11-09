@@ -212,6 +212,8 @@ export class TextArea extends TextField {
   }
 
   _handleKeyDown(event) {
+    if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
+
     if (!this.acceptsReturn && event.key === "Enter") {
       event.preventDefault();
       this.events.emit("enterKey", {

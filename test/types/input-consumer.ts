@@ -1,4 +1,5 @@
-import { EditorControl, TextInput, type EditorValidationResult, type EditorControlOptions } from 'taet-ui/inputs';
+import { gridEditors } from 'taet-ui/grid/editors';
+import { NumberInput, TextArea, EditorControl, TextInput, type EditorValidationResult, type EditorControlOptions } from 'taet-ui/inputs';
 function check(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 interface ValidationContext { minimum: number }
 
@@ -79,3 +80,22 @@ function rejected() {
 }
 void rejected;
 console.log('Installed input consumer OK: values, veto, dirty/reset, validation, subclass and teardown');
+
+// Opt-in sparse masks keep positional holes in serialized application values.
+export function createSlotsInput(host: HTMLElement, unmaskValue = false) {
+  return new TextInput(host, { mask: 'AA-0000', maskMode: 'slots', value: 'AB-1234', unmaskValue });
+}
+
+const slotsTextEditor = gridEditors.text({ mask: 'AA-0000', maskMode: 'slots', unmaskValue: true });
+void slotsTextEditor;
+function rejectSlotsOnNonText() {
+  // @ts-expect-error Sparse masks are a text editor opt-in only.
+  new NumberInput({ maskMode: 'slots' });
+  // @ts-expect-error TextArea does not implement masked slots.
+  new TextArea({ maskMode: 'slots' });
+  // @ts-expect-error Numeric grid editors do not implement masked slots.
+  gridEditors.number({ maskMode: 'slots' });
+  // @ts-expect-error Unknown mask modes are not accepted.
+  new TextInput({ maskMode: 'sparse' });
+}
+void rejectSlotsOnNonText;

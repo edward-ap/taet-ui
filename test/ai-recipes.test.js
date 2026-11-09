@@ -9,7 +9,7 @@ test("AI recipes are importable factories that follow application guardrails", a
     .filter(file => /^\d{2}-.+\.js$/.test(file))
     .sort();
 
-  assert.deepEqual(files.map(f => f.slice(0,2)), ['01','02','03','04','05','06','07','08','09','10','11','12']);
+  assert.deepEqual(files.map(f => f.slice(0,2)), ['01','02','03','04','05','06','07','08','09','10','11','12','13']);
 
   for (const file of files) {
     const url = new URL(file, recipesDirectory);

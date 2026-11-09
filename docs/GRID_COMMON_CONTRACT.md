@@ -55,6 +55,22 @@ change schema/projection or open another editor; the old attempt stops and canno
 overwrite the newer editor or keyboard target. Unrelated background updates preserve
 the live draft; removal/hiding/replacement of its target cancels it.
 
+### Pending numeric input
+
+The number factory's `updateMode: 'commit'` is opt-in; its default remains live.
+Both tables explicitly call an optional editor `prepareCommit` before validation
+and value readback. A failed preparation emits `editReject` with reason
+`prepare-commit` (unless silent) and keeps the current editor without a row write.
+Callbacks that replace/destroy the session stop subsequent stale phases.
+
+This separates the native draft, committed editor value and stored row value.
+Blur completes only the numeric editor value. Enter/Tab or commitEdit completes
+the owner write; Escape/cancel/teardown never saves the row. A later validator or
+beforeCellChange veto does not undo a field commit already completed during
+preparation. Pending disabled/readonly input blocks preparation. Getters,
+validation and editor destruction never implicitly complete a draft. See the
+[typed protocol](GRID_EDITOR_TYPES.md#explicit-draft-preparation).
+
 ## Sort, conditions and schema
 
 Both expose getSortModel(): Rule[]. Legacy getSortState remains first-rule/null
