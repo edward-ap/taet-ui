@@ -1,3 +1,74 @@
+# rc.7 native caret audit follow-up - 2026-11-10 (UTC)
+
+The first portability follow-up `9ea50f9548b22a8a7b17c7f64efeb7a18996d19e`
+passed all four Windows/Linux Node jobs, performance, Linux compatibility
+(3308 passed / 16 existing clipboard skips), and its 42 bundle cases in
+[PR run 42722365084](https://github.com/edward-ap/taet-ui/actions/runs/42722365084).
+macOS passed all 1305 Chromium cases, including the repaired documentation
+journeys. Its Firefox/WebKit compatibility then exposed eight End-key fixture
+failures: two deletion journeys, both raw modes, both engines. That gate finished
+2192 passed / 8 failed / 16 existing skips; later macOS bundle/release steps were
+skipped. The [second failure artifact](https://github.com/edward-ap/taet-ui/actions/runs/42722365084/artifacts/13724955203)
+is preserved rather than treating the first fix as a complete macOS pass.
+
+Both deletion traces passed their initial value/caret checks before sending End.
+The test incorrectly assumed End moved the caret to the final character. macOS
+End is not guaranteed caret movement; Playwright maps it to document scrolling.
+Controlled Chromium replay of that command
+on Windows reproduced all four raw-mode/scenario symptoms: Backspace at caret 0
+left `34:` unchanged; Delete at caret 2 changed `12:4` to `12:`. Explicit keyboard
+Select All then ArrowRight established the final caret and restored the original
+strict expected outcomes. This replay is not native macOS certification.
+
+The two masked setups now assert full selection and final caret explicitly.
+A complete browser-spec Home/End audit found four more native-caret setup calls:
+three NumberInput draft appends and one ScrollingLabel drag-selection setup.
+They now use Select All plus the appropriate arrow. Each number append must show
+`1.0` before API/reset/clear; the drag setup checks caret 0 and horizontal scroll 0.
+All original deletion, value, event, pointer, layout and teardown assertions stay.
+Home/End remains unchanged where it exercises component-owned grid/tree/list/tab,
+select-popup, radio or slider navigation, or editor/grid keyboard isolation.
+
+No runtime source, API, timeout, worker budget or skip is changed. A preliminary
+macOS three-engine run of the four affected specs now catches this class earlier;
+every full test:all, compatibility, bundle, pack and release gate remains afterward.
+Local focused verification and the final commit's complete CI must pass before publication.
+Neither this report nor a Windows command replay turns a failed macOS gate green.
+
+---
+
+# rc.7 macOS documentation-fixture correction - 2026-11-09 (UTC)
+
+The first rc.7 CI input was `270c9c6770827caf995de7f15d8170d63800e6fc`,
+[run 42717928687](https://github.com/edward-ap/taet-ui/actions/runs/42717928687).
+Its macOS Chromium suite finished 1304 passed / 1 failed. The failure was the
+positional-mask documentation journey after focus, Home and typing X; the value
+remained `__-1234`. Later macOS compatibility/bundle gates were skipped, not passed.
+The original [failure artifact](https://github.com/edward-ap/taet-ui/actions/runs/42717928687/artifacts/13719258057)
+is retained as historical evidence.
+
+Playwright 1.61.1 maps macOS Home to `scrollToBeginningOfDocument`, not caret
+movement. TextField leaves that native key behavior intact, and a positional mask
+correctly rejects insertion beyond its final slot. A controlled Windows Chromium
+replay of that macOS editing command on a scrollable page reproduced the unchanged
+masked value with the caret at the end; a bare input retained the same caret and
+accepted a trailing X. This is command replay, not a native macOS run. The original
+trace does not record selection offsets, so no exact failed-run caret is claimed.
+
+Both documentation journeys now use Ctrl/Cmd+A followed by ArrowLeft and assert
+selection `[0,7]` then `[0,0]` before the unchanged sequential X/Y typing. Their
+value, raw-value, Form, completeness, required-validation and teardown assertions
+are preserved. The complete four-test documentation spec is now also in the
+three-engine compatibility gate. No runtime, API, timeout or skip is changed.
+
+Focused Windows verification passed 36/36: all four documentation tests, three
+engines and three repeats, one worker. Independent source review found no blocker.
+The follow-up commit still requires its complete remote CI, including actual macOS,
+before publication. This correction alone does not declare rc.7 published or the
+original failed run green. npm remains intended for `next`; `latest` is unchanged.
+
+---
+
 # rc.7 publication preparation - 2026-11-09 (UTC)
 
 This candidate collects the accumulated input-editing and strict owner-validation

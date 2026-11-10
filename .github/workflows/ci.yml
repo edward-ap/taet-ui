@@ -75,6 +75,8 @@ jobs:
           python-version: '3.13'
       - run: npm ci
       - run: npx playwright install chromium firefox webkit
+      # Catch native caret setup regressions early; every full gate below remains.
+      - run: node scripts/run-browser.js --config playwright.compat.config.js input-controls-docs.spec.js masked-editing-regressions.spec.js number-input-decimal-entry.spec.js scrolling-label.spec.js --workers=2
       - run: npm run test:all
       # test:all built dist. Reuse it without concurrent rebuilds.
       - run: node scripts/run-browser.js --config playwright.compat.config.js --project=firefox --project=webkit --workers=2

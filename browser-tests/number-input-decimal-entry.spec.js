@@ -77,17 +77,19 @@ test('NumberInput emits the completed decimal without an event for its equal-val
 test('NumberInput API setters, reset and clear synchronize a focused decimal draft', async ({ page }) => {
   const input = await mount(page, { value: 1 });
   await input.focus();
-  await input.press('End');
+  await input.press('ControlOrMeta+A'); await input.press('ArrowRight');
   await input.pressSequentially('.0');
   await expect(input).toHaveValue('1.0');
   await page.evaluate(() => number.value.set(1, { silent: true }));
   await expect(input).toHaveValue('1');
-  await input.press('End');
+  await input.press('ControlOrMeta+A'); await input.press('ArrowRight');
   await input.pressSequentially('.0');
+  await expect(input).toHaveValue('1.0');
   await page.evaluate(() => number.value.reset());
   await expect(input).toHaveValue('1');
-  await input.press('End');
+  await input.press('ControlOrMeta+A'); await input.press('ArrowRight');
   await input.pressSequentially('.0');
+  await expect(input).toHaveValue('1.0');
   await page.evaluate(() => number.value.clear());
   await expect(input).toHaveValue('');
   expect(await page.evaluate(() => number.value.get())).toBeNull();
