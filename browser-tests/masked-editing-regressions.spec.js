@@ -33,7 +33,9 @@ test.describe('Masked editing regressions', { tag: '@input-editing' }, () => {
       await input.press('Backspace');
       await expect(input).toHaveValue('34:');
       expect(await caret(input)).toEqual([0, 0]);
-      await input.press('End');
+      // End is not a portable caret command; establish the end caret explicitly.
+      await input.press('ControlOrMeta+A'); expect(await caret(input)).toEqual([0, 3]);
+      await input.press('ArrowRight'); expect(await caret(input)).toEqual([3, 3]);
       await input.press('Backspace');
       await input.press('Backspace');
       await expect(input).toHaveValue('');
@@ -193,7 +195,9 @@ test.describe('Masked literal deletion and synthetic composition', { tag: '@inpu
       await selection(input, 2); await input.press('Delete');
       await expect(input).toHaveValue('12:4');
       expect(await caret(input)).toEqual([2, 2]);
-      await input.press('End'); const before = await page.evaluate(() => changes.length);
+      await input.press('ControlOrMeta+A'); expect(await caret(input)).toEqual([0, 4]);
+      await input.press('ArrowRight'); expect(await caret(input)).toEqual([4, 4]);
+      const before = await page.evaluate(() => changes.length);
       await input.press('Delete'); await expect(input).toHaveValue('12:4');
       expect(await page.evaluate(() => changes.length)).toBe(before);
     });

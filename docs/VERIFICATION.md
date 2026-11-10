@@ -1,3 +1,42 @@
+# rc.7 native caret audit follow-up - 2026-11-10 (UTC)
+
+The first portability follow-up `9ea50f9548b22a8a7b17c7f64efeb7a18996d19e`
+passed all four Windows/Linux Node jobs, performance, Linux compatibility
+(3308 passed / 16 existing clipboard skips), and its 42 bundle cases in
+[PR run 42722365084](https://github.com/edward-ap/taet-ui/actions/runs/42722365084).
+macOS passed all 1305 Chromium cases, including the repaired documentation
+journeys. Its Firefox/WebKit compatibility then exposed eight End-key fixture
+failures: two deletion journeys, both raw modes, both engines. That gate finished
+2192 passed / 8 failed / 16 existing skips; later macOS bundle/release steps were
+skipped. The [second failure artifact](https://github.com/edward-ap/taet-ui/actions/runs/42722365084/artifacts/13724955203)
+is preserved rather than treating the first fix as a complete macOS pass.
+
+Both deletion traces passed their initial value/caret checks before sending End.
+The test incorrectly assumed End moved the caret to the final character. macOS
+End is not guaranteed caret movement; Playwright maps it to document scrolling.
+Controlled Chromium replay of that command
+on Windows reproduced all four raw-mode/scenario symptoms: Backspace at caret 0
+left `34:` unchanged; Delete at caret 2 changed `12:4` to `12:`. Explicit keyboard
+Select All then ArrowRight established the final caret and restored the original
+strict expected outcomes. This replay is not native macOS certification.
+
+The two masked setups now assert full selection and final caret explicitly.
+A complete browser-spec Home/End audit found four more native-caret setup calls:
+three NumberInput draft appends and one ScrollingLabel drag-selection setup.
+They now use Select All plus the appropriate arrow. Each number append must show
+`1.0` before API/reset/clear; the drag setup checks caret 0 and horizontal scroll 0.
+All original deletion, value, event, pointer, layout and teardown assertions stay.
+Home/End remains unchanged where it exercises component-owned grid/tree/list/tab,
+select-popup, radio or slider navigation, or editor/grid keyboard isolation.
+
+No runtime source, API, timeout, worker budget or skip is changed. A preliminary
+macOS three-engine run of the four affected specs now catches this class earlier;
+every full test:all, compatibility, bundle, pack and release gate remains afterward.
+Local focused verification and the final commit's complete CI must pass before publication.
+Neither this report nor a Windows command replay turns a failed macOS gate green.
+
+---
+
 # rc.7 macOS documentation-fixture correction - 2026-11-09 (UTC)
 
 The first rc.7 CI input was `270c9c6770827caf995de7f15d8170d63800e6fc`,

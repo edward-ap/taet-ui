@@ -36,7 +36,9 @@ test('loops with one native animation, pauses, resizes, respects reduced motion 
 test('native drag selection scrolls within another input without displacing its label',async({page})=>{
  const field=page.getByRole('textbox');const box=await field.boundingBox();
  const before=await page.locator('.dui-text-field__label').boundingBox();
- await field.click();await field.press('Home');
+ await field.click();await field.press('ControlOrMeta+A');await field.press('ArrowLeft');
+ expect(await field.evaluate(el=>[el.selectionStart,el.selectionEnd])).toEqual([0,0]);
+ await expect.poll(()=>field.evaluate(el=>el.scrollLeft)).toBe(0);
  await page.mouse.move(box.x+8,box.y+box.height/2);await page.mouse.down();
  await page.mouse.move(box.x+box.width+90,box.y+box.height/2,{steps:12});await page.waitForTimeout(900);
  expect(await field.evaluate(el=>el.selectionEnd>el.selectionStart)).toBe(true);
