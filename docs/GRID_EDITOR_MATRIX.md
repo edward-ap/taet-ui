@@ -114,9 +114,10 @@ Rows stay at the configured compact height (24px token, 22px test fixture). The
 Select popup display/button and short flow Radio now fit without growing a row.
 Radio column/multi-row layouts are not promised to fit, and the demo declares
 minimum column widths rather than enlarging every row. The example uses at least
-128px for Date and 156px for Time/DateTime. Time has a leading icon, popup and two
-step buttons; 96-112px leaves too little room for its value and is not a usable
-minimum. Narrow text/number fields may scroll their draft inside the input. The 10px indicator gutter
+128px for Date and 156px for Time/DateTime. Temporal inputs put the calendar/clock glyph on the existing trailing popup
+button, with no decorative leading square (24px saved at the default token).
+Time retains its two step buttons, so narrow widths still need a readable-value
+check; the example minimum widths remain unchanged. Narrow text/number fields may scroll their draft inside the input. The 10px indicator gutter
 stays separate from editors and data/range/export indices.
 
 See [full edit contract](GRID_COMMON_CONTRACT.md), [typed editor API](GRID_EDITOR_TYPES.md)

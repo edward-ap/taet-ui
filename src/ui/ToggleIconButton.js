@@ -10,12 +10,15 @@ export class ToggleIconButton extends CheckButton {
     return root;
   }
 
+  _syncAccessibleLabel() {
+    this._applyAccessibleName(this._button, { label: this._textElement?.textContent || this.label });
+  }
+
   _renderText() {
     super._renderText();
     if (!this._button) return;
     const name = this._textElement?.textContent || this.label;
-    this._button.removeAttribute("aria-labelledby");
-    this._button.setAttribute("aria-label", name);
+    this._applyAccessibleName(this._button, { label: name });
     this._renderValidationMessage();
   }
 

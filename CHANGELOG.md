@@ -1,5 +1,16 @@
 # Tæt UI changes
 
+## 0.6.0-rc.8 - accessible editors and interaction contracts, 2026-11-12
+
+- Associate editor captions with their actual input/focus target, separate validation descriptions from names, and give selector popups unique identities. Add independent ariaLabel/ariaLabelledBy options and setters for captionless editors.
+- Empty or omitted captions no longer reserve label space. Preserve per-field top/left placement within mixed Forms and dynamic caption restoration.
+- Replace decorative leading date/time squares with calendar/clock glyphs on the existing trailing picker buttons, saving 24px at the default size; preserve TimeInput step controls and existing leadingIconType API.
+- Preserve ColorPicker hue/saturation on achromatic values and hue-only edits.
+- Respect disabled List/TreeList interaction, Menu visibility and separators, ContextMenu refresh, and Toolbar child-event/veto/ownership contracts.
+- Render trusted Node Grid footer values according to the existing public type; keep scalar strings as text and stop stale paints after custom-element callbacks. Immutable imported provenance is unchanged.
+- Expand browser and unit regressions and document DOM lookup/accessibility contracts. Keep zero runtime dependencies and existing API maturity boundaries.
+- Target npm next; do not promote latest. Browser tests do not certify native screen readers, IME, or macOS host integrations. Local proprietary comparison samples are not distributed.
+
 ## 0.6.0-rc.7 - editing contracts and validation currentness, 2026-11-09
 
 - **Breaking for independent custom editors:** strict Form, Grid/TreeGrid and

@@ -16,7 +16,6 @@ export class CircularSlider extends TrackBar {
     root.classList.add('dui-circular-slider');
     const dial = root.querySelector('.dui-trackbar__content');
     dial.classList.add('dui-circular-slider__dial');
-    this._input.setAttribute('aria-label', this.label || this.name || 'Value');
     this._valueElement.setAttribute('aria-hidden', 'true');
     this._syncInput(this._value);
     let pointer = null, previous = 0, position = 0;
@@ -53,6 +52,15 @@ export class CircularSlider extends TrackBar {
     for (const type of ['pointerup','pointercancel','lostpointercapture']) this.disposables.addEventListener(dial,type,end);
     this.disposables.add(() => { if (pointer !== null && dial.hasPointerCapture(pointer)) dial.releasePointerCapture(pointer); });
     return root;
+  }
+
+  _syncAccessibleLabel() {
+    super._syncAccessibleLabel();
+    if (this._labelElement) this._labelElement.id = `${this._accessibilityId}-label`;
+    this._applyAccessibleName(this._input, {
+      labelledBy: String(this.label).trim() ? this._labelElement?.id : '',
+      label: this.name || 'Value'
+    });
   }
 
   _renderValue() {

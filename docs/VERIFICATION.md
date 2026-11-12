@@ -1,3 +1,69 @@
+# Accessible field-caption audit - 2026-11-12 (UTC)
+
+Local follow-up to rc.7 (`53c5b177a5b68f1c1779afe97316480c65101840`).
+No version change, commit, push or npm publication is part of this audit.
+
+The initial DateInput report was reproduced as a contaminated computed name,
+not an empty name: its enclosing label also named the picker button. DateInput,
+TimeInput and DateTimeInput now reference their caption explicitly. Exact role/name
+queries must match the caption alone; auxiliary buttons retain their own names.
+
+The audit covers all concrete exports of `taet-ui/inputs`, plus CheckButton and
+password/mask variants. New tests cover caption changes before/after mount,
+validation descriptions, refresh/read-only/disabled state, empty/restored captions,
+duplicate model names in independent owners, popup/channel names and teardown.
+Choice names exclude transient switch state; checkbox/marker text remains part of
+its option name. File, range and progress names exclude values, scales and errors.
+TrackBar uses a native label/input association so existing explicit consumer
+`aria-label` values retain browser precedence. Native WebKit range-label clicks
+forward activation without moving focus; tests compare that platform behavior
+rather than forcing Chromium focus behavior.
+
+Validation messages remain visible CSS tooltips and `aria-describedby`; they no
+longer become fallback names via native `title`. Updated consumer assertions
+verify the error description, not the removed duplicate title. Documentation
+snippet comparisons normalize generated accessibility IDs while retaining their
+reference structure. Public field signatures and value/commit semantics are unchanged.
+
+Verified locally on Windows:
+- `npm test`: syntax (590 files), API/package boundaries, 1348 unit tests and
+  installed TypeScript/JSDoc consumers passed.
+- `npm run test:types:browser`: installed package browser consumers passed.
+- Final frozen build and bundle checks passed; 42 bundle cases passed across
+  Chromium, Firefox and WebKit.
+- Final frozen complete Chromium run: 1362/1362 passed (8 workers).
+- New accessible-name group: 57 scenarios across three engines. The aggregate
+  passed 170/171; one Firefox browser-context teardown raised an internal protocol
+  error. The complete Firefox group then passed 57/57 with one worker.
+- Complete configured Firefox/WebKit compatibility gate: 2314 passed, 16 skipped
+  (existing platform clipboard skips), no failures. Windows WebKit ran with one worker.
+- `npm pack --dry-run --json`: 502 entries, no local logs/test results; local
+  release prerequisite and whitespace checks passed. Nothing was published.
+
+Earlier evidence is retained: the first broad run had seven failures (stale
+validation-title/markup/name expectations, the real TrackBar explicit-label
+regression and one page-load ERR_NO_BUFFER_SPACE). A later run overlapped a bundle
+rebuild and had three CSS-loading failures. Neither is counted as the final green
+aggregate. The final frozen Chromium and bundle runs above replace those gates.
+Independent source review caught and fixed the empty CheckLetter + focused
+validation-tooltip name leak before the final gate.
+
+Scope limits: browser computed accessibility names/descriptions, not an assistive
+technology certification; no real NVDA/VoiceOver or native WebView/macOS run here.
+Use the supported label/setLabel contract for TextField/date-time editors; their
+owned caption references take precedence over manual DOM aria-label overrides.
+The subsequently authorized Select popup-reference follow-up replaces model/control
+identity with the instance accessibility ID. Before the fix, separate Forms with
+the same field name reproduced identical `aria-controls="repeated-options"`.
+Six new scenarios cover custom SelectInput/DropDownList/MultiSelectDropDown with
+repeated names or explicit IDs, filtering, refresh, reopen and destruction of one
+owner while the other remains usable. Native select is unchanged. Follow-up gates:
+78/78 choice-name, select-icons and choice-lifecycle cases passed across all three
+engines; the rebuilt bundle passed 42/42 cases. API/package boundaries, changed-file
+syntax, whitespace and independent source review passed. The full-suite counts
+above describe the preceding name patch, not a rerun after this one-line follow-up.
+Real screen-reader testing was deferred by the owner; NVDA was not installed or started.
+
 # rc.7 native caret audit follow-up - 2026-11-10 (UTC)
 
 The first portability follow-up `9ea50f9548b22a8a7b17c7f64efeb7a18996d19e`
@@ -1712,3 +1778,129 @@ Primary source for the platform label ordering: https://raw.githubusercontent.co
 
 
 Follow-up `c8b8657215c0361dedd9fbe6b8ee15f643bb9ada`, run41372754653: all four Windows/Linux Node22/24 jobs and performance passed. Linux compatibility passed1385/1386; the earlier Switch application-focus, Mapper and Date failures passed. One Grid keyboard fixture sent Escape after Shift+Tab as soon as the new input value appeared, without awaiting the separately scheduled activation focus. Trace snapshots show the new editor not focused at that point and focused later, still open after Escape. The next fixture revision requires input focus after every reopen before global keyboard injection. Cancellation, boundary-focus and value assertions are retained and strengthened; runtime and timeouts are unchanged. The failed second-run trace/ZIP is preserved separately and its CI bundle step was skipped.
+
+## DOM-access contract follow-up (2026-11-12, Windows)
+
+Added `browser-tests/dom-access-contract.spec.js` to the portable compatibility
+suite. Its export-inventory guard covers all 23 concrete `taet-ui/inputs` exports;
+Button and CheckButton are checked as well. The 33 scenarios exercise root and
+primary target lookup before mount, through disable/hide/refresh/label changes,
+and after destroy; owner-local name/id collisions; root HTML-id separation;
+nested-owner focus isolation; SelectInput/DropDownList/MultiSelectDropDown portals
+with duplicate model names; the existing basic-form recipe; and DOM value versus
+model updates. `docs/CONTROL_TYPES.md` now documents this existing, limited escape
+hatch. No new public API or runtime change was needed for this follow-up.
+
+First exploratory Chromium run: 29/31 passed. Two expectations were wrong:
+ProgressBar's focus getter falls back to its root rather than its internal ARIA
+progressbar; StepProgressBar's default target was not focusable. The final matrix
+checks the ProgressBar root and explicitly configures the interactive step list
+with `tabIndex: 0`. No production code was changed to satisfy those expectations.
+
+Final command (TAET_UI_PORT=5192):
+`node scripts/run-browser.js --config playwright.compat.config.js dom-access-contract.spec.js --workers 3 --output test-results/dom-contract-final`
+passed **99/99**: 33 scenarios each in Chromium, Firefox and WebKit. Windows WebKit
+remained capped at one worker. This is browser-contract coverage, not NVDA,
+VoiceOver, native macOS/WebView certification, or a full-suite release gate.
+
+Accessibility regression command (TAET_UI_PORT=5193):
+`node scripts/run-browser.js --config playwright.compat.config.js text-temporal-accessible-names.spec.js choice-accessible-names.spec.js special-accessible-names.spec.js --workers 3 --output test-results/dom-contract-accessibility`
+passed **189/189** (63 per engine). The 99 DOM cases and these 189 naming cases
+passed on the same local patch; neither number represents the full repository
+browser suite. Log: `test-results/dom-contract-accessibility.log` (local only).
+
+`npm test` also passed on this patch: syntax, API inventory, package/provenance
+boundaries, unit tests and installed TypeScript/JSDoc consumers (NodeNext and
+Bundler). Log: `test-results/dom-contract-npm-test.log` (local only). No full
+`test:all`, bundle build gate, native screen-reader session or publication was
+performed as part of this DOM-contract-only follow-up.
+
+### ColorPicker achromatic hue regression (2026-11-12)
+
+A local pointer reproduction failed for all four initial states (empty, black,
+white and gray): moving Hue immediately converted HSV through RGB and back,
+which discarded the hue of achromatic colors and reset the handle to zero.
+ColorPicker now preserves editing coordinates while they still represent the
+accepted RGB model, and reconciles actual replacements/vetoes. Reopening the
+popup uses the same synchronization. This also preserves black saturation,
+RGB-rounding precision and the 360-degree red endpoint. Public RGB/HEX values
+and event policy are unchanged; this is not an exact hidden-HSV rollback promise.
+
+Added eight realistic pointer/keyboard scenarios in
+`browser-tests/color-picker-hue.spec.js`, included in the compatibility gate.
+The four original pointer scenarios failed before the fix. Afterward,
+`node scripts/run-browser.js --config playwright.compat.config.js color-picker-hue.spec.js channel-color-picker.spec.js --workers=6 --output test-results/color-hue-compat`
+passed **42/42** (14 per engine: Chromium, Firefox, WebKit; Windows WebKit uses
+one worker), including existing RGB/CMYK draft, cancellation and teardown cases.
+The same 42-case result was repeated. Log: `color-hue-compat.log` (ignored/local).
+Independent code review found no blocking issue. Existing accessibility edits
+were preserved. No publication or full-suite release certification is implied.
+
+Adjacent Chromium run (`specialized-input-lifecycle.spec.js`,
+`special-accessible-names.spec.js`, `dom-access-contract.spec.js`) passed
+**61/61**, including ColorPicker deferred focus/destruction, eyedropper teardown,
+semantic popup names and root/primary-target lifecycle. Log:
+`test-results/color-hue-neighbors.log` (local only).
+
+`npm test` subsequently passed on this patch: syntax (592 files), API and
+package/provenance checks, **1348/1348 unit tests**, and installed TypeScript/
+JSDoc consumers under NodeNext and Bundler. Log:
+`test-results/color-hue-unit.log` (local only). Full `test:all` and bundle release
+gates were not rerun for this isolated local fix.
+
+## 2026-11-12 compact temporal picker layout (local, unpublished)
+
+Removed the decorative leading square in DateInput, TimeInput and DateTimeInput.
+The existing trailing picker button now carries calendar/clock instead of a
+chevron. Input DOM identity, labels, accessible button names and event handlers
+are unchanged; TimeInput retains both step buttons. Historical `leadingIconType`
+is retained in the API and documented as the trailing glyph identifier.
+
+Checks on Windows/SANDRA, all three Playwright engines (Chromium, Firefox, WebKit):
+- New `temporal-picker-layout.spec.js`: **27/27 passed**. Actual Form and 22px-row
+  Grid/TreeGrid; Date 128px and Time/DateTime 156px column/control widths; correct
+  glyph, no leading square, bounded button geometry, no extra button, native
+  Tab/Enter, click, Alt+Down, Escape/focus return, readonly/disabled and unchanged
+  owner values. Final rerun includes exact remaining chrome width assertions.
+- Existing temporal editing, editing-owners, lifecycle, partial-time-display,
+  text/temporal accessible-names and Grid editor matrix/demo/presentation:
+  **669/669 passed**. Port 5227, four workers, Windows WebKit capped at one.
+- Headless Chromium visual inspection of the light-blue compact Form confirms
+  full displayed values fit. Measured input/group widths: Date 104/128px,
+  Time 84/156px, DateTime 132/156px. Remaining chrome: 24/72/24px, a 24px saving
+  in every field at the default control-height token. Grid demo minimum widths
+  are unchanged; no claim of a new universal minimum width.
+
+Dedicated run: `node scripts/run-browser.js --config playwright.compat.config.js
+ temporal-picker-layout.spec.js --workers=3 --output=test-results/temporal-layout`
+(with TAET_UI_PORT=5228). Regression run selected eight files by their names in
+`playwright.compat.config.js`. Evidence stays under ignored `test-results/`.
+No native screen-reader run, native macOS host certification or publication is
+implied by these browser checks. Other local uncommitted changes were preserved.
+
+## Optional editor captions (2026-11-12)
+
+- Empty/omitted captions reserve no label track or gap. Dynamic clear/restore
+  preserves per-field top/left placement and the Form default.
+- Added independent ariaLabel/ariaLabelledBy options and setters; empty captions
+  do not retain misleading empty label references. Text/temporal native caption
+  click-to-focus is preserved through explicit label-for association.
+- empty-label-layout.spec.js: 18/18 across Chromium, Firefox, WebKit, exercising
+  22 editor variants in standalone and mixed Form placement, dynamic changes,
+  required state and icon-only exceptions.
+- unlabeled-accessible-names.spec.js: 87/87 (29 scenarios x 3 engines). Existing
+  text/temporal, choice and special accessible-name suites: 189/189.
+- Local-only comparison sample now uses No labels (not DHTMLX hiddenLabel);
+  independently named captionless fields retain values and restore captions.
+  Light-blue screenshot visually checked: test-results/no-labels-super-test.png.
+- Early fixture failures (icon-only caption visibility / exports) were corrected
+  and rerun; broader final build/package/regression gates are tracked separately.
+
+## 2026-11-12 Grid footer Node contract follow-up
+The local DHTMLX-inspired custom-footer case exposed a declared/runtime mismatch: GridSummaryValue permits Node, but footer paint stringified it. Grid now appends trusted application Nodes while retaining textContent for scalar/string values (no HTML-string execution). Paint-currentness checks after footer removal, content attachment and connected-cell insertion prevent custom-element callbacks from continuing a stale/destroyed render.
+
+New `browser-tests/grid-footer-content.spec.js` is included in the compat suite: reused Node identity/listeners and teardown; fresh DocumentFragments/text/scalars and literal HTML; connect/disconnect callbacks replacing data or destroying Grid. Focused final run:18/18 in Chromium/Firefox/WebKit,44.5s. Targeted existing Grid units17/17; package boundaries and48 candidate hashes passed. Only Grid.js successor hash updated; imported provenance unchanged. These focused results do not replace the post-fix full gate.
+
+## 2026-11-12 rc.8 final source gate
+
+Before release metadata edits, the complete tracked/untracked source snapshot matched SHA-256 f3d234ed7a61d6a01170b7fd1d94ac72e1ff057eb71ebd3a74bedf623cc9f345 byte-for-byte. Final gate completed at 15:13:12 UTC: npm test (601 syntax files, 1353 unit tests, API/package/provenance and installed TS/JS consumers), build, bundle checks, 42 bundle browser checks, and full compatibility: 3815 passed, 16 explicitly skipped, zero failures. All five stage exits were zero; snapshot unchanged before/after. Windows/SANDRA with Chromium, Firefox and WebKit; this is not native screen-reader or macOS host certification. Ignored local evidence: footer-final-status.json and matching logs/manifests under test-results. Release metadata/package checks and remote CI are verified separately.

@@ -113,8 +113,7 @@ export class ColorPicker extends EditorControl {
       return false;
     }
     this._ensurePopup();
-    this._hsv = rgbToHsv(hexToRgb(this._value || "#000000"));
-    this._syncPopup();
+    this._syncInput(this._value);
     const opened = this._popup.open(this._button, options);
     if (opened && !this._acceptKeyBound) {
       this._acceptKeyBound = true;
@@ -207,8 +206,13 @@ export class ColorPicker extends EditorControl {
     if (this._valueText) {
       this._valueText.textContent = value || localize(this.options, "No color");
     }
-    if (value) {
-      this._hsv = rgbToHsv(hexToRgb(value));
+    // RGB cannot represent the selected hue of an achromatic color (or the
+    // saturation of black), and byte rounding also loses HSV precision. Keep
+    // the current editing coordinates while they still represent the model;
+    // reconcile only actual color replacements, including vetoed changes.
+    const colorValue = value || "#000000";
+    if (rgbToHex(hsvToRgb(this._hsv)) !== colorValue) {
+      this._hsv = rgbToHsv(hexToRgb(colorValue));
     }
     this._syncPopup();
   }
@@ -223,6 +227,10 @@ export class ColorPicker extends EditorControl {
     } else {
       this._button.removeAttribute("aria-readonly");
     }
+  }
+
+  _syncAccessibleLabel() {
+    this._applyAccessibleName(this._button, { label: this.label || localize(this.options, "Choose color") });
   }
 
   _renderLabel() {

@@ -57,7 +57,7 @@ export class CheckButton extends EditorControl {
 
     const label = document.createElement("span");
     label.className = "dui-check-button__label";
-    label.id = `${this.id}-label`;
+    label.id = `${this._accessibilityId}-label`;
     label.textContent = this.label;
 
     const content = document.createElement("span");
@@ -77,7 +77,7 @@ export class CheckButton extends EditorControl {
 
     const text = document.createElement("span");
     text.className = "dui-check-button__text";
-    text.id = `${this.id}-text`;
+    text.id = `${this._accessibilityId}-text`;
 
     const measure = document.createElement("span");
     measure.className = "dui-check-button__measure";
@@ -90,7 +90,7 @@ export class CheckButton extends EditorControl {
 
     visible.append(icon, text);
     button.append(visible, measure);
-    button.setAttribute("aria-labelledby", `${label.id} ${text.id}`);
+
     content.append(button);
     root.append(label, content, message);
 
@@ -242,6 +242,14 @@ export class CheckButton extends EditorControl {
     }
   }
 
+  _syncAccessibleLabel() {
+    if (!this._button) return;
+    this._applyAccessibleName(this._button, { labelledBy: [
+      String(this.label).trim() && this._labelElement?.id,
+      this._textElement?.textContent?.trim() && this._textElement.id
+    ].filter(Boolean).join(" ") });
+  }
+
   _renderLabel() {
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
@@ -259,6 +267,7 @@ export class CheckButton extends EditorControl {
         : !this._value && this.uncheckedText != null
           ? this.uncheckedText
           : this.text;
+    this._syncAccessibleLabel();
   }
 
   _renderIcon() {

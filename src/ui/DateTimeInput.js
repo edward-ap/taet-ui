@@ -21,7 +21,6 @@ class DateTimeInputBase extends EditorControl {
     this.step = Number(options.step ?? this.defaultStep);
     this._labelElement = null;
     this._group = null;
-    this._iconElement = null;
     this._pickerButton = null;
     this.overlayManager = options.overlayManager ?? overlayManager;
 
@@ -55,25 +54,18 @@ class DateTimeInputBase extends EditorControl {
   }
 
   createElement() {
-    const root = document.createElement("label");
+    const root = document.createElement("div");
     root.className = ["dui-control", "dui-text-field", "dui-date-time-input", this.css]
       .filter(Boolean)
       .join(" ");
     root.dataset.duiControlId = this.id;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-text-field__label";
     label.textContent = this.label;
 
     const group = document.createElement("span");
     group.className = "dui-date-time-input__group";
-
-    const icon = document.createElement("span");
-    icon.className = ["dui-date-time-input__icon", this.leadingIconType && `dui-date-time-input__icon--${this.leadingIconType}`]
-      .filter(Boolean)
-      .join(" ");
-    icon.hidden = this.leadingIconType === "";
-    renderIcon(icon, this.leadingIconType === "time" ? "clock" : this.leadingIconType);
 
     const input = document.createElement("input");
     input.className = "dui-text-field__input dui-date-time-input__input";
@@ -96,9 +88,9 @@ class DateTimeInputBase extends EditorControl {
     pickerButton.setAttribute("aria-haspopup", "dialog");
     pickerButton.setAttribute("aria-expanded", "false");
     pickerButton.disabled = this.disabled;
-    renderIcon(pickerButton, "chevron-down");
+    renderIcon(pickerButton, this.leadingIconType === "time" ? "clock" : this.leadingIconType);
 
-    group.append(icon, input, pickerButton);
+    group.append(input, pickerButton);
     this._appendExtraButtons(group);
 
     const message = document.createElement("div");
@@ -109,7 +101,6 @@ class DateTimeInputBase extends EditorControl {
     root.append(label, group, message);
     this._labelElement = label;
     this._group = group;
-    this._iconElement = icon;
     this._input = input;
     this._pickerButton = pickerButton;
     this._message = message;
@@ -164,7 +155,6 @@ class DateTimeInputBase extends EditorControl {
         this._pendingValue = null;
         this._labelElement = null;
         this._group = null;
-        this._iconElement = null;
         this._pickerButton = null;
       }
     }
@@ -319,7 +309,23 @@ class DateTimeInputBase extends EditorControl {
     }
   }
 
+  _applyEditorLayout() {
+    super._applyEditorLayout();
+    this._syncAccessibleLabel();
+  }
+
+  _syncAccessibleLabel() {
+    if (!this._labelElement || !this._input) return;
+    this._labelElement.id = `${this._accessibilityId}-label`;
+    this._input.id ||= `${this._accessibilityId}-input`;
+    this._labelElement.htmlFor = this._input.id;
+    this._applyAccessibleName(this._input, {
+      labelledBy: String(this.label).trim() ? this._labelElement.id : ""
+    });
+  }
+
   _renderLabel() {
+    this._syncAccessibleLabel();
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
     }

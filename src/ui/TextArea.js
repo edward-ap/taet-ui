@@ -35,7 +35,7 @@ export class TextArea extends TextField {
   }
 
   createElement() {
-    const root = document.createElement("label");
+    const root = document.createElement("div");
     root.className = [
       "dui-control",
       "dui-text-field",
@@ -48,7 +48,7 @@ export class TextArea extends TextField {
       .join(" ");
     root.dataset.duiControlId = this.id;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-text-field__label dui-text-area__label";
     label.textContent = this.label;
 

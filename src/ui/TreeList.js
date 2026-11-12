@@ -351,6 +351,8 @@ export class TreeList extends List {
   }
 
   _selectItemFromUser(item, nativeEvent) {
+    if (this.destroyed || this.disabled) return false;
+
     const id = this.data.idOf(item);
 
     if (nativeEvent.target.closest?.("[data-dui-tree-toggle]")) {

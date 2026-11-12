@@ -2893,6 +2893,7 @@ export class Grid extends GridCore {
     this._footer.hidden = !hasFooter;
     root?.classList.toggle("dui-grid--has-footer", hasFooter);
     this._footer.replaceChildren();
+    this._windowRenderer.assertCurrent();
 
     if (!hasFooter) {
       this._syncGridTemplateRows();
@@ -2914,13 +2915,16 @@ export class Grid extends GridCore {
       const value = this.getColumnSummaryValue(column.id);
       this._windowRenderer.assertCurrent();
 
-      cell.textContent = value == null ? "" : String(value);
+      if (value instanceof Node) cell.appendChild(value);
+      else cell.textContent = value == null ? "" : String(value);
+      this._windowRenderer.assertCurrent();
 
       if (column.align) {
         cell.classList.add(`dui-grid__cell--${column.align}`);
       }
 
       this._footer.appendChild(cell);
+      this._windowRenderer.assertCurrent();
     }
     this._syncGridTemplateRows();
   }

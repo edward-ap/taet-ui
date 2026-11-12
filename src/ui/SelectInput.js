@@ -116,7 +116,7 @@ export class SelectInput extends TextField {
       .join(" ");
     root.dataset.duiControlId = this.id;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-text-field__label";
     label.textContent = this.label;
 
@@ -191,8 +191,8 @@ export class SelectInput extends TextField {
     this._listElement = list;
     this._input = display;
     this._message = message;
-    display.setAttribute("aria-label", this.label || this.name || this.id);
-    list.id = `${this.id}-options`;
+    this._syncPopupAccessibleNames();
+    list.id = `${this._accessibilityId}-options`;
     display.setAttribute("aria-controls", list.id);
 
     this._syncStateToInput();
@@ -249,13 +249,13 @@ export class SelectInput extends TextField {
   }
 
   _createNativeElement() {
-    const root = document.createElement("label");
+    const root = document.createElement("div");
     root.className = ["dui-control", "dui-text-field", "dui-select-input", this.css]
       .filter(Boolean)
       .join(" ");
     root.dataset.duiControlId = this.id;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-text-field__label";
     label.textContent = this.label;
 
@@ -568,8 +568,22 @@ export class SelectInput extends TextField {
     }
   }
 
+  _syncPopupAccessibleNames() {
+    const caption = this.ariaLabel || this.label || this.name || this.id;
+    const labelledBy = String(this.label).trim() && this._labelElement ? this._labelElement.id : "";
+    this._applyAccessibleName(this._displayElement, { labelledBy, label: caption });
+    this._applyAccessibleName(this._listElement, { labelledBy, label: caption });
+    this._searchElement?.setAttribute("aria-label", `${this.searchPlaceholder || "Search"}: ${caption}`);
+  }
+
+  _syncAccessibleLabel() {
+    super._syncAccessibleLabel();
+    this._syncPopupAccessibleNames();
+  }
+
   _renderLabel() {
-    this._displayElement?.setAttribute("aria-label", this.label || this.name || this.id);
+    super._renderLabel();
+    this._syncPopupAccessibleNames();
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
     }

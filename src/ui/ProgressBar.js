@@ -172,7 +172,21 @@ export class ProgressBar extends EditorControl {
     }
   }
 
+  _applyEditorLayout() {
+    super._applyEditorLayout();
+    this._syncAccessibleLabel();
+  }
+
+  _syncAccessibleLabel() {
+    if (!this._labelElement || !this._input) return;
+    this._labelElement.id = `${this._accessibilityId}-label`;
+    this._applyAccessibleName(this._input, {
+      labelledBy: String(this.label).trim() ? this._labelElement.id : ""
+    });
+  }
+
   _renderLabel() {
+    this._syncAccessibleLabel();
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
     }

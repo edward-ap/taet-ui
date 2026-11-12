@@ -149,11 +149,13 @@ export class Menu extends BaseControl {
   }
 
   _render() {
+    // ContextMenu.openAt can create overlays without mounting a host element.
+    // Command/item changes must invalidate those popups too.
+    this._clearPopups();
     if (!this.element) {
       return;
     }
 
-    this._clearPopups();
     this._renderInto(this.element);
   }
 
@@ -618,17 +620,19 @@ export class Menu extends BaseControl {
   }
 
   _getItemState(item) {
+    const visible = item.hidden !== true && item.visible !== false;
     if (item.type === "separator") {
       return {
         label: "",
-        visible: true,
+        visible,
         enabled: false,
         checked: false
       };
     }
 
     if (item.command && this.commands) {
-      return this.commands.state(item.command);
+      const state = this.commands.state(item.command);
+      return { ...state, visible: visible && state.visible !== false };
     }
 
     return {
@@ -636,7 +640,7 @@ export class Menu extends BaseControl {
       label: item.text ?? item.label ?? item.id,
       shortcut: item.shortcut,
       enabled: item.disabled !== true && item.enabled !== false,
-      visible: item.visible !== false,
+      visible,
       checked: item.checked === true,
       icon: item.icon ?? null
     };

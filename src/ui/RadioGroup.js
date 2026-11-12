@@ -278,6 +278,10 @@ export class RadioGroup extends EditorControl {
     }
   }
 
+  _syncAccessibleLabel() {
+    this._applyAccessibleName(this._contentElement, { label: this.label });
+  }
+
   _renderLabel() {
     if (this._labelElement) {
       this._labelElement.textContent = this.label;

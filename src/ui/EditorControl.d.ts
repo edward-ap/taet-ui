@@ -41,7 +41,12 @@ export interface EditorControlEvents<V = unknown, S = EditorControl<V>> {
 }
 export interface EditorControlOptions<V = unknown, C extends object = object, S = EditorControl<V, C>>
   extends BaseControlOptions<S> {
+  /** Empty or omitted: no visible caption or reserved caption space. */
   label?: string;
+  /** Independent accessible name; does not create a visible caption. */
+  ariaLabel?: string;
+  /** Space-separated IDs naming this editor. Takes precedence over ariaLabel. */
+  ariaLabelledBy?: string;
   labelPosition?: 'left' | 'top' | null;
   labelWidth?: ControlDimension;
   indent?: ControlDimension;
@@ -72,6 +77,8 @@ export declare class EditorControl<V = unknown, C extends object = object,
   readonly value: Readonly<EditorValueApi<V>>;
   readonly validation: Readonly<EditorValidationApi<this>>;
   label: string;
+  ariaLabel: string;
+  ariaLabelledBy: string;
   labelPosition: 'left' | 'top' | null;
   labelWidth: ControlDimension;
   indent: ControlDimension;
@@ -85,6 +92,8 @@ export declare class EditorControl<V = unknown, C extends object = object,
   getName(): string;
   getLabel(): string;
   setLabel(label: string | null | undefined, options?: MutationOptions): this;
+  setAriaLabel(label: string | null | undefined): this;
+  setAriaLabelledBy(ids: string | null | undefined): this;
   setLabelPosition(position: 'left' | 'top' | null): this;
   setLabelWidth(width: ControlDimension): this;
   setIndent(indent: ControlDimension): this;
@@ -111,6 +120,7 @@ export declare class EditorControl<V = unknown, C extends object = object,
   protected _syncInput(value: unknown): void;
   protected _syncStateToInput(): void;
   protected _renderLabel(): void;
+  protected _applyAccessibleName(target: HTMLElement | null, fallback?: { labelledBy?: string; label?: string }): void;
 }
 /** Helper export from the implementation module; not an inputs entry-point value export. */
 export declare function normalizeValidationResult<S extends { name: string | null; id: string }>(

@@ -155,7 +155,11 @@ test("copyable button snippets match live factories and release owned controls a
           const registry = control.commands;
           const clone = control.element.cloneNode(true);
           for (const element of [clone, ...clone.querySelectorAll("[data-dui-control-id]")]) element.removeAttribute("data-dui-control-id");
-          actual.push(clone.outerHTML);
+          const ids = new Map();
+          actual.push(clone.outerHTML.replace(/dui-editor-a11y-\d+/g, id => {
+            if (!ids.has(id)) ids.set(id, `dui-editor-a11y-${ids.size + 1}`);
+            return ids.get(id);
+          }));
           control.destroy();
           if (host.childElementCount || children.some(child => !child.destroyed) || (registry && !registry.destroyed)) {
             throw new Error(`Leaked example: ${doc.id}/${example.title}`);

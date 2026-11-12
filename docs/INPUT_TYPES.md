@@ -35,6 +35,60 @@ if (!result.ok) console.log(result.errors[0]?.message);
 name.destroy();
 ```
 
+## Optional captions and placement
+
+A label is an editor property, not an owning container. An omitted or empty
+`label` creates no visible caption and reserves no label column, row or gap.
+`setLabel('')` removes that space immediately; restoring a caption restores its
+previous placement. This applies to standalone editors and editors inside Form.
+
+`labelPosition: 'top' | 'left'` belongs to each editor. A non-null per-field value
+overrides the Form default; `null` inherits it (and standalone defaults to left).
+Changing label text never changes the field value or its model `name`.
+Checkbox/switch option `text` and radio item text are independent of the caption.
+
+`new TextInput({name:'amount', ariaLabel:'Amount', value:'12'})` creates an
+accessible input with no visible caption. An external row/column heading can
+instead be referenced through `ariaLabelledBy`. Do not use placeholders as the
+only explanation of ambiguous fields. This is an absent-caption contract, not a
+DHTMLX `hiddenLabel` mode that retains a visually hidden caption.
+
+## Accessible field names
+
+Give fields a meaningful `label`; `name` is primarily the model key, not a
+universal substitute for a visible/accessibility caption. For text, numeric,
+masked/password, date/time, file, slider and progress controls, the visible
+caption names the semantic editor. Checkbox/switch/check-button captions also
+include their visible option text; radio options retain their own item names.
+Auxiliary picker/reveal/stepper buttons are named independently. Values, scale
+labels and validation errors must not be appended to a field's name.
+
+`setLabel()` updates the accessible name as well as the visible caption, including
+before mount, after refresh and after clearing/restoring the caption. Each field
+owns unique label/description references, even when model names repeat in separate
+Forms. Custom SelectInput, DropDownList and MultiSelectDropDown popup controls
+also own independent `aria-controls` targets, even when explicit control IDs repeat.
+Validation remains `aria-describedby` plus the visible error tooltip,
+not a native `title` used as a fallback name.
+
+An empty text/date/range caption does not borrow names from adjacent buttons.
+For fields without a visible caption use `ariaLabel` or `ariaLabelledBy` (a
+space-separated list of existing element IDs), with `setAriaLabel()` /
+`setAriaLabelledBy()` for dynamic updates. Explicit external references take
+precedence over an explicit accessible name; either overrides the caption name.
+These options do not create a visible caption or reserve caption space. An empty
+caption does not leave an empty owned `aria-labelledby` reference.
+Placeholders are hints, not a replacement for a meaningful field label. Existing
+control-specific fallbacks remain: custom selection controls use their model
+name/id, FilePicker can use its placeholder, ColorPicker uses "Choose color",
+and CircularSlider uses its configured name or "Value". List/OptionList and
+StepProgressBar retain their separate collection/step naming contracts.
+
+Regression coverage is in `text-temporal-accessible-names.spec.js`,
+`choice-accessible-names.spec.js` and `special-accessible-names.spec.js`.
+These assert computed names/descriptions in the browser, not a certification of
+all screen-reader/browser combinations or native desktop accessibility.
+
 ## Values, dirty state and events
 
 TextInput uses string values. EditorControl is the generic value base and does not
@@ -1049,7 +1103,7 @@ an absolute angle; at the bottom endpoint the current half of the range disambig
 No timer, continuous animation or rendering loop runs while idle. Include taet-ui.css.
 Linear presentation settings inherited from TrackBar (orientation, scale, thumb/value position)
 are not part of CircularSlider's supported options; its ring and center stay fixed.
-Live example: Input Controls → TrackBar → Circular slider.
+Live example: Input Controls â†’ TrackBar â†’ Circular slider.
 
 ### State recovery and accessible captions
 
@@ -1065,3 +1119,17 @@ removes its error description. This also applies to TextArea and NumberInput.
 Caption/error DOM IDs are instance-specific; field names may repeat across separate
 forms without cross-linking their accessibility descriptions. These IDs are internal,
 so integrations should follow aria-labelledby/aria-describedby rather than derive them.
+
+For owner-local lookup (`name`/`id`), root access (`.element`), primary targets
+(`getFocusElement()`), and overlay limitations, see
+[Finding a control and reaching its DOM](CONTROL_TYPES.md#finding-a-control-and-reaching-its-dom).
+A field's model key and its accessible name are separate contracts.
+
+### Compact temporal picker buttons
+
+DateInput and DateTimeInput show a calendar on their existing trailing picker
+button; TimeInput shows a clock. There is no decorative leading square. This
+returns one control-height of width (24px with default tokens) to the text input.
+The native input, caption accessibility, button names, Alt+Down, Escape, disabled
+and readonly behavior are unchanged. TimeInput retains its two step buttons.
+`leadingIconType` keeps its historical API name but identifies the trailing glyph.

@@ -54,7 +54,7 @@ export class TrackBar extends EditorControl {
   }
 
   createElement() {
-    const root = document.createElement("label");
+    const root = document.createElement("div");
     root.className = [
       "dui-control",
       "dui-trackbar",
@@ -70,7 +70,7 @@ export class TrackBar extends EditorControl {
     root.dataset.valuePosition = this.valuePosition;
     root.dataset.thumbShape = this.thumbShape;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-trackbar__label";
     label.textContent = this.label;
 
@@ -89,6 +89,8 @@ export class TrackBar extends EditorControl {
     const input = document.createElement("input");
     input.className = "dui-trackbar__input";
     input.type = "range";
+    input.id = `${this._accessibilityId}-input`;
+    label.htmlFor = input.id;
     input.setAttribute("aria-orientation", this.orientation);
     input.dataset.duiFocusTarget = "true";
 
@@ -268,7 +270,23 @@ export class TrackBar extends EditorControl {
     }
   }
 
+  _applyEditorLayout() {
+    super._applyEditorLayout();
+    this._syncAccessibleLabel();
+  }
+
+  _syncAccessibleLabel() {
+    if (!this._labelElement || !this._input) return;
+    this._input.id = `${this._accessibilityId}-input`;
+    this._labelElement.htmlFor = this._input.id;
+    if (this.ariaLabel || this.ariaLabelledBy || this._managedAccessibleName) {
+      this._applyAccessibleName(this._input);
+      this._managedAccessibleName = !!(this.ariaLabel || this.ariaLabelledBy);
+    }
+  }
+
   _renderLabel() {
+    this._syncAccessibleLabel();
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
     }

@@ -524,31 +524,8 @@
 .dui-date-time-input__group {
   display: grid;
   position: relative;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   min-width: 0;
-}
-
-.dui-date-time-input__icon {
-  display: grid;
-  place-items: center;
-  position: relative;
-  width: var(--dui-control-height);
-  min-width: var(--dui-control-height);
-  height: var(--dui-control-height);
-  padding: 0;
-  border: var(--dui-border-width) solid var(--dui-color-border-strong);
-  border-right-width: 0;
-  background: var(--dui-color-surface-strong);
-  color: var(--dui-color-muted);
-}
-
-.dui-date-time-input__icon[hidden] {
-  display: none;
-}
-
-.dui-date-time-input__icon > .dui-icon {
-  width: var(--dui-icon-size-md);
-  height: var(--dui-icon-size-md);
 }
 
 .dui-date-time-input__input {
@@ -572,8 +549,8 @@
 }
 
 .dui-date-time-input__button > .dui-icon {
-  width: var(--dui-icon-size-sm);
-  height: var(--dui-icon-size-sm);
+  width: var(--dui-icon-size-md);
+  height: var(--dui-icon-size-md);
 }
 
 .dui-date-time-input__step > .dui-icon {
@@ -1952,4 +1929,18 @@
   border-color: var(--dui-color-border-strong);
   background: var(--dui-button-bg-disabled);
   color: var(--dui-color-muted);
+}
+
+/* A caption belongs to its editor. Empty captions reserve neither a grid track
+   nor a gap, independently of the owning Form's default label position. */
+.dui-editor.dui-editor--no-label[data-dui-control-id] {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0;
+  column-gap: 0;
+}
+.dui-editor.dui-editor--no-label > [data-dui-editor-label] {
+  display: none;
+}
+.dui-editor.dui-editor--no-label > .dui-text-field__message {
+  left: 0;
 }

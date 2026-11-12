@@ -63,14 +63,21 @@ export class CheckLetter extends CheckBox {
     return this;
   }
 
+  _syncAccessibleLabel() {
+    this._applyAccessibleName(this._input, {
+      label: [this.label, this.letter, this.text].filter(value => String(value ?? "").trim()).join(". ")
+    });
+  }
+
+  _renderLabel() {
+    super._renderLabel();
+    this._syncAccessibleLabel();
+  }
+
   _renderLetter() {
     if (this._letterElement) {
       this._letterElement.textContent = this.letter;
     }
-    if (this._input) {
-      const accessibleText = [this.letter, this.text].filter(Boolean).join(". ");
-      if (accessibleText) this._input.setAttribute("aria-label", accessibleText);
-      else this._input.removeAttribute("aria-label");
-    }
+    this._syncAccessibleLabel();
   }
 }

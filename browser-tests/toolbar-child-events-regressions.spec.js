@@ -1,0 +1,18 @@
+import {test,expect} from '@playwright/test';
+test.beforeEach(async({page})=>page.goto('/browser-tests/recipes.html'));
+for(const queued of [false,true])test(`Toolbar child events/veto with ${queued?'queued':'mounted'} children`,async({page})=>{
+ const result=await page.evaluate(async queued=>{const {Toolbar,Button}=await import('/src/ui/all.js');const t=new Toolbar(),a=new Button({name:'a',text:'Allowed'}),b=new Button({name:'b',text:'Denied'});const seen=[];if(!queued)t.mount('#root');t.events.on('beforeChildAdd',e=>{seen.push('before:'+e.controlName);if(e.control===b)e.cancel=true;});t.events.on('childAdd',e=>seen.push('after:'+e.controlName));t.add(a,a,b);if(queued)t.mount('#root');const out={seen,children:t.getItems().map(c=>c.name),allowedMounted:a.mounted,deniedMounted:b.mounted,deniedParent:b.parent,buttons:t.element.querySelectorAll('button').length};t.destroy();b.destroy();return out;},queued);
+ expect(result).toEqual({seen:['before:a','after:a','before:b'],children:['a'],allowedMounted:true,deniedMounted:false,deniedParent:null,buttons:1});
+});
+test('Toolbar mounted add rolls back failed mount and stops after childAdd destroys owner',async({page})=>{
+ const result=await page.evaluate(async()=>{const {Toolbar,Button,BaseControl}=await import('/src/ui/all.js');const t=new Toolbar().mount('#root');class Broken extends BaseControl{createElement(){throw Error('mount failure');}}const bad=new Broken({name:'bad'});let error='';try{t.add(bad);}catch(e){error=e.message;}const rollback={count:t.getItems().length,parent:bad.parent,registered:t.hasItem('bad')};const a=new Button(),b=new Button();t.events.on('childAdd',()=>t.destroy());t.add(a,b);const out={error,rollback,firstDestroyed:a.destroyed,laterParent:b.parent,laterDestroyed:b.destroyed};bad.destroy();b.destroy();return out;});
+ expect(result).toEqual({error:'mount failure',rollback:{count:0,parent:null,registered:false},firstDestroyed:true,laterParent:null,laterDestroyed:false});
+});
+test('Toolbar same-control reentry emits one addition and honors callback ownership changes',async({page})=>{
+ const result=await page.evaluate(async()=>{const {Toolbar,Button,Panel}=await import('/src/ui/all.js');const t=new Toolbar().mount('#root'),a=new Button({name:'a'});let count=0;t.events.on('beforeChildAdd',e=>{count++;t.add(e.control);});t.add(a);const before={count,children:t.getItems().length,dom:t.element.querySelectorAll('button').length};t.destroy();const target=new Toolbar().mount('#root'),foreign=new Panel().mount('#root'),b=new Button();target.events.on('beforeChildAdd',()=>foreign.add(b));let error='';try{target.add(b);}catch(e){error=e.message;}const moved={foreign:b.parent===foreign,notOwned:target.getItems().length===0,alive:!b.destroyed,error};target.destroy();foreign.destroy();return {before,moved};});
+ expect(result.before).toEqual({count:1,children:1,dom:1});expect(result.moved.foreign).toBe(true);expect(result.moved.notOwned).toBe(true);expect(result.moved.alive).toBe(true);expect(result.moved.error).toContain('another parent');
+});
+
+test('Toolbar queued beforeChildAdd may mount its host without leaving child detached',async({page})=>{
+ const result=await page.evaluate(async()=>{const {Toolbar,Button}=await import('/src/ui/all.js');const t=new Toolbar(),b=new Button();let before=0,after=0;t.events.on('beforeChildAdd',()=>{before++;t.mount('#root');});t.events.on('childAdd',()=>after++);t.add(b);const out={before,after,mounted:b.mounted,owned:b.parent===t,attached:b.element?.parentElement===t.element};t.destroy();return out;});expect(result).toEqual({before:1,after:1,mounted:true,owned:true,attached:true});
+});

@@ -47,6 +47,7 @@ declare class DateTimeInputBase<C extends object> extends EditorControl<string, 
   readonly inputMode: string;
   readonly pickerText: string;
   readonly pickerTitle: string;
+  /** Historical name: identifies the glyph on the trailing picker button. */
   readonly leadingIconType: string;
   readonly defaultStep: number;
   protected _setValue(value: DateTimeWriteValue, options?: MutationOptions): boolean;

@@ -45,6 +45,7 @@ export class Switch extends EditorControl {
     const label = document.createElement("span");
     label.className = "dui-switch__label";
     label.textContent = this.label;
+    label.id = `${this._accessibilityId}-label`;
 
     const content = document.createElement("span");
     content.className = "dui-switch__content";
@@ -73,14 +74,17 @@ export class Switch extends EditorControl {
 
     const state = document.createElement("span");
     state.className = "dui-switch__state";
+    state.setAttribute("aria-hidden", "true");
 
     const text = document.createElement("span");
     text.className = "dui-switch__text";
     text.textContent = this.text;
+    text.id = `${this._accessibilityId}-text`;
 
     const message = document.createElement("div");
     message.className = "dui-text-field__message";
     message.setAttribute("role", "tooltip");
+    message.setAttribute("aria-hidden", "true");
     message.hidden = true;
 
     content.append(offIcon, input, visual, onIcon, state, text);
@@ -97,6 +101,7 @@ export class Switch extends EditorControl {
     this._syncInput(this._value);
     this._syncStateToInput();
     this._renderStateText();
+    this._syncAccessibleLabel();
 
     this.disposables.addEventListener(input, "change", () => {
       this._setValue(input.checked, {
@@ -210,6 +215,16 @@ export class Switch extends EditorControl {
     this._input.disabled = this.disabled || this.isReadOnly();
   }
 
+  _syncAccessibleLabel() {
+    if (!this._input || !this._labelElement || !this._textElement) return;
+    this._labelElement.id = `${this._accessibilityId}-label`;
+    this._textElement.id = `${this._accessibilityId}-text`;
+    this._applyAccessibleName(this._input, { labelledBy: [
+      String(this.label).trim() && this._labelElement.id,
+      String(this.text).trim() && this._textElement.id
+    ].filter(Boolean).join(" ") });
+  }
+
   _renderLabel() {
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
@@ -219,6 +234,7 @@ export class Switch extends EditorControl {
   _renderText() {
     if (this._textElement) {
       this._textElement.textContent = this.text;
+      this._syncAccessibleLabel();
     }
   }
 
@@ -227,8 +243,7 @@ export class Switch extends EditorControl {
       this._stateElement.textContent = this._value ? this.onText : this.offText;
     }
     if (this._input) {
-      const stateText = this._value ? this.onText : this.offText;
-      this._input.setAttribute("aria-label", [this.label, stateText].filter(Boolean).join(": "));
+      this._syncAccessibleLabel();
     }
   }
 

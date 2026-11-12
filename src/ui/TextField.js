@@ -64,7 +64,7 @@ export class TextField extends EditorControl {
   }
 
   createElement() {
-    const root = document.createElement("label");
+    const root = document.createElement("div");
     root.className = [
       "dui-control",
       "dui-text-field",
@@ -76,7 +76,7 @@ export class TextField extends EditorControl {
       .join(" ");
     root.dataset.duiControlId = this.id;
 
-    const label = document.createElement("span");
+    const label = document.createElement("label");
     label.className = "dui-text-field__label";
     label.textContent = this.label;
 
@@ -534,14 +534,12 @@ export class TextField extends EditorControl {
 
   _syncAccessibleLabel() {
     if (!this._labelElement || !this._input) return;
-    const labelId = `${this._accessibilityId}-label`;
-    if (this.label) {
-      this._labelElement.id = labelId;
-      this._input.setAttribute("aria-labelledby", labelId);
-    } else if (this._input.getAttribute("aria-labelledby") === labelId) {
-      this._input.removeAttribute("aria-labelledby");
-      this._labelElement.removeAttribute("id");
-    }
+    this._labelElement.id = `${this._accessibilityId}-label`;
+    this._input.id ||= `${this._accessibilityId}-input`;
+    this._labelElement.htmlFor = this._input.id;
+    this._applyAccessibleName(this._input, {
+      labelledBy: String(this.label).trim() ? this._labelElement.id : ""
+    });
   }
 
   _renderLabel() {

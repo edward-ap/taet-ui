@@ -49,6 +49,7 @@ export class CheckBox extends EditorControl {
     const message = document.createElement("div");
     message.className = "dui-text-field__message";
     message.setAttribute("role", "tooltip");
+    message.setAttribute("aria-hidden", "true");
     message.hidden = true;
 
     content.append(input, text);
@@ -58,6 +59,7 @@ export class CheckBox extends EditorControl {
     this._input = input;
     this._message = message;
     this._syncStateToInput();
+    this._syncAccessibleLabel();
 
     this.disposables.addEventListener(input, "change", () => {
       this._setValue(input.checked, {
@@ -121,6 +123,16 @@ export class CheckBox extends EditorControl {
     }
   }
 
+  _syncAccessibleLabel() {
+    if (!this._input || !this._labelElement || !this._textElement) return;
+    this._labelElement.id = `${this._accessibilityId}-label`;
+    this._textElement.id = `${this._accessibilityId}-text`;
+    this._applyAccessibleName(this._input, { labelledBy: [
+      String(this.label).trim() && this._labelElement.id,
+      String(this.text).trim() && this._textElement.id
+    ].filter(Boolean).join(" ") });
+  }
+
   _renderLabel() {
     if (this._labelElement) {
       this._labelElement.textContent = this.label;
@@ -130,6 +142,7 @@ export class CheckBox extends EditorControl {
   _renderText() {
     if (this._textElement) {
       this._textElement.textContent = this.text;
+      this._syncAccessibleLabel();
     }
   }
 }

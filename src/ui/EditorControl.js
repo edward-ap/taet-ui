@@ -10,6 +10,8 @@ export class EditorControl extends BaseControl {
     this._accessibilityId = `dui-editor-a11y-${nextAccessibilityId++}`;
 
     this.label = options.label ?? "";
+    this.ariaLabel = options.ariaLabel ?? "";
+    this.ariaLabelledBy = options.ariaLabelledBy ?? "";
     this.labelPosition = normalizeLabelPosition(options.labelPosition, true);
     this.labelWidth = options.labelWidth ?? null;
     this.indent = options.indent ?? options.leftIndent ?? null;
@@ -66,6 +68,7 @@ export class EditorControl extends BaseControl {
     this._syncInput(this._value);
     this._syncStateToInput();
     this._renderLabel();
+    this._applyEditorLayout();
     this._renderValidationMessage();
   }
 
@@ -110,6 +113,7 @@ export class EditorControl extends BaseControl {
     const oldValue = this.label;
     this.label = label ?? "";
     this._renderLabel();
+    this._applyEditorLayout();
 
     if (!options.silent && oldValue !== this.label) {
       this.events.emit("labelChange", {
@@ -122,6 +126,36 @@ export class EditorControl extends BaseControl {
     }
 
     return this;
+  }
+
+  setAriaLabel(label) {
+    this._assertMutable("setAriaLabel");
+    this.ariaLabel = label ?? "";
+    this._syncAccessibleLabel?.();
+    return this;
+  }
+
+  setAriaLabelledBy(ids) {
+    this._assertMutable("setAriaLabelledBy");
+    this.ariaLabelledBy = ids ?? "";
+    this._syncAccessibleLabel?.();
+    return this;
+  }
+
+  _applyAccessibleName(target, { labelledBy = "", label = "" } = {}) {
+    if (!target) return;
+    const explicitIds = String(this.ariaLabelledBy).trim();
+    const explicitLabel = String(this.ariaLabel).trim();
+    const ids = explicitIds || (explicitLabel ? "" : String(labelledBy).trim());
+    const text = explicitLabel || String(label).trim();
+    if (ids) {
+      target.setAttribute("aria-labelledby", ids);
+      target.removeAttribute("aria-label");
+    } else {
+      target.removeAttribute("aria-labelledby");
+      if (text) target.setAttribute("aria-label", text);
+      else target.removeAttribute("aria-label");
+    }
   }
 
   setLabelPosition(position) {
@@ -391,6 +425,9 @@ export class EditorControl extends BaseControl {
     }
 
     this.element.classList.add("dui-editor");
+    if (this._labelElement) this._labelElement.dataset.duiEditorLabel = "";
+    this.element.classList.toggle("dui-editor--no-label", !!this._labelElement && !String(this.label).trim());
+    this._syncAccessibleLabel?.();
     this.element.classList.toggle("dui-editor--label-left", this.labelPosition === "left");
     this.element.classList.toggle("dui-editor--label-top", this.labelPosition === "top");
     setOptionalCssProperty(this.element, "--dui-label-width", this.labelWidth);
@@ -444,7 +481,9 @@ export class EditorControl extends BaseControl {
 
     if (this._input) {
       if (message) {
-        this._input.title = message;
+        // Validation is a description, not a fallback accessible name.
+        // The styled message remains visible on hover/focus; do not duplicate
+        // it in title, which browsers use to name otherwise unlabeled fields.
         this._input.setAttribute("aria-invalid", this.state.has("invalid") ? "true" : "false");
         this._input.setAttribute("aria-describedby", `${this._accessibilityId}-message`);
         this._message.id = `${this._accessibilityId}-message`;

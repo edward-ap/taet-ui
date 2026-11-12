@@ -18,7 +18,8 @@ export async function checkInputBrowserConsumer(page, url) {
   assert.deepEqual(validation.errors, [['warning', 'length']]);
   assert.ok(validation.phases.includes('dirtyChange'));
   assert.equal(await field.getAttribute('aria-invalid'), 'false');
-  assert.equal(await field.getAttribute('title'), 'Short');
+  assert.equal(await field.getAttribute('title'), null);
+  assert.equal(await field.evaluate(input => document.getElementById(input.getAttribute('aria-describedby'))?.textContent), 'Short');
   await page.evaluate(() => inputRecipe.input.value.set('Silent', { silent: true }));
   assert.equal(await field.inputValue(), 'Silent');
   assert.equal(await field.getAttribute('title'), null);
@@ -71,7 +72,8 @@ export async function checkInputBrowserConsumer(page, url) {
   await number.fill('');
   const numericValidation = await page.evaluate(() => ({ value: fields.number.value.get(), ok: fields.number.validate().ok }));
   assert.deepEqual(numericValidation, { value: null, ok: false });
-  assert.equal(await number.getAttribute('title'), 'Quantity required');
+  assert.equal(await number.getAttribute('title'), null);
+  assert.equal(await number.evaluate(input => document.getElementById(input.getAttribute('aria-describedby'))?.textContent), 'Quantity required');
   await page.evaluate(() => fields.number.value.set(6, { silent: true }));
   assert.equal(await number.inputValue(), '6');
   await number.dispatchEvent('wheel', { deltaY: -100 });

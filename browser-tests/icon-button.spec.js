@@ -61,7 +61,9 @@ for (const theme of ['light-blue', 'dark-blue']) {
     await expect(button).toBeDisabled();
     await page.evaluate(() => { window.toggleAction.setReadOnly(false); window.toggleAction.value.set(true); });
     await page.evaluate(() => { window.toggleAction.setValidators([() => 'Playback unavailable']); window.toggleAction.validate(); });
-    await expect(button).toHaveAttribute('title', 'Playback unavailable');
+    await expect(button).toHaveAttribute('title', 'Stop');
+    await expect(button).toHaveAccessibleName('Stop');
+    await expect(button).toHaveAccessibleDescription('Playback unavailable');
     await expect(button).toHaveAttribute('aria-invalid', 'true');
     await page.evaluate(() => window.toggleAction.clearValidation());
     await expect(button).toHaveAttribute('title', 'Stop');

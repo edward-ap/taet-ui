@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.6.0-rc.7",
-  "changeSet": "editor-validation-currentness-2026-11-09",
-  "note": "User-approved strict custom editor revisions and no-stale-save guards, independently reviewed. Five existing Grid runtime/type hashes are updated and the reviewed table snapshot helper is added; the other 42 candidate hashes and immutable imported provenance are preserved. PropertyGrid and Form changes are recorded by the complete source freeze.",
+  "packageVersion": "0.6.0-rc.8",
+  "changeSet": "accessible-editors-and-interaction-contracts-2026-11-12",
+  "note": "User-approved strict custom editor revisions and no-stale-save guards, independently reviewed. Five existing Grid runtime/type hashes are updated and the reviewed table snapshot helper is added; the other 42 candidate hashes and immutable imported provenance are preserved. PropertyGrid and Form changes are recorded by the complete source freeze. 2026-11-12: reviewed Node footer rendering with paint-currentness checks; only Grid.js hash updated for this follow-up.",
   "importManifestSha256": "9d32c9bcbbafcce32f04719b4b095b6c8b8bed1230ae7bc47aeff18bc3150d67",
   "files": [
     {
@@ -103,7 +103,7 @@
     {
       "path": "src/ui/Grid.js",
       "importedSha256": "8784367eb52a32ad3799286b1a7730c3373ad60544e1f22f90bd3efa5a7e497a",
-      "sha256": "16da50638593de8530c9080a648db13ea2f3616e45652be852586fcfec51e9e5"
+      "sha256": "8d80638a2e82a62a9c82c2b6f5eb309c7c292ca2a1fd72eb0eee89b0a3612486"
     },
     {
       "path": "src/ui/GridColumnReorderController.js",

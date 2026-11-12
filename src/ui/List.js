@@ -101,6 +101,7 @@ export class List extends BaseControl {
     }
 
     this.disposables.addEventListener(root, "click", event => {
+      if (this.destroyed || this.disabled) return;
       const itemElement = event.target.closest?.(".dui-list__item");
 
       if (!itemElement || !root.contains(itemElement)) {
@@ -114,7 +115,7 @@ export class List extends BaseControl {
       }
 
       this._selectItemFromUser(item, event);
-      if (this.destroyed) return;
+      if (this.destroyed || this.disabled) return;
       this.events.emit("itemClick", {
         source: this,
         item,
@@ -126,6 +127,7 @@ export class List extends BaseControl {
     });
 
     this.disposables.addEventListener(root, "dblclick", event => {
+      if (this.destroyed || this.disabled) return;
       const itemElement = event.target.closest?.(".dui-list__item");
 
       if (!itemElement || !root.contains(itemElement)) {

@@ -14,6 +14,7 @@ export class Toolbar extends Panel {
     super(options);
 
     this.commands = options.commands ?? null;
+    this._pendingToolbarAdds = new Set();
     this.css = options.css ?? "";
 
     if (hasContainer) {
@@ -82,11 +83,47 @@ export class Toolbar extends Panel {
     this._assertMutable("add");
 
     for (const control of controls.flat()) {
+      if (this.destroyed || this._destroying) break;
       this._assertControl(control);
-      this.addControl(control);
+      if (this._pendingToolbarAdds.has(control)) continue;
+      this._preflightControl(control);
+      if (!this.element && this.items.includes(control)) continue;
 
-      if (this.element) {
-        this._mountToolbarControl(control);
+      this._pendingToolbarAdds.add(control);
+      try {
+        if (this.element) {
+          // Use Panel's transactional mount, veto and ownership checks.
+          this.attach(control);
+          continue;
+        }
+
+        // Toolbar supports declarative children before mount. Registration is
+        // still a child-add mutation, even though mounting happens later.
+        const beforeEvent = this._createChildEvent("beforeChildAdd", control, {}, { cancel: false });
+        this.events.emit("beforeChildAdd", beforeEvent);
+        if (beforeEvent.cancel || this.destroyed || this._destroying || control.destroyed) continue;
+        this._preflightControl(control);
+        if (this.items.includes(control)) continue;
+        const wasMounted = control.mounted;
+        try {
+          // A beforeChildAdd callback may have mounted the toolbar itself.
+          if (this.element) this._mountToolbarControl(control);
+          if (this.destroyed || this._destroying || control.destroyed) {
+            if (!wasMounted && !control.destroyed && !control.parent) control.destroy();
+            continue;
+          }
+          this.addControl(control);
+        } catch (error) {
+          if (!wasMounted && control.mounted && !control.destroyed && !control.parent) {
+            try { control.destroy(); } catch (cleanupError) {
+              throw new AggregateError([error, cleanupError], "Toolbar add failed and transient child cleanup failed.");
+            }
+          }
+          throw error;
+        }
+        this.events.emit("childAdd", this._createChildEvent("childAdd", control, {}));
+      } finally {
+        this._pendingToolbarAdds.delete(control);
       }
     }
 

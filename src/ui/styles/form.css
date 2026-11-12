@@ -73,17 +73,17 @@
   flex: 1 1 0;
 }
 
-.dui-form--labels-top .dui-editor:not(.dui-editor--label-left) {
+.dui-form--labels-top .dui-editor:not(.dui-editor--label-left):not(.dui-editor--no-label) {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   row-gap: var(--dui-gap-xs);
 }
 
-.dui-form--labels-top .dui-editor:not(.dui-editor--label-left) > .dui-text-field__message {
+.dui-form--labels-top .dui-editor:not(.dui-editor--label-left):not(.dui-editor--no-label) > .dui-text-field__message {
   left: 0;
 }
 
-.dui-form--labels-top .dui-editor:not(.dui-editor--label-left) > .dui-text-area__label {
+.dui-form--labels-top .dui-editor:not(.dui-editor--label-left):not(.dui-editor--no-label) > .dui-text-area__label {
   padding-top: 0;
 }
 

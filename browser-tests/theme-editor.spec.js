@@ -139,7 +139,7 @@ test('preset and UI settings repaint live controls without replacing form input'
  await page.goto('/examples/theme-editor/');await expect(page.locator('body')).toHaveAttribute('data-ready','true');
  const preview=page.frameLocator('#preview'),name=preview.getByRole('textbox',{name:'Name',exact:true});await name.fill('Keep this edit');
  await name.evaluate(el=>window.originalInput=el);
- await page.locator('#foundation-toggle .dui-switch__visual').click();await expect(page.getByRole('checkbox',{name:/^Dark foundation:/})).toBeChecked();await expect(preview.locator('body')).toHaveAttribute('data-foundation','dark');
+ await page.locator('#foundation-toggle .dui-switch__visual').click();await expect(page.getByRole('checkbox',{name:'Dark foundation',exact:true})).toBeChecked();await expect(preview.locator('body')).toHaveAttribute('data-foundation','dark');
  const before=await preview.locator('body').getAttribute('style');
  await page.getByRole('slider',{name:'Surface',exact:true}).focus();
  await page.getByRole('slider',{name:'Surface',exact:true}).press('End');
