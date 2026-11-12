@@ -33,7 +33,7 @@
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "esbuild": "0.28.2",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   },
   "description": "Object-first compact desktop UI toolkit for WebView applications",
   "license": "MIT",
